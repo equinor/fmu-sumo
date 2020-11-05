@@ -222,7 +222,20 @@ class FileOnDisk:
 
         result = {}
 
-        response = self._upload_metadata(sumo_connection=sumo_connection, sumo_parent_id=sumo_parent_id)
+        try:
+            response = self._upload_metadata(sumo_connection=sumo_connection, sumo_parent_id=sumo_parent_id)
+        except Exception as err:
+            if "504 Gateway Time-out" in str(err):    # temporary implementation, pending detailed errors from wrapper
+                print("Got 504, this failed")
+                result['status'] = 'failed'
+                return result
+            if "503 Service Unavailable" in str(err):
+                print("Got 503, this failed")
+                result['failed'] = 'failed'
+                return result
+
+            print("Did not detect either 503 or 504, raising the exception")
+            raise err
 
         _t1_metadata = time.perf_counter()
         result['metadata_upload_response_status_code'] = response.status_code
