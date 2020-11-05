@@ -22,7 +22,14 @@ def UPLOAD_FILES(files:list, sumo_parent_id:str, sumo_connection, threads=4):
         file, sumo_connection, sumo_parent_id = arg
         if not file:
             return
-        result = file.upload_to_sumo(sumo_connection=sumo_connection, sumo_parent_id=sumo_parent_id)
+        try:
+            result = file.upload_to_sumo(sumo_connection=sumo_connection, sumo_parent_id=sumo_parent_id)
+        except Exception as err:
+            print('Tried uploading, got this exception:')
+            raise err
+
+        # try again if 504 or 504????
+
         return result
 
     def _print_upload_result(result):
