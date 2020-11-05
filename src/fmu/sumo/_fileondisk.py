@@ -2,6 +2,9 @@ import yaml
 import os
 import datetime
 import time
+import logging
+
+logger = logging.getLogger()
 
 class FileOnDisk:
 
@@ -142,9 +145,9 @@ class FileOnDisk:
         dtype = self.metadata.get('class', {}).get('type')
 
         if dtype is None:
-            #logging.error('Could not get file format from metadata')
-            #logging.error('File: {}'.format(self.path))
-            #logging.error('Metadata file: {}'.format(self.metadata_path))
+            #logger.error('Could not get file format from metadata')
+            #logger.error('File: {}'.format(self.path))
+            #logger.error('Metadata file: {}'.format(self.metadata_path))
             raise MetadataError('Could not get file format')
 
         return dtype
@@ -155,9 +158,9 @@ class FileOnDisk:
         fformat = self.metadata.get('data', {}).get('format')
 
         if fformat is None:
-            #logging.error('Could not get file format from metadata')
-            #logging.error('File: {}'.format(self.path))
-            #logging.error('Metadata file: {}'.format(self.metadata_path))
+            #logger.error('Could not get file format from metadata')
+            #logger.error('File: {}'.format(self.path))
+            #logger.error('Metadata file: {}'.format(self.metadata_path))
             raise MetadataError('Could not get file format')
 
         return fformat
@@ -215,7 +218,6 @@ class FileOnDisk:
 
         # TODO: Do a check towards Sumo for confirming that ID is referring to existing ensemble
 
-
         # UPLOAD JSON
         _t0 = time.perf_counter()
         _t0_metadata = time.perf_counter()
@@ -225,16 +227,17 @@ class FileOnDisk:
         try:
             response = self._upload_metadata(sumo_connection=sumo_connection, sumo_parent_id=sumo_parent_id)
         except Exception as err:
+            logger.debug("Exception was returned from wrapper when uploading file. Checking if it's a known Exception.")
             if "504 Gateway Time-out" in str(err):    # temporary implementation, pending detailed errors from wrapper
-                print("Got 504, this failed")
+                logger.debug("Got 504, returning failed")
                 result['status'] = 'failed'
                 return result
             if "503 Service Unavailable" in str(err):
-                print("Got 503, this failed")
+                logger.debug("Got 503, returning failed")
                 result['failed'] = 'failed'
                 return result
 
-            print("Did not detect either 503 or 504, raising the exception")
+            logger.debug("Did not detect either 503 or 504, raising the exception")
             raise err
 
         _t1_metadata = time.perf_counter()

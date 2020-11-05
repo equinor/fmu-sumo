@@ -6,7 +6,9 @@ from fmu.sumo._connection import SumoConnection
 from fmu.sumo._upload_files import UPLOAD_FILES
 import time
 import pandas as pd
+import logging
 
+logger = logging.getLogger()
 
 class EnsembleOnDisk:
     """
@@ -46,12 +48,16 @@ class EnsembleOnDisk:
         api (SumoConnection instance): Connection to Sumo.
         """
 
+        logger.debug('EnsembleOnDisk.__init__ start')
+
         self._manifest = self._load_manifest(manifest_path)
         self._fmu_ensemble_id = None
         self._files = []
         self.sumo_connection = sumo_connection
         self._sumo_parent_id = None
         self._on_sumo = None
+
+        logger.debug('EnsembleOnDisk.__init__ done')
 
     def __str__(self):
         s = f'{self.__class__}, {len(self._files)} files.'
@@ -96,27 +102,31 @@ class EnsembleOnDisk:
         """Add files to the ensemble, based on searchstring"""
         file_paths = self._find_file_paths(searchstring)
 
+        logger.debug('Adding files with searchstring: {}'.format(searchstring))
+
         for file_path in file_paths:
             file = FileOnDisk(path=file_path)
             if file.metadata:
                 self._files.append(file)
             else:
-                print('No metadata, skipping file: {}'.format(file))
+                logger.info('No metadata, skipping file: {}'.format(file))
+
+        logger.debug('self._files length is now {}'.format(len(self._files)))
 
     def _find_file_paths(self, searchstring):
         """Given a searchstring, return yielded valid files as list
         of FileOnDisk instances"""
         files = [f for f in glob.glob(searchstring) if os.path.isfile(f)]
         if len(files) == 0:
-            print('No files found! Bad searchstring?')
-            print('Searchstring: {}'.format(searchstring))
+            logger.info('No files found! Bad searchstring?')
+            logger.info('Searchstring: {}'.format(searchstring))
         return files
 
     def _get_sumo_parent_id(self):
         """Call sumo, check if the ensemble is already there. Use fmu_ensemble_id for this."""
 
         # search for all ensembles on Sumo, matching on fmu_ensemble_id
-        print('this fmu_ensemble_id: {}'.format(self.fmu_ensemble_id))
+        logger.info('this fmu_ensemble_id: {}'.format(self.fmu_ensemble_id))
 
         query = f'fmu_ensemble.fmu_ensemble_id:{self.fmu_ensemble_id}'
         search_results = self.sumo_connection.api.searchroot(query, select='source', buckets='source')
@@ -131,8 +141,8 @@ class EnsembleOnDisk:
                 return sumo_parent_id
 
         except Exception as error:
-            print('ERROR in hits. This is what the search results looked like:')
-            print(search_results)
+            logger.warning('ERROR in hits. This is what the search results looked like:')
+            logger.warning(search_results)
             raise error
 
         if len(hits) == 0:
@@ -140,7 +150,7 @@ class EnsembleOnDisk:
 
         if len(hits) == 1:
             sumo_parent_id = hits[0].get('_id')
-            print(f'Already registered on Sumo with ID: {sumo_parent_id}')
+            logger.info(f'Already registered on Sumo with ID: {sumo_parent_id}')
             return sumo_parent_id
 
         raise DuplicateSumoEnsemblesError(f'Found {len(hits)} ensembles with the same ID on Sumo')
@@ -155,9 +165,9 @@ class EnsembleOnDisk:
                 sumo_parent_id (uuid4): Unique ID for this ensemble on Sumo
         """
 
-        print('Registering ensemble on Sumo')
+        logger.info('Registering ensemble on Sumo')
         sumo_parent_id = self._upload_manifest(self.manifest)
-        print('Ensemble registered. SumoID: {}'.format(sumo_parent_id))
+        logger.info('Ensemble registered. SumoID: {}'.format(sumo_parent_id))
         self._sumo_parent_id = sumo_parent_id   # bad pattern, needs refactoring
         return sumo_parent_id
 
@@ -193,7 +203,7 @@ class EnsembleOnDisk:
 
         df = pd.DataFrame().from_dict(uploads)
 
-        print('_calculate_upload_stats, showplot is {}'.format(showplot))
+        logger.debug('_calculate_upload_stats, showplot is {}'.format(showplot))
 
         stats = {
             'blob': {'upload_time' : {'mean': df['blob_upload_time_elapsed'].mean(),
@@ -211,7 +221,7 @@ class EnsembleOnDisk:
                         }
 
         if showplot:
-            print('plotting...')
+            logger.debug('plotting...')
             import matplotlib.pyplot as plt
             fig, ax = plt.subplots()
             ax_sec = ax.twinx()
@@ -247,14 +257,14 @@ class EnsembleOnDisk:
         """
 
         if self.sumo_parent_id is None:
-            print('Ensemble is not registered on Sumo')
+            logger.info('Ensemble is not registered on Sumo')
             if register_ensemble:
-                print('Registering ensemble')
+                logger.info('Registering ensemble')
                 self.register()
-                print('Ensemble registered with ID: {}'.format(self.sumo_parent_id))
+                logger.info('Ensemble registered with ID: {}'.format(self.sumo_parent_id))
 
         if not self.files:
-            print('No files to upload. Check searchstring.')
+            logger.info('No files to upload. Check searchstring.')
             return
         _files_to_upload = [f for f in self.files]
         ok_uploads = []
@@ -276,16 +286,16 @@ class EnsembleOnDisk:
 
             attempts += 1
             if attempts >= max_attempts:
-                print('Stopping after {} attempts'.format(attempts))
+                logger.debug('Stopping after {} attempts'.format(attempts))
                 break
 
             if not _files_to_upload:
-                print('No more files to upload, breaking the loop')
+                logger.debug('No more files to upload, breaking the loop')
                 break
 
-            print('sleep 3')
+            logger.debug('sleep 3')
             time.sleep(3)
-            print('Retrying {} failed uploads after waiting 3 seconds'.format(len(failed_uploads)))
+            logger.info('Retrying {} failed uploads after waiting 3 seconds'.format(len(failed_uploads)))
 
         _dt = time.perf_counter() - _t0
 
