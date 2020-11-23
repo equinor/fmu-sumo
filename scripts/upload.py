@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import argparse
 from fmu import sumo
 import os
@@ -9,17 +11,15 @@ def main():
     manifest_path = os.path.join(args.casepath, 'pred/share/runinfo/manifest.yaml')
 
     # add some files
-    subfolders = [#'pred/share/results/maps/depth/*.gri',
+    subfolders = ['pred/share/results/maps/depth/viking_gp_top*mean.gri',
                   #'pred/share/results/maps/isochores/*.gri',
                   #'pred/share/results/maps/depth_conversion/*.gri',
-                  'realization-0/pred/share/polygons/*--field_outline.csv',
-                  'realization-0/pred/share/polygons/*--faultlines.csv',
+                  #'realization-0/pred/share/polygons/*--field_outline.csv',
+                  #'realization-0/pred/share/polygons/*--faultlines.csv',
                   #'realization-*/pred/share/maps/depth/*.gri',
                   #'realization-*/pred/share/maps/isochores/*.gri',
-                  #'realization-0/pred/share/maps/fwl/*.gri'
-                  #'realization-0/pred/share/maps/depth_conversion/*.gri',
-                  'realization-0/pred/share/maps/depth/*.gri',
-                  'realization-0/pred/share/maps/isochores/*.gri',
+                  #'realization-*/pred/share/maps/fwl/*.gri'
+                  #'realization-*/pred/share/maps/depth_conversion/*.gri',
                   ]
 
     sumo_connection = sumo.SumoConnection(env=args.env)
@@ -30,7 +30,7 @@ def main():
         e.add_files(os.path.join(args.casepath, subfolder))
     
     print('\nuploading files')
-    e.upload(threads=args.threads, showplot=True)
+    e.upload(threads=args.threads, showplot=False)
 
 def parse_arguments():
     parser = argparse.ArgumentParser()

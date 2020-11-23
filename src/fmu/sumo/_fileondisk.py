@@ -201,8 +201,8 @@ class FileOnDisk:
         #print('===')
         return response
 
-    def _upload_bytestring(self, sumo_connection, object_id):
-        response = sumo_connection.api.save_blob(blob=self.bytestring, object_id=object_id)
+    def _upload_bytestring(self, sumo_connection, object_id, blob_url=None):
+        response = sumo_connection.api.save_blob(blob=self.bytestring, object_id=object_id, url=blob_url)
         return response
 
 
@@ -237,7 +237,6 @@ class FileOnDisk:
         result['blob_file_path'] = self.path
         result['blob_file_size'] = self.size
 
-
         if response.status_code == 400:
             result['status'] = 'rejected'
             return result
@@ -247,10 +246,12 @@ class FileOnDisk:
             return result
 
         self._sumo_child_id = response.json().get('objectid')
+        self._blob_url = response.json().get('blob_url')
 
         # UPLOAD BLOB
         _t0_blob = time.perf_counter()
-        response = self._upload_bytestring(sumo_connection=sumo_connection, object_id=self._sumo_child_id)
+        print('uploading bytestring with URL')
+        response = self._upload_bytestring(sumo_connection=sumo_connection, object_id=self._sumo_child_id, blob_url=self._blob_url)
         _t1_blob = time.perf_counter()
 
         result['blob_upload_response_status_code'] = response.status_code
@@ -260,9 +261,9 @@ class FileOnDisk:
         result['blob_upload_time_elapsed'] = _t1_blob-_t0_blob
 
         if response.status_code not in [200,201]:
-            print(response)
+            print(response.status_code)
             result['status'] = 'failed'
-
-        result['status'] = 'ok'
+        else:
+            result['status'] = 'ok'
 
         return result
