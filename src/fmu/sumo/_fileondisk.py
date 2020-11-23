@@ -250,7 +250,6 @@ class FileOnDisk:
 
         # UPLOAD BLOB
         _t0_blob = time.perf_counter()
-        print('uploading bytestring with URL')
         response = self._upload_bytestring(sumo_connection=sumo_connection, object_id=self._sumo_child_id, blob_url=self._blob_url)
         _t1_blob = time.perf_counter()
 
