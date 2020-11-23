@@ -11,15 +11,15 @@ def main():
     manifest_path = os.path.join(args.casepath, 'pred/share/runinfo/manifest.yaml')
 
     # add some files
-    subfolders = ['pred/share/results/maps/depth/viking_gp_top*mean.gri',
-                  #'pred/share/results/maps/isochores/*.gri',
-                  #'pred/share/results/maps/depth_conversion/*.gri',
-                  #'realization-0/pred/share/polygons/*--field_outline.csv',
-                  #'realization-0/pred/share/polygons/*--faultlines.csv',
-                  #'realization-*/pred/share/maps/depth/*.gri',
-                  #'realization-*/pred/share/maps/isochores/*.gri',
-                  #'realization-*/pred/share/maps/fwl/*.gri'
-                  #'realization-*/pred/share/maps/depth_conversion/*.gri',
+    subfolders = ['pred/share/results/maps/depth/*.gri',
+                  'pred/share/results/maps/isochores/*.gri',
+                  'pred/share/results/maps/depth_conversion/*.gri',
+                  'realization-0/pred/share/polygons/*--field_outline.csv',
+                  'realization-0/pred/share/polygons/*--faultlines.csv',
+                  'realization-*/pred/share/maps/depth/*.gri',
+                  'realization-*/pred/share/maps/isochores/*.gri',
+                  'realization-*/pred/share/maps/fwl/*.gri',
+                  'realization-*/pred/share/maps/depth_conversion/*.gri',
                   ]
 
     sumo_connection = sumo.SumoConnection(env=args.env)
