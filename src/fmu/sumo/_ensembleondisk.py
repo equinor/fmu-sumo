@@ -136,6 +136,7 @@ class EnsembleOnDisk:
             raise error
 
         if len(hits) == 0:
+            print("Ensemble not found on Sumo - register the ensemble before uploading.")
             return None
 
         if len(hits) == 1:
