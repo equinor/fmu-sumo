@@ -210,7 +210,7 @@ class FileOnDisk:
         """Upload this file to Sumo"""
 
         if not sumo_parent_id:
-            raise ValueError()
+            raise ValueError("No Sumo parent ID")
             #return {'status': 'failed', 'response': 'Failed, sumo_parent_id passed to upload_to_sumo: {}'.format(sumo_parent_id)}
 
         # TODO: Do a check towards Sumo for confirming that ID is referring to existing ensemble
