@@ -21,15 +21,19 @@ def UPLOAD_FILES(files:list, sumo_parent_id:str, sumo_connection, threads=4):
     def _upload_file(arg):
         file, sumo_connection, sumo_parent_id = arg
         if not file:
-            return
+            raise ValueError('An element in the upload array was missing the file (file was None)')
 
         try:
             result = file.upload_to_sumo(sumo_connection=sumo_connection, sumo_parent_id=sumo_parent_id)
             return result
         except Exception as err:
             if '500 Internal Server Error' in str(err):
-                result = {'status': 'failed'}
+                result = {'file': file, 'status': 'failed'}
                 return result
+            if '504 Gateway Time-out' in str(err):
+                result = {'file': file, 'status': 'failed'}
+                return result
+
             raise err
 
 
