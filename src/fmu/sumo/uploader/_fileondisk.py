@@ -78,7 +78,7 @@ class FileOnDisk:
         self._metadata['_sumo'] = {}
         self._metadata['_sumo']['blob_size'] = len(self._byte_string)
         digester = hashlib.md5(self._byte_string)
-        self._metadata['_sumo']['blob_md5'] = base64.b64encode(digester.digest())
+        self._metadata['_sumo']['blob_md5'] = base64.b64encode(digester.digest()).decode("utf-8") 
 
 
 
