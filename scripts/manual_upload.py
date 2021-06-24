@@ -18,9 +18,9 @@ def main():
 
     # add some files
     subfolders = [
-        f"realization-*/{args.iteration}/share/results/maps/*.gri",
-        f"realization-*/{args.iteration}/share/results/polygons/*.csv",
-        f"realization-*/{args.iteration}/share/results/tables/*.csv",
+        f"realization-*/{args.iteration}/share/results/maps/*.gri.yml",
+        f"realization-*/{args.iteration}/share/results/polygons/*.csv.yml",
+        f"realization-*/{args.iteration}/share/results/tables/*.csv.yml",
     ]
 
     sumo_connection = uploader.SumoConnection(env=args.env)

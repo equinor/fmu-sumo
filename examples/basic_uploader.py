@@ -4,7 +4,7 @@ This is a command-line example script for uploading data to Sumo in an FMU setti
 
 Usage:
 
-  > python basic_uploader.py <ensemble_metadata_path> <search_path> [env] [threads]
+  > python basic_uploader.py <case_metadata_path> <search_path> [env] [threads]
 
 
 """
@@ -18,12 +18,12 @@ from fmu.sumo import uploader
 def main():
     args = parse_arguments()
     sumo_connection = uploader.SumoConnection(env=args.env)
-    case = uploader.EnsembleOnDisk(
-        ensemble_metadata_path=args.ensemble_metadata_path,
+    case = uploader.CaseOnDisk(
+        case_metadata_path=args.case_metadata_path,
         sumo_connection=sumo_connection,
     )
     case.add_files(args.search_path)
-    case.upload(threads=args.threads, register_ensemble=True)
+    case.upload(threads=args.threads, register_case=True)
 
 
 def parse_arguments():
@@ -37,7 +37,7 @@ def parse_arguments():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "ensemble_metadata_path", type=str, help="Absolute path to ensemble metadata"
+        "case_metadata_path", type=str, help="Absolute path to case metadata"
     )
     parser.add_argument("search_path", type=str, help="Search path for files to upload")
     parser.add_argument(
