@@ -153,7 +153,7 @@ def test_teardown():
     sumo_connection.api.delete_object(e.sumo_parent_id)
 
     time.sleep(2)
-    # Assert children is on Sumo
+    # Assert children is not on Sumo
     search_results = sumo_connection.api.search(query=f'{e.fmu_case_uuid}')
     total = search_results.get('hits').get('total').get('value')
     print(search_results.get('hits').get('total'))
