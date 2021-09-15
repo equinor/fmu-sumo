@@ -7,13 +7,16 @@ from ert_shared.plugins.plugin_response import plugin_response
 
 
 def _get_jobs_from_directory(directory):
-    resource_directory = resource_filename("fmu_sumo", directory)
+    resource_directory = resource_filename("jobs", directory)
+
+    print(resource_directory)
 
     all_files = [
         os.path.join(resource_directory, f)
         for f in os.listdir(resource_directory)
         if os.path.isfile(os.path.join(resource_directory, f))
     ]
+    print({os.path.basename(path): path for path in all_files})
     return {os.path.basename(path): path for path in all_files}
 
 
@@ -21,7 +24,7 @@ def _get_jobs_from_directory(directory):
 @hook_implementation
 @plugin_response(plugin_name="fmu_sumo")  # pylint: disable=no-value-for-parameter
 def installable_jobs():
-    return _get_jobs_from_directory("jobs/config_jobs")
+    return _get_jobs_from_directory("config_jobs")
 
 
 def _get_module_variable_if_exists(module_name, variable_name, default=""):
@@ -41,7 +44,7 @@ def job_documentation(job_name):
         return None
 
 
-    module_name = "fmu_sumo.jobs.scripts.fm_{}".format(job_name.lower())
+    module_name = "jobs.scripts.fm_{}".format(job_name.lower())
 
     description = _get_module_variable_if_exists(
         module_name=module_name, variable_name="description"

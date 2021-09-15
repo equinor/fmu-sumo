@@ -10,7 +10,7 @@
 STDERR    sumo_upload.stderr
 STDOUT    sumo_upload.stdout
 
-EXECUTABLE  sumo_upload.py
+EXECUTABLE  sumo_upload
 
 ARGLIST       <casepath> <searchpath>
 
