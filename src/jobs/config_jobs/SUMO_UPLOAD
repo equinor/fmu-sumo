@@ -2,20 +2,17 @@
 -- It is called from the ERT config file as a regular forward model
 
 -- Arguments:
---     casepath:   The absolute path to the root of the case
+--     sumo_casepath:   The absolute path to the root of the case
 --                 e.g. <SCRATCH>/<USER>/<CASE_DIR>
---     searchpath: The searchpath relative to the realization root
+--     sumo_searchpath: The searchpath relative to the realization root
 --                 e.g "share/results/maps/*.gri"
---     opt1..opt6  Optional arguments:
---                 --env=<enviroment>
---		   --threads=<num_threads>
---		   --metadata_path=<path to case yml file>
---		   --loglevel=<DEBUG is deafult>
+--     end: The environment to upload to
 
 STDERR    sumo_upload.stderr
 STDOUT    sumo_upload.stdout
 
 EXECUTABLE  sumo_upload
+
 
 ARGLIST       <SUMO_CASEPATH> <SUMO_SEARCHPATH> <SUMO_ENV>
 
