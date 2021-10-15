@@ -77,12 +77,18 @@ def parse_arguments():
     args.searchpath = os.path.expandvars(args.searchpath)
 
     if args.env not in ["dev", "test", "prod", "exp", "preview"]:
+        logger.error("env arg was %s", args.env)
         raise ValueError(f"Illegal environment: {args.env}. Valid environments: dev, test, prod, exp, preview")
 
     if not Path(args.casepath).is_absolute():
+        logger.error("casepath arg was %s", args.casepath)
+        if args.casepath.startswith("<") and args.casepath.endswith(">"):
+            ValueError("ERT variable is not defined: %s", args.casepath)
         raise ValueError("Provided casepath must be an absolute path to the case root")
+
     if not Path(args.casepath).exists():
-        raise ValueError(f"Provided case path does not exist: {args.casepath}")
+        logger.error("casepath arg was %s", args.casepath)
+        raise ValueError(f"Provided case path does not exist")
 
     return args
 
