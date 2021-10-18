@@ -120,7 +120,7 @@ class CaseOnDisk:
             except IOError as err:
                 info = f"{err}. No metadata, skipping file."
                 warnings.warn(info)
-                print(info)
+                #print(info)
 
     def _get_sumo_parent_id(self):
         """Call sumo, check if the case is already there. Use fmu_case_uuid for this."""
@@ -350,11 +350,11 @@ def _find_file_paths(search_string):
     if len(files) == 0:
         info = "No files found! Please, check the search string."
         warnings.warn(info)
-        print(info)
+        #print(info)
 
         info = f"Search string: {search_string}"
         warnings.warn(info)
-        print(info)
+        #print(info)
 
     return files
 

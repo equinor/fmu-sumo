@@ -12,7 +12,7 @@ class SumoConnection:
 
         info = "Connection to Sumo on environment: {}".format(self.env)
         logging.info(info)
-        print(info)
+        #print(info)
 
     @property
     def env(self):
@@ -35,7 +35,7 @@ class SumoConnection:
 
             info = f"Authenticated user: {name} ({upn})"
             logging.info(info)
-            print(info)
+            #print(info)
 
         return self._api
 

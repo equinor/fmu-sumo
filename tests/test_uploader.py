@@ -11,7 +11,7 @@ from fmu.sumo import uploader
 TEST_DIR = Path(__file__).parent / "../"
 os.chdir(TEST_DIR)
 
-ENV = "dev"
+ENV = "localhost"
 
 logger = logging.getLogger(__name__)
 logger.setLevel(level="DEBUG")
@@ -71,6 +71,7 @@ def test_case():
     time.sleep(3)  # wait 3 seconds
     search_results = sumo_connection.api.searchroot(query)
     hits = search_results.get('hits').get('hits')
+    logger.debug(search_results.get('hits'))
     assert len(hits) == 1
 
 
@@ -87,10 +88,9 @@ def test_one_file():
     # Assert children is on Sumo
 
     e.upload()
-    time.sleep(2)
+    time.sleep(4)
     search_results = sumo_connection.api.search(query=f'{e.fmu_case_uuid}')
     total = search_results.get('hits').get('total').get('value')
-    print(search_results.get('hits').get('total'))
     assert total == 2
 
 
@@ -113,7 +113,6 @@ def test_missing_metadata():
     # Assert children is on Sumo
     search_results = sumo_connection.api.search(query=f'{e.fmu_case_uuid}')
     total = search_results.get('hits').get('total').get('value')
-    print(search_results.get('hits').get('total'))
     assert total == 2
 
 
@@ -130,14 +129,32 @@ def test_wrong_metadata():
     e.add_files('tests/data/test_case_080/surface_error.bin')
 
     e.upload()
-    time.sleep(2)
+    time.sleep(4)
     # Assert children is on Sumo
     search_results = sumo_connection.api.search(query=f'{e.fmu_case_uuid}')
     total = search_results.get('hits').get('total').get('value')
-    print(search_results.get('hits').get('total'))
     assert total == 2
 
 
+def test_seismic_file():
+    """
+        Upload one seimic file to Sumo. Assert that it is there.
+    """
+    sumo_connection = uploader.SumoConnection(env=ENV)
+    e = uploader.CaseOnDisk(case_metadata_path="tests/data/test_case_080/case.yml",
+                                sumo_connection=sumo_connection)
+    e.register()
+    e.add_files('tests/data/test_case_080/seismic.segy')
+
+    # Assert children is on Sumo
+
+    e.upload()
+    time.sleep(4)
+    search_results = sumo_connection.api.search(query=f'{e.fmu_case_uuid}')
+    total = search_results.get('hits').get('total').get('value')
+    assert total == 3
+
+    
 
 def test_teardown():
     """
@@ -152,9 +169,8 @@ def test_teardown():
 
     sumo_connection.api.delete_object(e.sumo_parent_id)
 
-    time.sleep(2)
+    time.sleep(4)
     # Assert children is not on Sumo
     search_results = sumo_connection.api.search(query=f'{e.fmu_case_uuid}')
     total = search_results.get('hits').get('total').get('value')
-    print(search_results.get('hits').get('total'))
     assert total == 0
