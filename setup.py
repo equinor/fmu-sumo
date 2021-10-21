@@ -32,6 +32,7 @@ setup(
         "pandas",
         "sumo-wrapper-python",
         "setuptools",
+        "oneseismic"
     ],
     python_requires=">=3.4",
     packages=find_packages("src"),
