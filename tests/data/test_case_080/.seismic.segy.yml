@@ -12,7 +12,7 @@ tracklog:
       id: testuser
     event: updated
 
-class: seismic
+class: cube
 
 # fmu:
 # The fmu block in data objects have more sub-elements compared to ensemble objects.
@@ -71,7 +71,7 @@ fmu:
 
 file:
   relative_path: realization-33/iter-0/share/results/maps/seismic.segy
-  absolute_path: /some/absolute/path//realization-33/iter-0/share/results/maps/seismiv.segy
+  absolute_path: /some/absolute/path//realization-33/iter-0/share/results/maps/seismic.segy
   checksum_md5: kjhsdfvsdlfk23knerknvk23  # checksum of the file, not the data.
 
 data: # The data block describes the actual data (e.g. surface). Only present in data objects
@@ -107,7 +107,7 @@ data: # The data block describes the actual data (e.g. surface). Only present in
       is_discrete: false # to be used for discrete values in surfaces.
       calculation: null # max/min/rms/var/maxpos/sum/etc
 
-  format: irap_binary
+  format: segy
   layout: regular # / cornerpoint / structured / etc
   unit: m
   vertical_domain: depth # / time / null

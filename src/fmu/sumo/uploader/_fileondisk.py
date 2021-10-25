@@ -92,7 +92,8 @@ class FileOnDisk:
 
         self.metadata["_sumo"] = {}
 
-        if self.metadata["class"] == "seismic":
+        #if self.metadata["class"] == "seismic":
+        if self.metadata["data"]["format"] == "segy":
             self.metadata["_sumo"]["blob_size"] = 0
             self.manifest = json.loads(scan.main([self.path]))
             self.metadata["_sumo"]["blob_sha256"] = self.manifest["guid"]
@@ -216,7 +217,8 @@ class FileOnDisk:
         upload_response = {}
         for i in backoff:
             try:
-                if self.metadata["class"] == "seismic":
+                #if self.metadata["class"] == "seismic":
+                if self.metadata["data"]["format"] == "segy":
                     with tempfile.NamedTemporaryFile(mode='w+') as temp:
                         json.dump(self.manifest, temp)
                         temp.flush()
