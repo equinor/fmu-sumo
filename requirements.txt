@@ -5,3 +5,4 @@ pytest~=6.1.1
 sumo-wrapper-python
 oneseismic
 ert
+azure-core
