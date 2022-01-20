@@ -33,6 +33,7 @@ setup(
         "sumo-wrapper-python",
         "setuptools",
         "oneseismic",
+        "azure",
     ],
     python_requires=">=3.6",
     packages=find_packages("src"),
