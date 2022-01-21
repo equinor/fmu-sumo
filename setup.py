@@ -34,7 +34,6 @@ setup(
         "setuptools",
         "oneseismic",
         "azure-core",
-        "ert",
     ],
     python_requires=">=3.6",
     packages=find_packages("src"),
