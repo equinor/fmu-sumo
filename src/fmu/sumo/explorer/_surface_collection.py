@@ -1,4 +1,8 @@
-from collections import Sequence
+try:
+    from collections import Sequence
+except ImportError:
+    from collections.abc import Sequence
+
 from io import BytesIO
 import zipfile
 from fmu.sumo.explorer._object import Surface

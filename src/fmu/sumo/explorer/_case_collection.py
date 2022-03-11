@@ -1,4 +1,8 @@
-from collections import Sequence
+try:
+    from collections import Sequence
+except ImportError:
+    from collections.abc import Sequence
+
 from fmu.sumo.explorer._case import Case
 
 class CaseCollection(Sequence):
