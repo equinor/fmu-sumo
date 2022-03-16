@@ -1,100 +1,70 @@
 from time import time
+
+from numpy import real
 from fmu.sumo.explorer import Explorer
 
-sumo = Explorer(env="test", write_back=True)
+sumo = Explorer(env="dev", write_back=True)
 
-""" my_case = sumo.get_case_by_id("0005976b-6e0c-68a4-63bc-fa6e5c74e111")
+my_case = sumo.get_case_by_id("81a57a32-37e7-06bc-924e-6710ba6e59b0")
 
-
-surface_names = my_case.get_surface_names(
-    iteration_id=0,
-    #realization_id=0,
-    aggregation="MEAN"
-)
-
-print(surface_names)
-
+# Get tag names
 tag_names = my_case.get_surface_tag_names(
-    surface_name="VIKING GP. Top",
     iteration_id=0,
-    #realization_id=0,
-    aggregation="MEAN"
+    realization_id=0,
+    #aggregation="MEAN"
 )
 
-print(tag_names)
+#print(tag_names)
 
+# Get surface names
+surface_names = my_case.get_surface_names(
+    tag_name="amplitude_full_max",
+    iteration_id=0, 
+    realization_id=0,
+    #aggregation="MEAN"
+)
+
+#print(surface_names)
+
+# Get aggregation operations
 aggregations = my_case.get_surface_aggregations(
-    surface_name="VIKING GP. Top",
-    tag_name="structural_model",
+    surface_name="draupne_fm_1",
+    tag_name="amplitude_full_max",
     iteration_id=0,
 )
 
-print(aggregations)
+#print(aggregations)
 
-surfaces = my_case.get_surfaces(
-    surface_name="VIKING GP. Top",
-    tag_name="structural_model",
+# Get surface time spans
+timespans = my_case.get_surface_time_spans(
+    surface_name="draupne_fm_1",
+    tag_name="amplitude_full_max",
     iteration_id=0,
-    #realization_id=0,
-    aggregation="mean"
+    realization_id=0,
+    #aggregation="MEAN"
 )
 
-print(len(surfaces)) """
+print(timespans)
 
 
-""" my_case = sumo.get_case_by_id("69852e8a-b230-d341-e0de-bf61b1308f2b")
+# Current pattern
+my_case.get_surface_tag_names()
+my_case.get_surface_names()
+my_case.get_surface_aggregations()
+my_case.get_surface_time_intervals()
+my_case.get_surfaces()
 
-time_intervals = my_case.get_surface_time_intervals(
- 
-)
+my_case.get_polygon_tag_names()
+my_case.get_polygon_names()
+my_case.get_polygons()
 
-print(time_intervals) """
+# Alternative pattern
+my_case.surfaces.tag_names()
+my_case.surfaces.names()
+my_case.surfaces.aggregations()
+my_case.surfaces.time_intervals()
+my_case.surfaces.get()
 
-""" surfaces = my_case.get_surfaces(
-    surface_name="Draupne Fm. 1 JS Top",
-    tag_name="depth_depth_conversion",
-    iteration_id=2,
-    realization_id=26
-) """
-
-
-res = sumo.post("/debug-search", json={
-    "size": 1, 
-    "runtime_mappings": {
-        "time_start": {
-            "type": "keyword",
-            "script": {
-                "source": "emit(doc['data.time'][1]['value'])"
-            }
-        },
-        "time_end": {
-            "type": "keyword",
-            "script": {
-                "source": "emit(doc['data.time'][0]['value'])"
-            }
-        },
-        "surface_content": {
-            "type": "keyword",
-            "script": {
-                "source": """
-                    String[] split_path = doc['file.relative_path.keyword'].value.splitOnToken('/');
-                    String file_name = split_path[split_path.length - 1];
-                    String surface_content = file_name.splitOnToken('--')[1].replace('.gri', '');
-                
-                    emit(surface_content);
-                """
-            }
-        },
-    },
-    "query": {
-        "bool": {
-            "must": [
-                {"match": {"class": "surface"}}
-            ]
-        }
-    },
-    "fields": ["surface_content"]
-})
-
-
-print(res.json()["hits"]["hits"][0])
+my_case.polygons.tag_names()
+my_case.polygons.names()
+my_case.polygons.get()

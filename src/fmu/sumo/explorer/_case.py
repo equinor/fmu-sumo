@@ -21,25 +21,65 @@ class Case:
     def __create_surface_elastic_query(
             self, 
             size=0, 
-            fields_match=None, 
-            fields_exists=None,
+            fields_match=[], 
+            fields_exists=[],
             aggregate_field=None
     ):
         elastic_query = {
             "size": size, 
             "runtime_mappings": {
-                "surface_content": {
+                "time_start": {
+                    "type": "keyword",
+                    "script": {
+                        "lang": "painless", 
+                        "source": """
+                        if(params['_source']['data']['time'] != null) {
+                            emit(params['_source']['data']['time'][1]['value']); 
+                        } else {
+                            emit('NULL');
+                        }
+                        """
+                    }
+                },
+                "time_end": {
+                    "type": "keyword",
+                    "script": {
+                        "lang": "painless", 
+                        "source": """
+                        if(params['_source']['data']['time'] != null) {
+                            emit(params['_source']['data']['time'][0]['value']); 
+                        } else {
+                            emit('NULL');
+                        }
+                        """
+                    }
+                },
+                "time_interval": {
+                    "type": "keyword",
+                    "script": {
+                        "lang": "painless", 
+                        "source": """
+                        if(params['_source']['data']['time'] != null) {
+                            String start = params['_source']['data']['time'][1]['value'];
+                            String end = params['_source']['data']['time'][0]['value'];
+                            emit(start + ' - ' + end); 
+                        } else {
+                            emit('NULL');
+                        }
+                        """
+                    }
+                },
+                "tag_name": {
                     "type": "keyword",
                     "script": {
                         "source": """
                             String[] split_path = doc['file.relative_path.keyword'].value.splitOnToken('/');
                             String file_name = split_path[split_path.length - 1];
                             String surface_content = file_name.splitOnToken('--')[1].replace('.gri', '');
-                        
                             emit(surface_content);
                         """
                     }
-                },
+                }
             },
             "query": {
                 "bool": {
@@ -48,7 +88,7 @@ class Case:
                     ]
                 }
             },
-            "fields": ["surface_content"]
+            "fields": ["tag_name", "time_start", "time_end", "time_interval"]
         }
 
         for field in fields_match:
@@ -107,39 +147,78 @@ class Case:
         return self.utils.map_buckets(sorted(buckets, key=lambda b : b["key"]))
 
 
-    def get_surface_names(
+    def get_surface_tag_names(
         self, 
         iteration_id=None, 
-        realization_id=None, 
+        realization_id=None,
         aggregation=None
     ):
-        query = f"_sumo.parent_object:{self.sumo_id} AND class:surface"
+        fields_match = {"_sumo.parent_object": self.sumo_id}
+        fields_exists = []
 
         if iteration_id is not None:
-            query += f" AND fmu.iteration.id:{iteration_id}"
+            fields_match["fmu.iteration.id"] = iteration_id
 
         if realization_id is not None:
-            query += f" AND fmu.realization.id:{realization_id}"
+            fields_match["fmu.realization.id"] = realization_id
 
         if aggregation:
-            query += f" AND fmu.aggregation.operation:{aggregation}"
+            fields_match["fmu.aggregation.operation"] = aggregation
         else:
-            query += f" AND NOT fmu.aggregation.operation:*"
+            fields_exists.append("fmu.realization.id")
 
-        result = self.sumo.get("/search",
-            query=query,
-            buckets=["data.name.keyword"],
-            bucketsize=200
+        elastic_query = self.__create_surface_elastic_query(
+            fields_exists=fields_exists,
+            fields_match=fields_match,
+            aggregate_field="tag_name",
         )
 
-        buckets = result["aggregations"]["data.name.keyword"]["buckets"]
+        result = self.sumo.post("/debug-search", json=elastic_query)
+        buckets = result.json()["aggregations"]["tag_name"]["buckets"]
 
         return self.utils.map_buckets(buckets)
 
 
-    def get_surface_tag_names(
+    def get_surface_names(
         self, 
+        tag_name=None,
+        iteration_id=None, 
+        realization_id=None, 
+        aggregation=None
+    ):
+        fields_match = {"_sumo.parent_object": self.sumo_id}
+        fields_exists = []
+
+        if iteration_id is not None:
+            fields_match["fmu.iteration.id"] = iteration_id
+
+        if realization_id is not None:
+            fields_match["fmu.realization.id"] = realization_id
+
+        if tag_name:
+            fields_match["tag_name"] = tag_name
+
+        if aggregation:
+            fields_match["fmu.aggregation.operation"] = aggregation
+        else:
+            fields_exists.append("fmu.realization.id")
+
+        elastic_query = self.__create_surface_elastic_query(
+            fields_exists=fields_exists,
+            fields_match=fields_match,
+            aggregate_field="data.name.keyword",
+        )
+
+        result = self.sumo.post("/debug-search", json=elastic_query)
+        buckets = result.json()["aggregations"]["data.name.keyword"]["buckets"]
+
+        return self.utils.map_buckets(buckets)
+
+
+    def get_surface_time_intervals(
+        self,
         surface_name=None, 
+        tag_name=None,
         iteration_id=None, 
         realization_id=None,
         aggregation=None
@@ -156,6 +235,9 @@ class Case:
         if realization_id is not None:
             fields_match["fmu.realization.id"] = realization_id
 
+        if tag_name:
+            fields_match["tag_name"] = tag_name
+
         if aggregation:
             fields_match["fmu.aggregation.operation"] = aggregation
         else:
@@ -164,11 +246,11 @@ class Case:
         elastic_query = self.__create_surface_elastic_query(
             fields_exists=fields_exists,
             fields_match=fields_match,
-            aggregate_field="surface_content",
+            aggregate_field="time_interval",
         )
 
         result = self.sumo.post("/debug-search", json=elastic_query)
-        buckets = result.json()["aggregations"]["surface_content"]["buckets"]
+        buckets = result.json()["aggregations"]["time_interval"]["buckets"]
 
         return self.utils.map_buckets(buckets)
 
@@ -188,7 +270,7 @@ class Case:
             fields_match["fmu.iteration.id"] = iteration_id
 
         if tag_name:
-            fields_match["surface_content"] = tag_name
+            fields_match["tag_name"] = tag_name
 
         elastic_query = self.__create_surface_elastic_query(
             fields_exists=["fmu.aggregation.operation"],
@@ -202,50 +284,11 @@ class Case:
         return self.utils.map_buckets(buckets)
 
 
-    def get_surface_time_intervals(
-        self, 
-        surface_name=None, 
-        tag_name=None,
-        iteration_id=None, 
-        realization_id=None,
-        aggregation=None
-    ):
-        fields_match = { "_sumo.parent_object": self.sumo_id }
-        fields_exists = []
-
-        if surface_name:
-            fields_match["data.name.keyword"] = surface_name
-
-        if iteration_id is not None:
-            fields_match["fmu.iteration.id"] = iteration_id
-
-        if realization_id is not None:
-            fields_match["fmu.realization.id"] = realization_id
-
-        if tag_name:
-            fields_match["surface_content"] = tag_name
-
-        if aggregation:
-            fields_match["fmu.aggregation.operation"] = aggregation
-        else:
-            fields_exists.append("fmu.realization.id")
-
-        elastic_query = self.__create_surface_elastic_query(
-            fields_exists=fields_exists,
-            fields_match=fields_match,
-            aggregate_field="data.time",
-        )
-
-        result = self.sumo.post("/debug-search", json=elastic_query)
-        buckets = result.json()["aggregations"]["data.time"]["buckets"]
-
-        return self.utils.map_buckets(buckets)
-
-
     def get_surfaces(
         self,
         surface_name=None,
         tag_name=None,
+        time_interval=None,
         iteration_id=None,
         realization_id=None,
         aggregation=None
@@ -260,10 +303,13 @@ class Case:
             fields_match["fmu.realization.id"] = realization_id
 
         if tag_name:
-            fields_match["surface_content"] = tag_name
+            fields_match["tag_name"] = tag_name
 
         if surface_name:
             fields_match["data.name.keyword"] = surface_name
+
+        if time_interval:
+            fields_match["time_interval"] = time_interval
 
         if aggregation:
             fields_match["fmu.aggregation.operation"] = aggregation

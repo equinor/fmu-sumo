@@ -38,4 +38,4 @@ class Surface(Object):
         Object.__init__(self, sumo_client, meta_data)
         
         fields = meta_data["fields"]
-        self.tag_name = fields["surface_content"][0]
+        self.tag_name = fields["tag_name"][0]
