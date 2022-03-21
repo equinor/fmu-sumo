@@ -5,9 +5,9 @@ except ImportError:
 
 from io import BytesIO
 import zipfile
-from fmu.sumo.explorer._object import Surface
+from fmu.sumo.explorer._object import Object
 
-class SurfaceCollection(Sequence):
+class ObjectCollection(Sequence):
     def __init__(self, sumo_client, query, result_count):
         self.sumo = sumo_client
         self.query = query
@@ -32,7 +32,7 @@ class SurfaceCollection(Sequence):
         result = self.sumo.post("/debug-search", json=query)
 
         cases = list(map(
-            lambda c: Surface(self.sumo, c),
+            lambda c: Object(self.sumo, c),
             result.json()["hits"]["hits"]
         ))
 
@@ -41,6 +41,8 @@ class SurfaceCollection(Sequence):
         
         return cases
 
+
+class SurfaceCollection(ObjectCollection):
     def aggregate(self, operations):
         multiple_operations = False
         operation_list = operations

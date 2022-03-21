@@ -1,6 +1,11 @@
-from fmu.sumo.explorer._object import Surface
 from fmu.sumo.explorer._utils import Utils
-from fmu.sumo.explorer._surface_collection import SurfaceCollection
+from fmu.sumo.explorer._object_collection import SurfaceCollection, ObjectCollection
+
+OBJECT_TYPES = {
+    'surface': '.gri',
+    'polygons': '.csv',
+    'table': '.csv'
+}
 
 class Case:
     def __init__(self, sumo_client, meta_data):
@@ -18,13 +23,17 @@ class Case:
         self.user = source["fmu"]["case"]["user"]["id"]
 
 
-    def __create_surface_elastic_query(
+    def _create_elastic_query(
             self, 
+            object_type='surface',
             size=0, 
             fields_match=[], 
             fields_exists=[],
             aggregate_field=None
     ):
+        if object_type not in list(OBJECT_TYPES.keys()):
+            raise Exception(f"Invalid object_type: {object_type}")
+
         elastic_query = {
             "size": size, 
             "runtime_mappings": {
@@ -33,11 +42,13 @@ class Case:
                     "script": {
                         "lang": "painless", 
                         "source": """
-                        if(params['_source']['data']['time'] != null) {
-                            emit(params['_source']['data']['time'][1]['value']); 
-                        } else {
-                            emit('NULL');
-                        }
+                            def time = params['_source']['data']['time'];
+                            
+                            if(time != null && time.length > 1) {
+                                emit(params['_source']['data']['time'][1]['value'].splitOnToken('T')[0]); 
+                            } else {
+                                emit('NULL');
+                            }
                         """
                     }
                 },
@@ -46,11 +57,13 @@ class Case:
                     "script": {
                         "lang": "painless", 
                         "source": """
-                        if(params['_source']['data']['time'] != null) {
-                            emit(params['_source']['data']['time'][0]['value']); 
-                        } else {
-                            emit('NULL');
-                        }
+                            def time = params['_source']['data']['time'];
+                            
+                            if(time != null && time.length > 0) {
+                                emit(params['_source']['data']['time'][0]['value'].splitOnToken('T')[0]); 
+                            } else {
+                                emit('NULL');
+                            }
                         """
                     }
                 },
@@ -59,23 +72,30 @@ class Case:
                     "script": {
                         "lang": "painless", 
                         "source": """
-                        if(params['_source']['data']['time'] != null) {
-                            String start = params['_source']['data']['time'][1]['value'];
-                            String end = params['_source']['data']['time'][0]['value'];
-                            emit(start + ' - ' + end); 
-                        } else {
-                            emit('NULL');
-                        }
+                            def time = params['_source']['data']['time'];
+                            
+                            if(time != null) {
+                                if(time.length > 1) {
+                                String start = params['_source']['data']['time'][1]['value'].splitOnToken('T')[0];
+                                String end = params['_source']['data']['time'][0]['value'].splitOnToken('T')[0];
+                                
+                                emit(start + ' - ' + end);
+                                } else if(time.length > 0) {
+                                emit(params['_source']['data']['time'][0]['value'].splitOnToken('T')[0]);
+                                }
+                            }else {
+                                emit('NULL');
+                            }
                         """
                     }
                 },
                 "tag_name": {
                     "type": "keyword",
                     "script": {
-                        "source": """
+                        "source": f"""
                             String[] split_path = doc['file.relative_path.keyword'].value.splitOnToken('/');
                             String file_name = split_path[split_path.length - 1];
-                            String surface_content = file_name.splitOnToken('--')[1].replace('.gri', '');
+                            String surface_content = file_name.splitOnToken('--')[1].replace('{OBJECT_TYPES[object_type]}', '');
                             emit(surface_content);
                         """
                     }
@@ -84,7 +104,7 @@ class Case:
             "query": {
                 "bool": {
                     "must": [
-                        {"match": {"class": "surface"}}
+                        {"match": {"class": object_type}}
                     ]
                 }
             },
@@ -147,8 +167,9 @@ class Case:
         return self.utils.map_buckets(sorted(buckets, key=lambda b : b["key"]))
 
 
-    def get_surface_tag_names(
+    def get_object_tag_names(
         self, 
+        object_type,
         iteration_id=None, 
         realization_id=None,
         aggregation=None
@@ -167,7 +188,8 @@ class Case:
         else:
             fields_exists.append("fmu.realization.id")
 
-        elastic_query = self.__create_surface_elastic_query(
+        elastic_query = self._create_elastic_query(
+            object_type=object_type,
             fields_exists=fields_exists,
             fields_match=fields_match,
             aggregate_field="tag_name",
@@ -179,8 +201,9 @@ class Case:
         return self.utils.map_buckets(buckets)
 
 
-    def get_surface_names(
+    def get_object_names(
         self, 
+        object_type,
         tag_name=None,
         iteration_id=None, 
         realization_id=None, 
@@ -203,7 +226,8 @@ class Case:
         else:
             fields_exists.append("fmu.realization.id")
 
-        elastic_query = self.__create_surface_elastic_query(
+        elastic_query = self._create_elastic_query(
+            object_type=object_type,
             fields_exists=fields_exists,
             fields_match=fields_match,
             aggregate_field="data.name.keyword",
@@ -215,9 +239,10 @@ class Case:
         return self.utils.map_buckets(buckets)
 
 
-    def get_surface_time_intervals(
+    def get_object_time_intervals(
         self,
-        surface_name=None, 
+        object_type,
+        object_name=None, 
         tag_name=None,
         iteration_id=None, 
         realization_id=None,
@@ -226,8 +251,8 @@ class Case:
         fields_match = {"_sumo.parent_object": self.sumo_id}
         fields_exists = []
 
-        if surface_name:
-            fields_match["data.name.keyword"] = surface_name
+        if object_name:
+            fields_match["data.name.keyword"] = object_name
 
         if iteration_id is not None:
             fields_match["fmu.iteration.id"] = iteration_id
@@ -243,7 +268,8 @@ class Case:
         else:
             fields_exists.append("fmu.realization.id")
 
-        elastic_query = self.__create_surface_elastic_query(
+        elastic_query = self._create_elastic_query(
+            object_type=object_type,
             fields_exists=fields_exists,
             fields_match=fields_match,
             aggregate_field="time_interval",
@@ -255,16 +281,17 @@ class Case:
         return self.utils.map_buckets(buckets)
 
 
-    def get_surface_aggregations(
+    def get_object_aggregations(
         self, 
-        surface_name=None, 
+        object_type,
+        object_name=None, 
         tag_name=None,
         iteration_id=None, 
     ):
         fields_match = { "_sumo.parent_object": self.sumo_id }
 
-        if surface_name:
-            fields_match["data.name.keyword"] = surface_name
+        if object_name:
+            fields_match["data.name.keyword"] = object_name
 
         if iteration_id is not None:
             fields_match["fmu.iteration.id"] = iteration_id
@@ -272,7 +299,8 @@ class Case:
         if tag_name:
             fields_match["tag_name"] = tag_name
 
-        elastic_query = self.__create_surface_elastic_query(
+        elastic_query = self._create_elastic_query(
+            object_type=object_type,
             fields_exists=["fmu.aggregation.operation"],
             fields_match=fields_match,
             aggregate_field="fmu.aggregation.operation.keyword",
@@ -284,9 +312,10 @@ class Case:
         return self.utils.map_buckets(buckets)
 
 
-    def get_surfaces(
+    def get_objects(
         self,
-        surface_name=None,
+        object_type,
+        object_name=None,
         tag_name=None,
         time_interval=None,
         iteration_id=None,
@@ -305,8 +334,8 @@ class Case:
         if tag_name:
             fields_match["tag_name"] = tag_name
 
-        if surface_name:
-            fields_match["data.name.keyword"] = surface_name
+        if object_name:
+            fields_match["data.name.keyword"] = object_name
 
         if time_interval:
             fields_match["time_interval"] = time_interval
@@ -316,7 +345,8 @@ class Case:
         else:
             fields_exists.append("fmu.realization.id")
 
-        query = self.__create_surface_elastic_query(
+        query = self._create_elastic_query(
+            object_type=object_type,
             fields_exists=fields_exists,
             fields_match=fields_match,
             size=0
@@ -324,5 +354,8 @@ class Case:
 
         result = self.sumo.post("/debug-search", json=query)
         count = result.json()["hits"]["total"]["value"]
-        
-        return SurfaceCollection(self.sumo, query, count)
+
+        if object_type == "surface":
+            return SurfaceCollection(self.sumo, query, count)
+
+        return ObjectCollection(self.sumo, query, count)

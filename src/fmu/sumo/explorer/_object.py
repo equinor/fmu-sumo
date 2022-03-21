@@ -2,9 +2,12 @@ class Object:
     def __init__(self, sumo_client, meta_data):
         self.sumo = sumo_client
         self.__blob = None
+        self.__png = None
 
         source = meta_data["_source"]
+        fields = meta_data["fields"]
 
+        self.tag_name = fields["tag_name"][0]
         self.sumo_id = meta_data["_id"]
         self.name = source["data"]["name"]
         self.iteration_id = source["fmu"]["iteration"]["id"]
@@ -32,10 +35,13 @@ class Object:
         blob = self.sumo.get(f"/objects('{self.sumo_id}')/blob")
         return blob
 
+    @property
+    def png(self):
+        if self.__png is None:
+            self.__png = self.__get_png()
 
-class Surface(Object):
-    def __init__(self, sumo_client, meta_data):
-        Object.__init__(self, sumo_client, meta_data)
-        
-        fields = meta_data["fields"]
-        self.tag_name = fields["tag_name"][0]
+        return self.__png
+
+    def __get_png(self):
+        png = self.sumo.get(f"/objects('{self.sumo_id}')/blob", encoder="png")
+        return png
