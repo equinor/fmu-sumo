@@ -4,10 +4,11 @@ from fmu.sumo.explorer._utils import Utils
 from fmu.sumo.explorer._case_collection import CaseCollection
 
 class Explorer:
-    def __init__(self, env, logging_level="INFO", write_back=False):
+    def __init__(self, env, access_token=None, logging_level="INFO", write_back=False):
         self.utils = Utils()
         self.sumo = SumoClient(
             env=env, 
+            access_token=access_token,
             logging_level=logging_level, 
             write_back=write_back
         )
