@@ -196,7 +196,7 @@ class Case:
             aggregate_field="tag_name",
         )
 
-        result = self.sumo.post("/debug-search", json=elastic_query)
+        result = self.sumo.post("/search", json=elastic_query)
         buckets = result.json()["aggregations"]["tag_name"]["buckets"]
 
         return self.utils.map_buckets(buckets)
@@ -234,7 +234,7 @@ class Case:
             aggregate_field="data.name.keyword",
         )
 
-        result = self.sumo.post("/debug-search", json=elastic_query)
+        result = self.sumo.post("/search", json=elastic_query)
         buckets = result.json()["aggregations"]["data.name.keyword"]["buckets"]
 
         return self.utils.map_buckets(buckets)
@@ -276,7 +276,7 @@ class Case:
             aggregate_field="time_interval",
         )
 
-        result = self.sumo.post("/debug-search", json=elastic_query)
+        result = self.sumo.post("/search", json=elastic_query)
         buckets = result.json()["aggregations"]["time_interval"]["buckets"]
 
         return self.utils.map_buckets(buckets)
@@ -307,14 +307,14 @@ class Case:
             aggregate_field="fmu.aggregation.operation.keyword",
         )
 
-        result = self.sumo.post("/debug-search", json=elastic_query)
+        result = self.sumo.post("/search", json=elastic_query)
         buckets = result.json()["aggregations"]["fmu.aggregation.operation.keyword"]["buckets"]
 
         return self.utils.map_buckets(buckets)
 
-    def get_object_field_values(
+    def get_object_property_values(
         self,
-        field,
+        property,
         object_type,
         object_name=None,
         tag_name=None,
@@ -323,7 +323,7 @@ class Case:
         realization_id=None,
         aggregation=None
     ):
-        accepted_fields = {
+        accepted_properties = {
             "tag_name": "tag_name",
             "time_interval": "time_interval",
             "aggregation": "fmu.aggregation.operation.keyword",
@@ -332,11 +332,10 @@ class Case:
             "realization_id": "fmu.realization.id"
         }
 
-        if field not in accepted_fields.keys():
-            raise Exception(f"Invalid field: {field}. Accepted fields: {accepted_fields.keys()}")
+        if property not in accepted_properties.keys():
+            raise Exception(f"Invalid field: {property}. Accepted fields: {accepted_properties.keys()}")
 
         fields_match = {"_sumo.parent_object": self.sumo_id}
-        fields_exists = []
 
         if iteration_id is not None:
             fields_match["fmu.iteration.id"] = iteration_id
@@ -355,19 +354,16 @@ class Case:
 
         if aggregation:
             fields_match["fmu.aggregation.operation"] = aggregation
-        else:
-            fields_exists.append("fmu.realization.id")
 
-        agg_field = accepted_fields[field]
+        agg_field = accepted_properties[property]
 
         elastic_query = self._create_elastic_query(
             object_type=object_type,
-            fields_exists=fields_exists,
             fields_match=fields_match,
-            aggregate_field=agg_field,
+            aggregate_field=agg_field
         )
 
-        result = self.sumo.post("/debug-search", json=elastic_query)
+        result = self.sumo.post("/search", json=elastic_query)
         buckets = result.json()["aggregations"][agg_field]["buckets"]
 
         return self.utils.map_buckets(buckets)
@@ -413,7 +409,7 @@ class Case:
             size=0
         )
 
-        result = self.sumo.post("/debug-search", json=query)
+        result = self.sumo.post("/search", json=query)
         count = result.json()["hits"]["total"]["value"]
 
         if object_type == "surface":
