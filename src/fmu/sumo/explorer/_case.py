@@ -32,7 +32,7 @@ class Case:
             aggregate_field=None
     ):
         if object_type not in list(OBJECT_TYPES.keys()):
-            raise Exception(f"Invalid object_type: {object_type}")
+            raise Exception(f"Invalid object_type: {object_type}. Accepted object_types: {OBJECT_TYPES.keys()}")
 
         elastic_query = {
             "size": size, 
@@ -125,7 +125,8 @@ class Case:
             elastic_query["aggs"] = {
                 aggregate_field: {
                     "terms": {
-                        "field": aggregate_field
+                        "field": aggregate_field,
+                        "size": 300
                     }
                 }
             }
@@ -308,6 +309,66 @@ class Case:
 
         result = self.sumo.post("/debug-search", json=elastic_query)
         buckets = result.json()["aggregations"]["fmu.aggregation.operation.keyword"]["buckets"]
+
+        return self.utils.map_buckets(buckets)
+
+    def get_object_field_values(
+        self,
+        field,
+        object_type,
+        object_name=None,
+        tag_name=None,
+        time_interval=None,
+        iteration_id=None,
+        realization_id=None,
+        aggregation=None
+    ):
+        accepted_fields = {
+            "tag_name": "tag_name",
+            "time_interval": "time_interval",
+            "aggregation": "fmu.aggregation.operation.keyword",
+            "object_name": "data.name.keyword",
+            "iteration_id": "fmu.iteration.id",
+            "realization_id": "fmu.realization.id"
+        }
+
+        if field not in accepted_fields.keys():
+            raise Exception(f"Invalid field: {field}. Accepted fields: {accepted_fields.keys()}")
+
+        fields_match = {"_sumo.parent_object": self.sumo_id}
+        fields_exists = []
+
+        if iteration_id is not None:
+            fields_match["fmu.iteration.id"] = iteration_id
+
+        if realization_id is not None:
+            fields_match["fmu.realization.id"] = realization_id
+
+        if tag_name:
+            fields_match["tag_name"] = tag_name
+
+        if object_name:
+            fields_match["data.name.keyword"] = object_name
+
+        if time_interval:
+            fields_match["time_interval"] = time_interval
+
+        if aggregation:
+            fields_match["fmu.aggregation.operation"] = aggregation
+        else:
+            fields_exists.append("fmu.realization.id")
+
+        agg_field = accepted_fields[field]
+
+        elastic_query = self._create_elastic_query(
+            object_type=object_type,
+            fields_exists=fields_exists,
+            fields_match=fields_match,
+            aggregate_field=agg_field,
+        )
+
+        result = self.sumo.post("/debug-search", json=elastic_query)
+        buckets = result.json()["aggregations"][agg_field]["buckets"]
 
         return self.utils.map_buckets(buckets)
 
