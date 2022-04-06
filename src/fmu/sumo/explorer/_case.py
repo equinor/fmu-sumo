@@ -1,5 +1,5 @@
 from fmu.sumo.explorer._utils import Utils
-from fmu.sumo.explorer._object_collection import SurfaceCollection, ObjectCollection
+from fmu.sumo.explorer._object_collection import ObjectCollection
 
 OBJECT_TYPES = {
     'surface': '.gri',
@@ -412,7 +412,4 @@ class Case:
         result = self.sumo.post("/search", json=query)
         count = result.json()["hits"]["total"]["value"]
 
-        if object_type == "surface":
-            return SurfaceCollection(self.sumo, query, count)
-
-        return ObjectCollection(self.sumo, query, count)
+        return ObjectCollection(self.sumo, query, count, object_type)

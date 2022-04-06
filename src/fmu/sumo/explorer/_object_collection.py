@@ -8,42 +8,52 @@ import zipfile
 from fmu.sumo.explorer._object import Object
 
 class ObjectCollection(Sequence):
-    def __init__(self, sumo_client, query, result_count):
+    def __init__(self, sumo_client, query, result_count, object_type):
         self.sumo = sumo_client
-        self.query = query
         self.result_count = result_count
+        self.object_type = object_type
+        self.search_after = None
+
+        self.query = {**query, "size": 500, "sort":[{"tracklog.datetime": "desc"}]}
+        self.objects = self.__next_batch__()
+
+
+    def __next_batch__(self):
+        query = self.query.copy()
+
+        if self.search_after:
+            query["search_after"] = self.search_after
+
+        result = self.sumo.post("/search", json=query)
+        objects = result.json()["hits"]["hits"]
+        self.search_after = objects[-1]["sort"]
+
+        return list(map(lambda c: Object(self.sumo, c), objects))
+
 
     def __len__(self):
         return self.result_count
 
+    
     def __getitem__(self, key):
         start = key
-        size = 1
+        stop = None
 
         if type(key) is slice:
             start = key.start
-            size = key.stop - key.start
+            stop = key.stop
 
-        query = self.query.copy()
-        query["from"] = start
-        query["size"] = size
-        query["sort"] = [{"tracklog.datetime": "desc"}]
-
-        result = self.sumo.post("/debug-search", json=query)
-
-        cases = list(map(
-            lambda c: Object(self.sumo, c),
-            result.json()["hits"]["hits"]
-        ))
-
-        if size == 1:
-            return cases[0]
-        
-        return cases
+        if (stop or start) > (len(self.objects) - 1):
+            self.objects += self.__next_batch__()
+            return self.__getitem__(key)
+        else:
+            return self.objects[start:stop] if stop else self.objects[start]
 
 
-class SurfaceCollection(ObjectCollection):
     def aggregate(self, operations):
+        if self.object_type != "surface":
+            raise Exception(f"Can't aggregate object type: {self.object_type}")
+
         multiple_operations = False
         operation_list = operations
 
@@ -53,10 +63,8 @@ class SurfaceCollection(ObjectCollection):
         else:
             operation_list = [operations]
 
-        query = self.query.copy()
-        query["size"] = self.result_count
-
-        result = self.sumo.post("/debug-search", json=query)
+        query = {**self.query, "size": self.result_count}
+        result = self.sumo.post("/search", json=query)
 
         object_ids = list(map(
             lambda s : s["_id"],
