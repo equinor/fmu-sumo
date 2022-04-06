@@ -1,5 +1,6 @@
 from fmu.sumo.explorer._utils import Utils
 from fmu.sumo.explorer._object_collection import ObjectCollection
+from fmu.sumo.explorer._object import Object
 
 OBJECT_TYPES = {
     'surface': '.gri',
@@ -27,6 +28,7 @@ class Case:
             self, 
             object_type='surface',
             size=0, 
+            sort=None,
             fields_match=[], 
             fields_exists=[],
             aggregate_field=None
@@ -110,6 +112,9 @@ class Case:
             },
             "fields": ["tag_name", "time_start", "time_end", "time_interval"]
         }
+
+        if sort:
+            elastic_query["sort"] = sort
 
         for field in fields_match:
             elastic_query["query"]["bool"]["must"].append({
@@ -402,14 +407,27 @@ class Case:
         else:
             fields_exists.append("fmu.realization.id")
 
+        sort = [{"tracklog.datetime": "desc"}]
+
         query = self._create_elastic_query(
             object_type=object_type,
             fields_exists=fields_exists,
             fields_match=fields_match,
-            size=0
+            size=20,
+            sort=sort
         )
 
-        result = self.sumo.post("/search", json=query)
-        count = result.json()["hits"]["total"]["value"]
+        result = self.sumo.post("/search", json=query).json()
+        count = result["hits"]["total"]["value"]
+        objects = result["hits"]["hits"]
+        search_after = objects[-1]["sort"]
 
-        return ObjectCollection(self.sumo, query, count, object_type)
+        return ObjectCollection(
+            self.sumo, 
+            query, 
+            count, 
+            object_type,
+            sort,
+            initial_batch=list(map(lambda c: Object(self.sumo, c), objects)),
+            search_after=search_after
+        )

@@ -7,15 +7,36 @@ from io import BytesIO
 import zipfile
 from fmu.sumo.explorer._object import Object
 
+DEFAULT_BATCH_SIZE = 500
+
 class ObjectCollection(Sequence):
-    def __init__(self, sumo_client, query, result_count, object_type):
+    def __init__(
+        self, 
+        sumo_client, 
+        query, 
+        result_count, 
+        object_type,
+        sort,
+        initial_batch=None,
+        search_after=None,
+    ):
+        if initial_batch and not search_after:
+            raise Exception("search_after argument is required when initializing ObjectCollection with initial_batch")
+
+        self.DEFAULT_BATCH_SIZE = 500
+
         self.sumo = sumo_client
         self.result_count = result_count
         self.object_type = object_type
-        self.search_after = None
+        self.search_after = search_after
 
-        self.query = {**query, "size": 500, "sort":[{"tracklog.datetime": "desc"}]}
-        self.objects = self.__next_batch__()
+        self.query = {
+            **query, 
+            "size": len(initial_batch) if initial_batch else self.DEFAULT_BATCH_SIZE, 
+            "sort": sort
+        }
+
+        self.objects = initial_batch or self.__next_batch__()
 
 
     def __next_batch__(self):
@@ -44,6 +65,8 @@ class ObjectCollection(Sequence):
             stop = key.stop
 
         if (stop or start) > (len(self.objects) - 1):
+            print(f"Objects length: {len(self.objects)}. Index out of range: {(stop or start)}. Fetching next batch!")
+
             self.objects += self.__next_batch__()
             return self.__getitem__(key)
         else:
