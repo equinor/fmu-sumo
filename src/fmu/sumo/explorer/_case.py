@@ -397,7 +397,7 @@ class Case:
             object_type=object_type,
             fields_exists=fields_exists,
             fields_match=fields_match,
-            size=20,
+            size=500,
             sort=sort
         )
 
