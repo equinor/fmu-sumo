@@ -391,27 +391,16 @@ class Case:
         else:
             fields_exists.append("fmu.realization.id")
 
-        sort = [{"tracklog.datetime": "desc"}]
-
         query = self._create_elastic_query(
             object_type=object_type,
             fields_exists=fields_exists,
             fields_match=fields_match,
-            size=500,
-            sort=sort
+            size=20,
+            sort=[{"tracklog.datetime": "desc"}]
         )
-
-        result = self.sumo.post("/search", json=query).json()
-        count = result["hits"]["total"]["value"]
-        documents = result["hits"]["hits"]
-        search_after = documents[-1]["sort"]
 
         return DocumentCollection(
             self.sumo, 
-            query, 
-            count, 
-            sort,
-            lambda d: list(map(lambda c: ChildObject(self.sumo, c), d)),
-            initial_batch=documents,
-            search_after=search_after
+            query,
+            lambda d: list(map(lambda c: ChildObject(self.sumo, c), d))
         )

@@ -85,8 +85,6 @@ class Explorer:
             user_query = " OR ".join(users)
             query_string += f" fmu.case.user.id:({user_query})"
 
-        sort = [{"tracklog.datetime": "desc"}]
-
         elastic_query = {
             "query": {
                 "query_string": {
@@ -94,24 +92,14 @@ class Explorer:
                     "default_operator": "AND"
                 }
             },
-            "sort": sort,
+            "sort": [{"tracklog.datetime": "desc"}],
             "size": 500
         }
-
-        result = self.sumo.post("/search", json=elastic_query).json()
-
-        count = result["hits"]["total"]["value"]
-        documents = result["hits"]["hits"]
-        search_after = documents[-1]["sort"]
 
         return DocumentCollection(
             self.sumo, 
             elastic_query, 
-            count, 
-            sort,
             lambda d: list(map(lambda c: Case(self.sumo, c), d)),
-            initial_batch=documents,
-            search_after=search_after
         )
         
 

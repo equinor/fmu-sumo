@@ -12,28 +12,26 @@ class DocumentCollection(Sequence):
         self, 
         sumo_client, 
         query, 
-        result_count, 
-        sort,
-        mapper_function,
-        initial_batch=None,
-        search_after=None,
+        mapper_function=None
     ):
-        if initial_batch and not search_after:
-            raise Exception("search_after argument is required when initializing ObjectCollection with initial_batch")
-
-        self.DEFAULT_BATCH_SIZE = 500
         self.sumo = sumo_client
-        self.result_count = result_count
-        self.search_after = search_after
+        self.result_count = None
+        self.search_after = None
         self.mapper_function = mapper_function
+        self.query = self.__validate_query__(query)
 
-        self.query = {
-            **query, 
-            "size": self.DEFAULT_BATCH_SIZE, 
-            "sort": sort
-        }
+        self.documents = self.__next_batch__()
 
-        self.documents = mapper_function(initial_batch) if initial_batch else self.__next_batch__()
+
+    def __validate_query__(self, query):
+        required_keys = ["size", "sort"]
+        query_keys = query.keys()
+
+        for key in required_keys:
+            if key not in query_keys:
+                raise Exception(f"Query is missing required key: {key}")
+
+        return query
 
 
     def __next_batch__(self):
@@ -42,11 +40,14 @@ class DocumentCollection(Sequence):
         if self.search_after:
             query["search_after"] = self.search_after
 
-        result = self.sumo.post("/search", json=query)
-        documents = result.json()["hits"]["hits"]
+        result = self.sumo.post("/search", json=query).json()
+        documents = result["hits"]["hits"]
         self.search_after = documents[-1]["sort"]
 
-        return self.mapper_function(documents)
+        if not self.result_count:
+            self.result_count = result["hits"]["total"]["value"]
+
+        return self.mapper_function(documents) if self.mapper_function else documents
 
 
     def __len__(self):
@@ -62,8 +63,6 @@ class DocumentCollection(Sequence):
             stop = key.stop
 
         if (stop or start) > (len(self.documents) - 1):
-            print(f"Documents length: {len(self.documents)}. Index out of range: {(stop or start)}. Fetching next batch!")
-
             self.documents += self.__next_batch__()
             return self.__getitem__(key)
         else:
