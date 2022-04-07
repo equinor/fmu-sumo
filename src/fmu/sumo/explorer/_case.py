@@ -32,7 +32,7 @@ class Case:
             aggregate_field=None
     ):
         if object_type not in list(OBJECT_TYPES.keys()):
-            raise Exception(f"Invalid object_type: {object_type}")
+            raise Exception(f"Invalid object_type: {object_type}. Accepted object_types: {OBJECT_TYPES.keys()}")
 
         elastic_query = {
             "size": size, 
@@ -125,7 +125,8 @@ class Case:
             elastic_query["aggs"] = {
                 aggregate_field: {
                     "terms": {
-                        "field": aggregate_field
+                        "field": aggregate_field,
+                        "size": 300
                     }
                 }
             }
@@ -195,7 +196,7 @@ class Case:
             aggregate_field="tag_name",
         )
 
-        result = self.sumo.post("/debug-search", json=elastic_query)
+        result = self.sumo.post("/search", json=elastic_query)
         buckets = result.json()["aggregations"]["tag_name"]["buckets"]
 
         return self.utils.map_buckets(buckets)
@@ -233,7 +234,7 @@ class Case:
             aggregate_field="data.name.keyword",
         )
 
-        result = self.sumo.post("/debug-search", json=elastic_query)
+        result = self.sumo.post("/search", json=elastic_query)
         buckets = result.json()["aggregations"]["data.name.keyword"]["buckets"]
 
         return self.utils.map_buckets(buckets)
@@ -275,7 +276,7 @@ class Case:
             aggregate_field="time_interval",
         )
 
-        result = self.sumo.post("/debug-search", json=elastic_query)
+        result = self.sumo.post("/search", json=elastic_query)
         buckets = result.json()["aggregations"]["time_interval"]["buckets"]
 
         return self.utils.map_buckets(buckets)
@@ -306,8 +307,64 @@ class Case:
             aggregate_field="fmu.aggregation.operation.keyword",
         )
 
-        result = self.sumo.post("/debug-search", json=elastic_query)
+        result = self.sumo.post("/search", json=elastic_query)
         buckets = result.json()["aggregations"]["fmu.aggregation.operation.keyword"]["buckets"]
+
+        return self.utils.map_buckets(buckets)
+
+    def get_object_property_values(
+        self,
+        property,
+        object_type,
+        object_name=None,
+        tag_name=None,
+        time_interval=None,
+        iteration_id=None,
+        realization_id=None,
+        aggregation=None
+    ):
+        accepted_properties = {
+            "tag_name": "tag_name",
+            "time_interval": "time_interval",
+            "aggregation": "fmu.aggregation.operation.keyword",
+            "object_name": "data.name.keyword",
+            "iteration_id": "fmu.iteration.id",
+            "realization_id": "fmu.realization.id"
+        }
+
+        if property not in accepted_properties.keys():
+            raise Exception(f"Invalid field: {property}. Accepted fields: {accepted_properties.keys()}")
+
+        fields_match = {"_sumo.parent_object": self.sumo_id}
+
+        if iteration_id is not None:
+            fields_match["fmu.iteration.id"] = iteration_id
+
+        if realization_id is not None:
+            fields_match["fmu.realization.id"] = realization_id
+
+        if tag_name:
+            fields_match["tag_name"] = tag_name
+
+        if object_name:
+            fields_match["data.name.keyword"] = object_name
+
+        if time_interval:
+            fields_match["time_interval"] = time_interval
+
+        if aggregation:
+            fields_match["fmu.aggregation.operation"] = aggregation
+
+        agg_field = accepted_properties[property]
+
+        elastic_query = self._create_elastic_query(
+            object_type=object_type,
+            fields_match=fields_match,
+            aggregate_field=agg_field
+        )
+
+        result = self.sumo.post("/search", json=elastic_query)
+        buckets = result.json()["aggregations"][agg_field]["buckets"]
 
         return self.utils.map_buckets(buckets)
 
@@ -352,7 +409,7 @@ class Case:
             size=0
         )
 
-        result = self.sumo.post("/debug-search", json=query)
+        result = self.sumo.post("/search", json=query)
         count = result.json()["hits"]["total"]["value"]
 
         if object_type == "surface":
