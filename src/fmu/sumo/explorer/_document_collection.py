@@ -5,18 +5,16 @@ except ImportError:
 
 from io import BytesIO
 import zipfile
-from fmu.sumo.explorer._object import Object
 
-DEFAULT_BATCH_SIZE = 500
 
-class ObjectCollection(Sequence):
+class DocumentCollection(Sequence):
     def __init__(
         self, 
         sumo_client, 
         query, 
         result_count, 
-        object_type,
         sort,
+        mapper_function,
         initial_batch=None,
         search_after=None,
     ):
@@ -24,19 +22,18 @@ class ObjectCollection(Sequence):
             raise Exception("search_after argument is required when initializing ObjectCollection with initial_batch")
 
         self.DEFAULT_BATCH_SIZE = 500
-
         self.sumo = sumo_client
         self.result_count = result_count
-        self.object_type = object_type
         self.search_after = search_after
+        self.mapper_function = mapper_function
 
         self.query = {
             **query, 
-            "size": len(initial_batch) if initial_batch else self.DEFAULT_BATCH_SIZE, 
+            "size": self.DEFAULT_BATCH_SIZE, 
             "sort": sort
         }
 
-        self.objects = initial_batch or self.__next_batch__()
+        self.documents = mapper_function(initial_batch) if initial_batch else self.__next_batch__()
 
 
     def __next_batch__(self):
@@ -46,10 +43,10 @@ class ObjectCollection(Sequence):
             query["search_after"] = self.search_after
 
         result = self.sumo.post("/search", json=query)
-        objects = result.json()["hits"]["hits"]
-        self.search_after = objects[-1]["sort"]
+        documents = result.json()["hits"]["hits"]
+        self.search_after = documents[-1]["sort"]
 
-        return list(map(lambda c: Object(self.sumo, c), objects))
+        return self.mapper_function(documents)
 
 
     def __len__(self):
@@ -64,18 +61,18 @@ class ObjectCollection(Sequence):
             start = key.start
             stop = key.stop
 
-        if (stop or start) > (len(self.objects) - 1):
-            print(f"Objects length: {len(self.objects)}. Index out of range: {(stop or start)}. Fetching next batch!")
+        if (stop or start) > (len(self.documents) - 1):
+            print(f"Documents length: {len(self.documents)}. Index out of range: {(stop or start)}. Fetching next batch!")
 
-            self.objects += self.__next_batch__()
+            self.documents += self.__next_batch__()
             return self.__getitem__(key)
         else:
-            return self.objects[start:stop] if stop else self.objects[start]
+            return self.documents[start:stop] if stop else self.documents[start]
 
 
     def aggregate(self, operations):
-        if self.object_type != "surface":
-            raise Exception(f"Can't aggregate object type: {self.object_type}")
+        if self.documents[0].object_type != "surface":
+            raise Exception(f"Can't aggregate: {self.documents[0].object_type}")
 
         multiple_operations = False
         operation_list = operations

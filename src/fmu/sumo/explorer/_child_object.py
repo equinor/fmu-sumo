@@ -1,4 +1,4 @@
-class Object:
+class ChildObject:
     def __init__(self, sumo_client, meta_data):
         self.sumo = sumo_client
         self.__blob = None
@@ -13,6 +13,7 @@ class Object:
         self.iteration_id = source["fmu"]["iteration"]["id"]
         self.relative_path = source["file"]["relative_path"]
         self.meta_data = source
+        self.object_type = source["class"]
 
         if "realization" in source["fmu"]:
             self.realization_id = source["fmu"]["realization"]["id"]

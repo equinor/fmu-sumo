@@ -1,6 +1,6 @@
 from fmu.sumo.explorer._utils import Utils
-from fmu.sumo.explorer._object_collection import ObjectCollection
-from fmu.sumo.explorer._object import Object
+from fmu.sumo.explorer._document_collection import DocumentCollection
+from fmu.sumo.explorer._child_object import ChildObject
 
 OBJECT_TYPES = {
     'surface': '.gri',
@@ -22,6 +22,7 @@ class Case:
         self.field_name = source["masterdata"]["smda"]["field"][0]["identifier"]
         self.status = source["_sumo"]["status"]
         self.user = source["fmu"]["case"]["user"]["id"]
+        self.object_type = "case"
 
 
     def _create_elastic_query(
@@ -345,15 +346,15 @@ class Case:
 
         result = self.sumo.post("/search", json=query).json()
         count = result["hits"]["total"]["value"]
-        objects = result["hits"]["hits"]
-        search_after = objects[-1]["sort"]
+        documents = result["hits"]["hits"]
+        search_after = documents[-1]["sort"]
 
-        return ObjectCollection(
+        return DocumentCollection(
             self.sumo, 
             query, 
             count, 
-            object_type,
             sort,
-            initial_batch=list(map(lambda c: Object(self.sumo, c), objects)),
+            lambda d: list(map(lambda c: ChildObject(self.sumo, c), d)),
+            initial_batch=documents,
             search_after=search_after
         )
