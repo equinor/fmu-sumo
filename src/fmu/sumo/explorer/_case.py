@@ -1,5 +1,6 @@
 from fmu.sumo.explorer._utils import Utils
-from fmu.sumo.explorer._object_collection import SurfaceCollection, ObjectCollection
+from fmu.sumo.explorer._document_collection import DocumentCollection
+from fmu.sumo.explorer._child_object import ChildObject
 
 OBJECT_TYPES = {
     'surface': '.gri',
@@ -21,12 +22,14 @@ class Case:
         self.field_name = source["masterdata"]["smda"]["field"][0]["identifier"]
         self.status = source["_sumo"]["status"]
         self.user = source["fmu"]["case"]["user"]["id"]
+        self.object_type = "case"
 
 
     def _create_elastic_query(
             self, 
             object_type='surface',
             size=0, 
+            sort=None,
             fields_match=[], 
             fields_exists=[],
             aggregate_field=None
@@ -111,6 +114,9 @@ class Case:
             "fields": ["tag_name", "time_start", "time_end", "time_interval"]
         }
 
+        if sort:
+            elastic_query["sort"] = sort
+
         for field in fields_match:
             elastic_query["query"]["bool"]["must"].append({
                 "match": { field: fields_match[field]}
@@ -175,31 +181,13 @@ class Case:
         realization_id=None,
         aggregation=None
     ):
-        fields_match = {"_sumo.parent_object": self.sumo_id}
-        fields_exists = []
-
-        if iteration_id is not None:
-            fields_match["fmu.iteration.id"] = iteration_id
-
-        if realization_id is not None:
-            fields_match["fmu.realization.id"] = realization_id
-
-        if aggregation:
-            fields_match["fmu.aggregation.operation"] = aggregation
-        else:
-            fields_exists.append("fmu.realization.id")
-
-        elastic_query = self._create_elastic_query(
-            object_type=object_type,
-            fields_exists=fields_exists,
-            fields_match=fields_match,
-            aggregate_field="tag_name",
+        return self.get_object_property_values(
+            "tag_name",
+            object_type,
+            iteration_id=iteration_id,
+            realization_id=realization_id,
+            aggregation=aggregation
         )
-
-        result = self.sumo.post("/search", json=elastic_query)
-        buckets = result.json()["aggregations"]["tag_name"]["buckets"]
-
-        return self.utils.map_buckets(buckets)
 
 
     def get_object_names(
@@ -210,34 +198,14 @@ class Case:
         realization_id=None, 
         aggregation=None
     ):
-        fields_match = {"_sumo.parent_object": self.sumo_id}
-        fields_exists = []
-
-        if iteration_id is not None:
-            fields_match["fmu.iteration.id"] = iteration_id
-
-        if realization_id is not None:
-            fields_match["fmu.realization.id"] = realization_id
-
-        if tag_name:
-            fields_match["tag_name"] = tag_name
-
-        if aggregation:
-            fields_match["fmu.aggregation.operation"] = aggregation
-        else:
-            fields_exists.append("fmu.realization.id")
-
-        elastic_query = self._create_elastic_query(
-            object_type=object_type,
-            fields_exists=fields_exists,
-            fields_match=fields_match,
-            aggregate_field="data.name.keyword",
+        return self.get_object_property_values(
+            "object_name",
+            object_type,
+            tag_name=tag_name,
+            iteration_id=iteration_id,
+            realization_id=realization_id,
+            aggregation=aggregation
         )
-
-        result = self.sumo.post("/search", json=elastic_query)
-        buckets = result.json()["aggregations"]["data.name.keyword"]["buckets"]
-
-        return self.utils.map_buckets(buckets)
 
 
     def get_object_time_intervals(
@@ -249,11 +217,57 @@ class Case:
         realization_id=None,
         aggregation=None
     ):
-        fields_match = {"_sumo.parent_object": self.sumo_id}
-        fields_exists = []
+        return self.get_object_property_values(
+            "time_interval",
+            object_type,
+            object_name=object_name,
+            tag_name=tag_name,
+            iteration_id=iteration_id,
+            realization_id=realization_id,
+            aggregation=aggregation
+        )
 
-        if object_name:
-            fields_match["data.name.keyword"] = object_name
+
+    def get_object_aggregations(
+        self, 
+        object_type,
+        object_name=None, 
+        tag_name=None,
+        iteration_id=None, 
+    ):
+        return self.get_object_property_values(
+            "aggregation",
+            object_type,
+            object_name=object_name,
+            tag_name=tag_name,
+            iteration_id=iteration_id
+        )
+
+
+    def get_object_property_values(
+        self,
+        property,
+        object_type,
+        object_name=None,
+        tag_name=None,
+        time_interval=None,
+        iteration_id=None,
+        realization_id=None,
+        aggregation=None
+    ):
+        accepted_properties = {
+            "tag_name": "tag_name",
+            "time_interval": "time_interval",
+            "aggregation": "fmu.aggregation.operation.keyword",
+            "object_name": "data.name.keyword",
+            "iteration_id": "fmu.iteration.id",
+            "realization_id": "fmu.realization.id"
+        }
+
+        if property not in accepted_properties.keys():
+            raise Exception(f"Invalid property: {property}. Accepted properties: {accepted_properties.keys()}")
+
+        fields_match = {"_sumo.parent_object": self.sumo_id}
 
         if iteration_id is not None:
             fields_match["fmu.iteration.id"] = iteration_id
@@ -264,54 +278,29 @@ class Case:
         if tag_name:
             fields_match["tag_name"] = tag_name
 
-        if aggregation:
-            fields_match["fmu.aggregation.operation"] = aggregation
-        else:
-            fields_exists.append("fmu.realization.id")
-
-        elastic_query = self._create_elastic_query(
-            object_type=object_type,
-            fields_exists=fields_exists,
-            fields_match=fields_match,
-            aggregate_field="time_interval",
-        )
-
-        result = self.sumo.post("/search", json=elastic_query)
-        buckets = result.json()["aggregations"]["time_interval"]["buckets"]
-
-        return self.utils.map_buckets(buckets)
-
-
-    def get_object_aggregations(
-        self, 
-        object_type,
-        object_name=None, 
-        tag_name=None,
-        iteration_id=None, 
-    ):
-        fields_match = { "_sumo.parent_object": self.sumo_id }
-
         if object_name:
             fields_match["data.name.keyword"] = object_name
 
-        if iteration_id is not None:
-            fields_match["fmu.iteration.id"] = iteration_id
+        if time_interval:
+            fields_match["time_interval"] = time_interval
 
-        if tag_name:
-            fields_match["tag_name"] = tag_name
+        if aggregation:
+            fields_match["fmu.aggregation.operation"] = aggregation
+
+        agg_field = accepted_properties[property]
 
         elastic_query = self._create_elastic_query(
             object_type=object_type,
-            fields_exists=["fmu.aggregation.operation"],
             fields_match=fields_match,
-            aggregate_field="fmu.aggregation.operation.keyword",
+            aggregate_field=agg_field
         )
 
         result = self.sumo.post("/search", json=elastic_query)
-        buckets = result.json()["aggregations"]["fmu.aggregation.operation.keyword"]["buckets"]
+        buckets = result.json()["aggregations"][agg_field]["buckets"]
 
         return self.utils.map_buckets(buckets)
 
+      
     def get_object_property_values(
         self,
         property,
@@ -406,13 +395,12 @@ class Case:
             object_type=object_type,
             fields_exists=fields_exists,
             fields_match=fields_match,
-            size=0
+            size=20,
+            sort=[{"tracklog.datetime": "desc"}]
         )
 
-        result = self.sumo.post("/search", json=query)
-        count = result.json()["hits"]["total"]["value"]
-
-        if object_type == "surface":
-            return SurfaceCollection(self.sumo, query, count)
-
-        return ObjectCollection(self.sumo, query, count)
+        return DocumentCollection(
+            self.sumo, 
+            query,
+            lambda d: list(map(lambda c: ChildObject(self.sumo, c), d))
+        )

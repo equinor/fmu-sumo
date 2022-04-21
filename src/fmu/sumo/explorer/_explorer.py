@@ -1,7 +1,8 @@
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer._case import Case
 from fmu.sumo.explorer._utils import Utils
-from fmu.sumo.explorer._case_collection import CaseCollection
+from fmu.sumo.explorer._document_collection import DocumentCollection
+
 
 class Explorer:
     def __init__(self, env, access_token=None, logging_level="INFO", write_back=False):
@@ -70,29 +71,37 @@ class Explorer:
         fields=None, 
         users=None
     ):
-        query = "class:case"
+        query_string = "class:case"
 
         if status:
             status_query = " OR ".join(status)
-            query += f" _sumo.status:({status_query})"
+            query_string += f" _sumo.status:({status_query})"
 
         if fields:
             field_query = " OR ".join(fields)
-            query += f" masterdata.smda.field.identifier:({field_query})"
+            query_string += f" masterdata.smda.field.identifier:({field_query})"
 
         if users:
             user_query = " OR ".join(users)
-            query += f" fmu.case.user.id:({user_query})"
+            query_string += f" fmu.case.user.id:({user_query})"
 
-        result = self.sumo.get("/search", 
-            query=query,
-            size=0
+        elastic_query = {
+            "query": {
+                "query_string": {
+                    "query": query_string,
+                    "default_operator": "AND"
+                }
+            },
+            "sort": [{"tracklog.datetime": "desc"}],
+            "size": 500
+        }
+
+        return DocumentCollection(
+            self.sumo, 
+            elastic_query, 
+            lambda d: list(map(lambda c: Case(self.sumo, c), d)),
         )
-
-        count = result["hits"]["total"]["value"]
-
-        return CaseCollection(self.sumo, query, count)
-
+        
 
     def get(self, path, **params):
         return self.sumo.get(path, **params)
