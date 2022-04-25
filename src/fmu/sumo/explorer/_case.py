@@ -1,6 +1,8 @@
+from typing import List
 from fmu.sumo.explorer._utils import Utils
 from fmu.sumo.explorer._document_collection import DocumentCollection
 from fmu.sumo.explorer._child_object import ChildObject
+from deprecated import deprecated
 
 OBJECT_TYPES = {
     'surface': '.gri',
@@ -30,7 +32,7 @@ class Case:
             object_type='surface',
             size=0, 
             sort=None,
-            fields_match=[], 
+            terms={}, 
             fields_exists=[],
             aggregate_field=None
     ):
@@ -107,7 +109,8 @@ class Case:
             "query": {
                 "bool": {
                     "must": [
-                        {"match": {"class": object_type}}
+                        {"match": {"class": object_type}},
+                        {"match": {"_sumo.parent_object": self.sumo_id}}
                     ]
                 }
             },
@@ -117,9 +120,9 @@ class Case:
         if sort:
             elastic_query["sort"] = sort
 
-        for field in fields_match:
+        for field in terms:
             elastic_query["query"]["bool"]["must"].append({
-                "match": { field: fields_match[field]}
+                "terms": {field: terms[field]}
             })
 
         for field in fields_exists:
@@ -162,6 +165,7 @@ class Case:
         return self.utils.map_buckets(buckets)
 
 
+    @deprecated(reason="Use get_object_property_values to retrieve list of unique values for a property")
     def get_realizations(self, iteration_id):
         result = self.sumo.get("/search",
             query=f"_sumo.parent_object:{self.sumo_id} AND fmu.iteration.id:{iteration_id}",
@@ -174,6 +178,7 @@ class Case:
         return self.utils.map_buckets(sorted(buckets, key=lambda b : b["key"]))
 
 
+    @deprecated(reason="Use get_object_property_values to retrieve list of unique values for a property")
     def get_object_tag_names(
         self, 
         object_type,
@@ -190,6 +195,7 @@ class Case:
         )
 
 
+    @deprecated(reason="Use get_object_property_values to retrieve list of unique values for a property")
     def get_object_names(
         self, 
         object_type,
@@ -208,6 +214,7 @@ class Case:
         )
 
 
+    @deprecated(reason="Use get_object_property_values to retrieve list of unique values for a property")
     def get_object_time_intervals(
         self,
         object_type,
@@ -228,6 +235,7 @@ class Case:
         )
 
 
+    @deprecated(reason="Use get_object_property_values to retrieve list of unique values for a property")
     def get_object_aggregations(
         self, 
         object_type,
@@ -243,75 +251,35 @@ class Case:
             iteration_id=iteration_id
         )
 
-
+    
     def get_object_property_values(
         self,
-        property,
-        object_type,
-        object_name=None,
-        tag_name=None,
-        time_interval=None,
-        iteration_id=None,
-        realization_id=None,
-        aggregation=None
+        property: str,
+        object_type: str,
+        object_names: List[str]=[],
+        tag_names: List[str]=[],
+        time_intervals: List[str]=[],
+        iteration_ids: List[str]=[],
+        realization_ids: List[int]=[],
+        aggregations: List[int]=[]
     ):
-        accepted_properties = {
-            "tag_name": "tag_name",
-            "time_interval": "time_interval",
-            "aggregation": "fmu.aggregation.operation.keyword",
-            "object_name": "data.name.keyword",
-            "iteration_id": "fmu.iteration.id",
-            "realization_id": "fmu.realization.id"
-        }
+        """
+            Get a dictionary of unique values for a given property in case child objects.
 
-        if property not in accepted_properties.keys():
-            raise Exception(f"Invalid property: {property}. Accepted properties: {accepted_properties.keys()}")
+            Arguments:
+                `property`: tag_name | time_interval | aggregation | object_name | iteration_id | realization_id
+                `object_type`: surface | polygons | table
+                `object_names`: list of object names (strings)
+                `tag_names`: list of tag names (strings)
+                `time_intervals`: list of time intervals (strings)
+                `iteration_ids`: list of iteration ids (integers)
+                `realization_ids`: list of realizatio ids (intergers)
+                `aggregations`: list of aggregation operations (strings)
 
-        fields_match = {"_sumo.parent_object": self.sumo_id}
+            Returns:
+                Dictionary of unique values and number of objects
+        """
 
-        if iteration_id is not None:
-            fields_match["fmu.iteration.id"] = iteration_id
-
-        if realization_id is not None:
-            fields_match["fmu.realization.id"] = realization_id
-
-        if tag_name:
-            fields_match["tag_name"] = tag_name
-
-        if object_name:
-            fields_match["data.name.keyword"] = object_name
-
-        if time_interval:
-            fields_match["time_interval"] = time_interval
-
-        if aggregation:
-            fields_match["fmu.aggregation.operation"] = aggregation
-
-        agg_field = accepted_properties[property]
-
-        elastic_query = self._create_elastic_query(
-            object_type=object_type,
-            fields_match=fields_match,
-            aggregate_field=agg_field
-        )
-
-        result = self.sumo.post("/search", json=elastic_query)
-        buckets = result.json()["aggregations"][agg_field]["buckets"]
-
-        return self.utils.map_buckets(buckets)
-
-      
-    def get_object_property_values(
-        self,
-        property,
-        object_type,
-        object_name=None,
-        tag_name=None,
-        time_interval=None,
-        iteration_id=None,
-        realization_id=None,
-        aggregation=None
-    ):
         accepted_properties = {
             "tag_name": "tag_name",
             "time_interval": "time_interval",
@@ -324,31 +292,31 @@ class Case:
         if property not in accepted_properties.keys():
             raise Exception(f"Invalid field: {property}. Accepted fields: {accepted_properties.keys()}")
 
-        fields_match = {"_sumo.parent_object": self.sumo_id}
+        terms = {}
 
-        if iteration_id is not None:
-            fields_match["fmu.iteration.id"] = iteration_id
+        if iteration_ids:
+            terms["fmu.iteration.id"] = iteration_ids
 
-        if realization_id is not None:
-            fields_match["fmu.realization.id"] = realization_id
+        if realization_ids:
+            terms["fmu.realization.id"] = realization_ids
 
-        if tag_name:
-            fields_match["tag_name"] = tag_name
+        if tag_names:
+            terms["tag_name"] = tag_names
 
-        if object_name:
-            fields_match["data.name.keyword"] = object_name
+        if object_names:
+            terms["data.name.keyword"] = object_names
 
-        if time_interval:
-            fields_match["time_interval"] = time_interval
+        if time_intervals:
+            terms["time_interval"] = time_intervals
 
-        if aggregation:
-            fields_match["fmu.aggregation.operation"] = aggregation
+        if aggregations:
+            terms["fmu.aggregation.operation"] = aggregations
 
         agg_field = accepted_properties[property]
 
         elastic_query = self._create_elastic_query(
             object_type=object_type,
-            fields_match=fields_match,
+            terms=terms,
             aggregate_field=agg_field
         )
 
@@ -360,41 +328,57 @@ class Case:
 
     def get_objects(
         self,
-        object_type,
-        object_name=None,
-        tag_name=None,
-        time_interval=None,
-        iteration_id=None,
-        realization_id=None,
-        aggregation=None
+        object_type: str,
+        object_names: List[str]=[],
+        tag_names: List[str]=[],
+        time_intervals: List[str]=[],
+        iteration_ids: List[int]=[],
+        realization_ids: List[int]=[],
+        aggregations: List[str]=[]
     ):
-        fields_match = {"_sumo.parent_object": self.sumo_id}
+        """
+            Search for child objects in a case.
+
+            Arguments:
+                `object_type`: surface | polygons | table
+                `object_names`: list of object names (strings)
+                `tag_names`: list of tag names (strings)
+                `time_intervals`: list of time intervals (strings)
+                `iteration_ids`: list of iteration ids (integers)
+                `realization_ids`: list of realizatio ids (intergers)
+                `aggregations`: list of aggregation operations (strings)
+
+            Returns:
+                `DocumentCollection` used for retrieving search results
+        """
+
+        terms = {}
         fields_exists = []
 
-        if iteration_id is not None:
-            fields_match["fmu.iteration.id"] = iteration_id
+        if iteration_ids:
+            terms["fmu.iteration.id"] = iteration_ids
 
-        if realization_id is not None:
-            fields_match["fmu.realization.id"] = realization_id
+        if realization_ids:
+            terms["fmu.realization.id"] = realization_ids
 
-        if tag_name:
-            fields_match["tag_name"] = tag_name
+        if tag_names:
+            terms["tag_name"] = tag_names
 
-        if object_name:
-            fields_match["data.name.keyword"] = object_name
+        if object_names:
+            terms["data.name.keyword"] = object_names
 
-        if time_interval:
-            fields_match["time_interval"] = time_interval
+        if time_intervals:
+            terms["time_interval"] = time_intervals
 
-        if aggregation:
-            fields_match["fmu.aggregation.operation"] = aggregation
+        if aggregations:
+            terms["fmu.aggregation.operation"] = aggregations
         else:
             fields_exists.append("fmu.realization.id")
 
         query = self._create_elastic_query(
             object_type=object_type,
             fields_exists=fields_exists,
-            fields_match=fields_match,
+            terms=terms,
             size=20,
             sort=[{"tracklog.datetime": "desc"}]
         )
