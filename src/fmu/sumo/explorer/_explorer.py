@@ -5,13 +5,12 @@ from fmu.sumo.explorer._document_collection import DocumentCollection
 
 
 class Explorer:
-    def __init__(self, env, access_token=None, logging_level="INFO", write_back=False):
+    def __init__(self, env, token=None, interactive=True):
         self.utils = Utils()
         self.sumo = SumoClient(
             env=env, 
-            access_token=access_token,
-            logging_level=logging_level, 
-            write_back=write_back
+            token=token,
+            interactive=interactive
         )
     
 
