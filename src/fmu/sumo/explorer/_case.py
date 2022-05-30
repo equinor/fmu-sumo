@@ -189,9 +189,9 @@ class Case:
         return self.get_object_property_values(
             "tag_name",
             object_type,
-            iteration_id=iteration_id,
-            realization_id=realization_id,
-            aggregation=aggregation
+            iteration_ids=[iteration_id],
+            realization_ids=[realization_id],
+            aggregations=[aggregation]
         )
 
 
@@ -207,10 +207,10 @@ class Case:
         return self.get_object_property_values(
             "object_name",
             object_type,
-            tag_name=tag_name,
-            iteration_id=iteration_id,
-            realization_id=realization_id,
-            aggregation=aggregation
+            tag_names=[tag_name],
+            iteration_ids=[iteration_id],
+            realization_ids=[realization_id],
+            aggregations=[aggregation]
         )
 
 
@@ -227,11 +227,11 @@ class Case:
         return self.get_object_property_values(
             "time_interval",
             object_type,
-            object_name=object_name,
-            tag_name=tag_name,
-            iteration_id=iteration_id,
-            realization_id=realization_id,
-            aggregation=aggregation
+            object_names=[object_name],
+            tag_names=[tag_name],
+            iteration_ids=[iteration_id],
+            realization_ids=[realization_id],
+            aggregations=[aggregation]
         )
 
 
@@ -246,9 +246,9 @@ class Case:
         return self.get_object_property_values(
             "aggregation",
             object_type,
-            object_name=object_name,
-            tag_name=tag_name,
-            iteration_id=iteration_id
+            object_names=[object_name],
+            tag_names=[tag_name],
+            iteration_ids=[iteration_id]
         )
 
     
