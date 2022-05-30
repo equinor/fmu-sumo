@@ -189,9 +189,9 @@ class Case:
         return self.get_object_property_values(
             "tag_name",
             object_type,
-            iteration_ids=[iteration_id],
-            realization_ids=[realization_id],
-            aggregations=[aggregation]
+            iteration_ids=[iteration_id] if iteration_id else [],
+            realization_ids=[realization_id] if realization_id else [],
+            aggregations=[aggregation] if aggregation else []
         )
 
 
@@ -207,10 +207,10 @@ class Case:
         return self.get_object_property_values(
             "object_name",
             object_type,
-            tag_names=[tag_name],
-            iteration_ids=[iteration_id],
-            realization_ids=[realization_id],
-            aggregations=[aggregation]
+            tag_names=[tag_name] if tag_name else [],
+            iteration_ids=[iteration_id] if iteration_id else [],
+            realization_ids=[realization_id] if realization_id else [],
+            aggregations=[aggregation] if aggregation else []
         )
 
 
@@ -227,11 +227,11 @@ class Case:
         return self.get_object_property_values(
             "time_interval",
             object_type,
-            object_names=[object_name],
-            tag_names=[tag_name],
-            iteration_ids=[iteration_id],
-            realization_ids=[realization_id],
-            aggregations=[aggregation]
+            object_names=[object_name] if object_name else [],
+            tag_names=[tag_name] if tag_name else [],
+            iteration_ids=[iteration_id] if iteration_id else [],
+            realization_ids=[realization_id] if realization_id else [],
+            aggregations=[aggregation] if aggregation else []
         )
 
 
@@ -246,9 +246,9 @@ class Case:
         return self.get_object_property_values(
             "aggregation",
             object_type,
-            object_names=[object_name],
-            tag_names=[tag_name],
-            iteration_ids=[iteration_id]
+            object_names=[object_name] if object_name else [],
+            tag_names=[tag_name] if tag_name else [],
+            iteration_ids=[iteration_id] if iteration_id else []
         )
 
     
