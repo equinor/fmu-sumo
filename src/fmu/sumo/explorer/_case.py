@@ -2,7 +2,7 @@ from typing import List
 from fmu.sumo.explorer._utils import Utils
 from fmu.sumo.explorer._document_collection import DocumentCollection
 from fmu.sumo.explorer._child_object import ChildObject
-from deprecated import deprecated
+import deprecation
 
 OBJECT_TYPES = {
     'surface': '.gri',
@@ -165,7 +165,7 @@ class Case:
         return self.utils.map_buckets(buckets)
 
 
-    @deprecated(reason="Use get_object_property_values to retrieve list of unique values for a property")
+    @deprecation.deprecated(details="Use get_object_property_values to retrieve list of unique values for a property")
     def get_realizations(self, iteration_id):
         result = self.sumo.get("/search",
             query=f"_sumo.parent_object:{self.sumo_id} AND fmu.iteration.id:{iteration_id}",
@@ -178,7 +178,7 @@ class Case:
         return self.utils.map_buckets(sorted(buckets, key=lambda b : b["key"]))
 
 
-    @deprecated(reason="Use get_object_property_values to retrieve list of unique values for a property")
+    @deprecation.deprecated(details="Use get_object_property_values to retrieve list of unique values for a property")
     def get_object_tag_names(
         self, 
         object_type,
@@ -189,13 +189,13 @@ class Case:
         return self.get_object_property_values(
             "tag_name",
             object_type,
-            iteration_ids=[iteration_id] if iteration_id else [],
-            realization_ids=[realization_id] if realization_id else [],
-            aggregations=[aggregation] if aggregation else []
+            iteration_ids=self._list_wrap(iteration_id),
+            realization_ids=self._list_wrap(realization_id),
+            aggregations=self._list_wrap(aggregation)
         )
 
 
-    @deprecated(reason="Use get_object_property_values to retrieve list of unique values for a property")
+    @deprecation.deprecated(details="Use get_object_property_values to retrieve list of unique values for a property")
     def get_object_names(
         self, 
         object_type,
@@ -207,14 +207,14 @@ class Case:
         return self.get_object_property_values(
             "object_name",
             object_type,
-            tag_names=[tag_name] if tag_name else [],
-            iteration_ids=[iteration_id] if iteration_id else [],
-            realization_ids=[realization_id] if realization_id else [],
-            aggregations=[aggregation] if aggregation else []
+            tag_names=self._list_wrap(tag_name),
+            iteration_ids=self._list_wrap(iteration_id),
+            realization_ids=self._list_wrap(realization_id),
+            aggregations=self._list_wrap(aggregation)
         )
 
 
-    @deprecated(reason="Use get_object_property_values to retrieve list of unique values for a property")
+    @deprecation.deprecated(details="Use get_object_property_values to retrieve list of unique values for a property")
     def get_object_time_intervals(
         self,
         object_type,
@@ -227,15 +227,15 @@ class Case:
         return self.get_object_property_values(
             "time_interval",
             object_type,
-            object_names=[object_name] if object_name else [],
-            tag_names=[tag_name] if tag_name else [],
-            iteration_ids=[iteration_id] if iteration_id else [],
-            realization_ids=[realization_id] if realization_id else [],
-            aggregations=[aggregation] if aggregation else []
+            object_names=self._list_wrap(object_name),
+            tag_names=self._list_wrap(tag_name),
+            iteration_ids=self._list_wrap(iteration_id),
+            realization_ids=self._list_wrap(realization_id),
+            aggregations=self._list_wrap(aggregation)
         )
 
 
-    @deprecated(reason="Use get_object_property_values to retrieve list of unique values for a property")
+    @deprecation.deprecated(details="Use get_object_property_values to retrieve list of unique values for a property")
     def get_object_aggregations(
         self, 
         object_type,
@@ -246,10 +246,14 @@ class Case:
         return self.get_object_property_values(
             "aggregation",
             object_type,
-            object_names=[object_name] if object_name else [],
-            tag_names=[tag_name] if tag_name else [],
-            iteration_ids=[iteration_id] if iteration_id else []
+            object_names=self._list_wrap(object_name),
+            tag_names=self._list_wrap(tag_name),
+            iteration_ids=self._list_wrap(iteration_id)
         )
+
+
+    def _list_wrap(self, value):
+        return [value] if value is not None else []
 
     
     def get_object_property_values(
