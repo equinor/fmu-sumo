@@ -64,4 +64,4 @@ class SumoConnectionWithOutsideToken:
 
     def _establish_connection(self):
         """Establish the connection with Sumo API with outside access token"""
-        return CallSumoApi(env=self.env, outside_token=True)
+        return SumoClient(env=self.env, token=self._access_token)
