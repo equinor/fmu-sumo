@@ -1,0 +1,5 @@
+STDERR    fm_sumo_sender.stderr
+STDOUT    fm_sumo_sender.stdout
+
+EXECUTABLE    ../scripts/fm_sumo_sender.py
+ARGLIST       <HOST> <PORT> <SEARCHPATH>
