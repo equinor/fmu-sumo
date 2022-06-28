@@ -8,6 +8,9 @@ import hashlib
 import base64
 from argparse import ArgumentParser
 from sumo.wrapper import SumoClient
+from res.enkf import ErtScript
+from ert_shared.plugins.plugin_manager import hook_implementation
+
 
 
 class Uploader:
@@ -195,3 +198,13 @@ def get_arg_parser():
 
 if __name__ == "__main__":
     main()
+
+
+class SumoReceiver(ErtScript):
+    def run():
+        main()
+
+
+@hook_implementation
+def legacy_ertscript_workflow(config):
+    config.add_workflow(SumoReceiver, "SUMO_RECEIVER")

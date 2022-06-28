@@ -25,7 +25,11 @@ setup(
             "fmu_sumo_jobs = jobs.hook_implementations.jobs",
             "sumo_upload = fmu.sumo.uploader.scripts.sumo_upload",
         ],
-        "console_scripts": ["sumo_upload=fmu.sumo.uploader.scripts.sumo_upload:main"],
+        "console_scripts": [
+            "sumo_upload = fmu.sumo.uploader.scripts.sumo_upload:main",
+            "sumo_sender = fmu.sumo.uploader2.sumo_sender:main",
+            "sumo_receiver = fmu.sumo.uploader2.sumo_receiver:main"
+        ],
     },
     install_requires=[
         "PyYAML",
