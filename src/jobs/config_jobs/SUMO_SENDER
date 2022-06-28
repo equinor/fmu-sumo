@@ -1,5 +1,5 @@
 STDERR    fm_sumo_sender.stderr
 STDOUT    fm_sumo_sender.stdout
 
-EXECUTABLE    SUMO_SENDER
+EXECUTABLE    sumo_sender
 ARGLIST       <HOST> <PORT> <SEARCHPATH>
