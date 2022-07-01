@@ -8,8 +8,8 @@ import hashlib
 import base64
 from argparse import ArgumentParser
 from sumo.wrapper import SumoClient
-from res.enkf import ErtScript
-from ert_shared.plugins.plugin_manager import hook_implementation
+from res.enkf import ErtScript # type: ignore
+from ert_shared.plugins.plugin_manager import hook_implementation # type: ignore
 
 
 
