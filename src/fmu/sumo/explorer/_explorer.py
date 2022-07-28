@@ -2,6 +2,8 @@ from sumo.wrapper import SumoClient
 from fmu.sumo.explorer._case import Case
 from fmu.sumo.explorer._utils import Utils
 from fmu.sumo.explorer._document_collection import DocumentCollection
+from typing import List
+from fmu.sumo.explorer._child_object import ChildObject
 
 
 class Explorer:
@@ -101,6 +103,72 @@ class Explorer:
             lambda d: list(map(lambda c: Case(self.sumo, c), d)),
         )
         
+    def get_objects(
+        self,
+        object_type: str,
+        case_ids: List[str]=[],
+        object_names: List[str]=[],
+        tag_names: List[str]=[],
+        time_intervals: List[str]=[],
+        iteration_ids: List[int]=[],
+        realization_ids: List[int]=[],
+        aggregations: List[str]=[]
+    ):
+        """
+            Search for child objects in a case.
+
+            Arguments:
+                `object_type`: surface | polygons | table
+                `object_names`: list of object names (strings)
+                `tag_names`: list of tag names (strings)
+                `time_intervals`: list of time intervals (strings)
+                `iteration_ids`: list of iteration ids (integers)
+                `realization_ids`: list of realizatio ids (intergers)
+                `aggregations`: list of aggregation operations (strings)
+
+            Returns:
+                `DocumentCollection` used for retrieving search results
+        """
+
+        terms = {}
+        fields_exists = []
+
+        if iteration_ids:
+            terms["fmu.iteration.id"] = iteration_ids
+
+        if realization_ids:
+            terms["fmu.realization.id"] = realization_ids
+
+        if tag_names:
+            terms["tag_name"] = tag_names
+
+        if object_names:
+            terms["data.name.keyword"] = object_names
+
+        if time_intervals:
+            terms["time_interval"] = time_intervals
+
+        if case_ids:
+            terms["_sumo.parent_object.keyword"] = case_ids
+
+        if aggregations:
+            terms["fmu.aggregation.operation"] = aggregations
+        else:
+            fields_exists.append("fmu.realization.id")
+
+        query = self.utils.create_elastic_query(
+            object_type=object_type,
+            fields_exists=fields_exists,
+            terms=terms,
+            size=20,
+            sort=[{"tracklog.datetime": "desc"}]
+        )
+
+        return DocumentCollection(
+            self.sumo, 
+            query,
+            lambda d: list(map(lambda c: ChildObject(self.sumo, c), d))
+        )
 
     def get(self, path, **params):
         return self.sumo.get(path, **params)

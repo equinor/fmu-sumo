@@ -296,7 +296,9 @@ class Case:
         if property not in accepted_properties.keys():
             raise Exception(f"Invalid field: {property}. Accepted fields: {accepted_properties.keys()}")
 
-        terms = {}
+        terms = {
+            "_sumo.parent_object.keyword": [self.sumo_id]
+        }
 
         if iteration_ids:
             terms["fmu.iteration.id"] = iteration_ids
@@ -318,7 +320,7 @@ class Case:
 
         agg_field = accepted_properties[property]
 
-        elastic_query = self._create_elastic_query(
+        elastic_query = self.utils.create_elastic_query(
             object_type=object_type,
             terms=terms,
             aggregate_field=agg_field
@@ -356,7 +358,9 @@ class Case:
                 `DocumentCollection` used for retrieving search results
         """
 
-        terms = {}
+        terms = {
+            "_sumo.parent_object.keyword": [self.sumo_id]
+        }
         fields_exists = []
 
         if iteration_ids:
@@ -379,7 +383,7 @@ class Case:
         else:
             fields_exists.append("fmu.realization.id")
 
-        query = self._create_elastic_query(
+        query = self.utils.create_elastic_query(
             object_type=object_type,
             fields_exists=fields_exists,
             terms=terms,
