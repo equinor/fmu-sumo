@@ -7,3 +7,4 @@ git+https://github.com/equinor/sumo-wrapper-python.git@master#egg=sumo-wrapper-p
 xtgeo
 oneseismic
 azure-core
+ert>=2.38.0-b5
