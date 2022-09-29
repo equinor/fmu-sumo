@@ -42,12 +42,17 @@ class DocumentCollection(Sequence):
 
         result = self.sumo.post("/search", json=query).json()
         documents = result["hits"]["hits"]
-        self.search_after = documents[-1]["sort"]
 
-        if not self.result_count:
-            self.result_count = result["hits"]["total"]["value"]
+        if(len(documents) > 0):
+            self.search_after = documents[-1]["sort"]
 
-        return self.mapper_function(documents) if self.mapper_function else documents
+            if not self.result_count:
+                self.result_count = result["hits"]["total"]["value"]
+
+            return self.mapper_function(documents) if self.mapper_function else documents
+        else:
+            self.result_count = 0
+            return []
 
 
     def __len__(self):
@@ -61,6 +66,9 @@ class DocumentCollection(Sequence):
         if type(key) is slice:
             start = key.start
             stop = key.stop
+
+        if (stop or start) >= self.result_count:
+            raise IndexError("list index out of range")
 
         if (stop or start) > (len(self.documents) - 1):
             self.documents += self.__next_batch__()

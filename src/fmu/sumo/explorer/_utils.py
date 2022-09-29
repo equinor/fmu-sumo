@@ -30,36 +30,6 @@ class Utils:
         elastic_query = {
             "size": size, 
             "runtime_mappings": {
-                "time_start": {
-                    "type": "keyword",
-                    "script": {
-                        "lang": "painless", 
-                        "source": """
-                            def time = params['_source']['data']['time'];
-                            
-                            if(time != null && time.length > 1) {
-                                emit(params['_source']['data']['time'][1]['value'].splitOnToken('T')[0]); 
-                            } else {
-                                emit('NULL');
-                            }
-                        """
-                    }
-                },
-                "time_end": {
-                    "type": "keyword",
-                    "script": {
-                        "lang": "painless", 
-                        "source": """
-                            def time = params['_source']['data']['time'];
-                            
-                            if(time != null && time.length > 0) {
-                                emit(params['_source']['data']['time'][0]['value'].splitOnToken('T')[0]); 
-                            } else {
-                                emit('NULL');
-                            }
-                        """
-                    }
-                },
                 "time_interval": {
                     "type": "keyword",
                     "script": {
@@ -69,12 +39,12 @@ class Utils:
                             
                             if(time != null) {
                                 if(time.length > 1) {
-                                String start = params['_source']['data']['time'][1]['value'].splitOnToken('T')[0];
-                                String end = params['_source']['data']['time'][0]['value'].splitOnToken('T')[0];
+                                    String start = params['_source']['data']['time'][1]['value'].splitOnToken('T')[0];
+                                    String end = params['_source']['data']['time'][0]['value'].splitOnToken('T')[0];
                                 
-                                emit(start + ' - ' + end);
+                                    emit(start + ' - ' + end);
                                 } else if(time.length > 0) {
-                                emit(params['_source']['data']['time'][0]['value'].splitOnToken('T')[0]);
+                                    emit(params['_source']['data']['time'][0]['value'].splitOnToken('T')[0]);
                                 }
                             }else {
                                 emit('NULL');
@@ -88,8 +58,14 @@ class Utils:
                         "source": f"""
                             String[] split_path = doc['file.relative_path.keyword'].value.splitOnToken('/');
                             String file_name = split_path[split_path.length - 1];
-                            String surface_content = file_name.splitOnToken('--')[1].replace('{OBJECT_TYPES[object_type]}', '');
-                            emit(surface_content);
+                            String[] split_file_name = file_name.splitOnToken('--');
+
+                            if(split_file_name.length == 1) {{
+                                emit('NULL');
+                            }} else {{
+                                String surface_content = split_file_name[1].replace('{OBJECT_TYPES[object_type]}', '');
+                                emit(surface_content);
+                            }}
                         """
                     }
                 }
@@ -101,7 +77,7 @@ class Utils:
                     ]
                 }
             },
-            "fields": ["tag_name", "time_start", "time_end", "time_interval"]
+            "fields": ["tag_name", "time_interval"]
         }
 
         if sort:
