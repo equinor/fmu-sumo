@@ -39,14 +39,36 @@ class Case:
 
 
     def get_iterations(self):
-        result = self.sumo.get("/search",
-            query=f"_sumo.parent_object:{self.sumo_id}",
-			buckets=["fmu.iteration.id"]
-        )
+        elastic_query = {
+            "query": {
+                "query_string": {
+                    "query": f"_sumo.parent_object:{self.sumo_id}"
+                }
+            },
+            "size": 0,
+            "aggs": {
+                "iteration_ids": {
+                    "terms": {
+                        "field": "fmu.iteration.id",
+                        "size": 100
+                    },
+                    "aggs": {
+                        "iteration_names": {
+                            "terms": {
+                                "field": "fmu.iteration.name.keyword",
+                                "size": 100
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
-        buckets = result["aggregations"]["fmu.iteration.id"]["buckets"]
-
-        return self.utils.map_buckets(buckets)
+        result = self.sumo.post("/search", json=elastic_query)
+        buckets = result.json()["aggregations"]["iteration_ids"]["buckets"]
+        iterations = list(map(lambda b: {'id': b['key'], 'name': b['iteration_names']['buckets'][0]['key'], 'doc_count': b['doc_count']}, buckets))
+        
+        return iterations
 
 
     @deprecation.deprecated(details="Use get_object_property_values to retrieve list of unique values for a property")
