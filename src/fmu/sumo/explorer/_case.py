@@ -73,15 +73,36 @@ class Case:
 
     @deprecation.deprecated(details="Use get_object_property_values to retrieve list of unique values for a property")
     def get_realizations(self, iteration_id):
-        result = self.sumo.get("/search",
-            query=f"_sumo.parent_object:{self.sumo_id} AND fmu.iteration.id:{iteration_id}",
-            buckets=["fmu.realization.id"],
-            bucketsize=1000
-        )
+        elastic_query = {
+            "query": {
+                "query_string": {
+                    "query": f"_sumo.parent_object:{self.sumo_id} AND fmu.iteration.id:{iteration_id}"
+                }
+            },
+            "size": 0,
+            "aggs": {
+                "realization_ids": {
+                    "terms": {
+                        "field": "fmu.realization.id",
+                        "size": 1000
+                    },
+                    "aggs": {
+                        "realization_names": {
+                            "terms": {
+                                "field": "fmu.realization.name.keyword",
+                                "size": 1000
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
-        buckets = result["aggregations"]["fmu.realization.id"]["buckets"]
-
-        return self.utils.map_buckets(sorted(buckets, key=lambda b : b["key"]))
+        result = self.sumo.post("/search", json=elastic_query)
+        buckets = result.json()["aggregations"]["realization_ids"]["buckets"]
+        realizations = list(map(lambda b: {'id': b['key'], 'name': b['realization_names']['buckets'][0]['key'], 'doc_count': b['doc_count']}, buckets))
+        
+        return realizations
 
 
     @deprecation.deprecated(details="Use get_object_property_values to retrieve list of unique values for a property")
