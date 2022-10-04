@@ -80,6 +80,11 @@ class Utils:
             "fields": ["tag_name", "time_interval"]
         }
 
+        if aggregate_field in ["tag_name", "time_interval"]:
+            elastic_query["query"]["bool"]["must_not"] = [
+                {"term": {aggregate_field: "NULL"}}
+            ]
+
         if sort:
             elastic_query["sort"] = sort
 

@@ -171,7 +171,8 @@ class Case:
         time_intervals: List[str]=[],
         iteration_ids: List[str]=[],
         realization_ids: List[int]=[],
-        aggregations: List[int]=[]
+        aggregations: List[int]=[],
+        exclude_time_data: bool = False
     ):
         """
             Get a dictionary of unique values for a given property in case child objects.
@@ -205,6 +206,9 @@ class Case:
         terms = {
             "_sumo.parent_object.keyword": [self.sumo_id]
         }
+
+        if exclude_time_data:
+            terms["time_interval"] = ["NULL"]
 
         if iteration_ids:
             terms["fmu.iteration.id"] = iteration_ids
@@ -246,7 +250,8 @@ class Case:
         time_intervals: List[str]=[],
         iteration_ids: List[int]=[],
         realization_ids: List[int]=[],
-        aggregations: List[str]=[]
+        aggregations: List[str]=[],
+        exclude_time_data: bool = False
     ):
         """
             Search for child objects in a case.
@@ -268,6 +273,9 @@ class Case:
             "_sumo.parent_object.keyword": [self.sumo_id]
         }
         fields_exists = []
+
+        if exclude_time_data:
+            terms["time_interval"] = ["NULL"]
 
         if iteration_ids:
             terms["fmu.iteration.id"] = iteration_ids
