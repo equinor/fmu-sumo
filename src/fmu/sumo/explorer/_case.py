@@ -1,5 +1,5 @@
 from typing import List
-from fmu.sumo.explorer._utils import Utils
+from fmu.sumo.explorer._utils import Utils, TimeData
 from fmu.sumo.explorer._document_collection import DocumentCollection
 from fmu.sumo.explorer._child_object import ChildObject
 import deprecation
@@ -172,20 +172,21 @@ class Case:
         iteration_ids: List[str]=[],
         realization_ids: List[int]=[],
         aggregations: List[int]=[],
-        exclude_time_data: bool = False
+        include_time_data: TimeData = TimeData.ALL
     ):
         """
             Get a dictionary of unique values for a given property in case child objects.
 
             Arguments:
-                `property`: tag_name | time_interval | aggregation | object_name | iteration_id | realization_id
-                `object_type`: surface | polygons | table
+                `property`: tag_name | time_interval | aggregation | object_name | iteration_id | realization_id (string)
+                `object_type`: surface | polygons | table (string)
                 `object_names`: list of object names (strings)
                 `tag_names`: list of tag names (strings)
                 `time_intervals`: list of time intervals (strings)
                 `iteration_ids`: list of iteration ids (integers)
                 `realization_ids`: list of realizatio ids (intergers)
                 `aggregations`: list of aggregation operations (strings)
+                `include_time_data`: ALL | NO_TIMEDATA | ONLY_TIMEDATA (TimeData)
 
             Returns:
                 Dictionary of unique values and number of objects
@@ -206,9 +207,6 @@ class Case:
         terms = {
             "_sumo.parent_object.keyword": [self.sumo_id]
         }
-
-        if exclude_time_data:
-            terms["time_interval"] = ["NULL"]
 
         if iteration_ids:
             terms["fmu.iteration.id"] = iteration_ids
@@ -233,7 +231,8 @@ class Case:
         elastic_query = self.utils.create_elastic_query(
             object_type=object_type,
             terms=terms,
-            aggregate_field=agg_field
+            aggregate_field=agg_field,
+            include_time_data=include_time_data
         )
 
         result = self.sumo.post("/search", json=elastic_query)
@@ -251,7 +250,7 @@ class Case:
         iteration_ids: List[int]=[],
         realization_ids: List[int]=[],
         aggregations: List[str]=[],
-        exclude_time_data: bool = False
+        include_time_data: TimeData = TimeData.ALL
     ):
         """
             Search for child objects in a case.
@@ -264,6 +263,7 @@ class Case:
                 `iteration_ids`: list of iteration ids (integers)
                 `realization_ids`: list of realizatio ids (intergers)
                 `aggregations`: list of aggregation operations (strings)
+                `include_time_data`: ALL | NO_TIMEDATA | ONLY_TIMEDATA (TimeData)
 
             Returns:
                 `DocumentCollection` used for retrieving search results
@@ -273,9 +273,6 @@ class Case:
             "_sumo.parent_object.keyword": [self.sumo_id]
         }
         fields_exists = []
-
-        if exclude_time_data:
-            terms["time_interval"] = ["NULL"]
 
         if iteration_ids:
             terms["fmu.iteration.id"] = iteration_ids
@@ -302,7 +299,8 @@ class Case:
             fields_exists=fields_exists,
             terms=terms,
             size=20,
-            sort=[{"tracklog.datetime": "desc"}]
+            sort=[{"tracklog.datetime": "desc"}],
+            include_time_data=include_time_data
         )
 
         return DocumentCollection(

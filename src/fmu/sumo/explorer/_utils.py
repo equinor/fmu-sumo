@@ -1,3 +1,10 @@
+from enum import Enum
+class TimeData(Enum):
+    ALL = "ALL"
+    ONLY_TIMEDATA = "ONLY_TIMEDATA"
+    NO_TIMEDATA = "NO_TIMEDATA"
+
+
 OBJECT_TYPES = {
     'surface': '.gri',
     'polygons': '.csv',
@@ -22,7 +29,8 @@ class Utils:
             sort=None,
             terms={}, 
             fields_exists=[],
-            aggregate_field=None
+            aggregate_field=None,
+            include_time_data=TimeData.ALL
     ):
         if object_type not in list(OBJECT_TYPES.keys()):
             raise Exception(f"Invalid object_type: {object_type}. Accepted object_types: {OBJECT_TYPES.keys()}")
@@ -74,16 +82,25 @@ class Utils:
                 "bool": {
                     "must": [
                         {"match": {"class": object_type}}
-                    ]
+                    ],
+                    "must_not": []
                 }
             },
             "fields": ["tag_name", "time_interval"]
         }
 
         if aggregate_field in ["tag_name", "time_interval"]:
-            elastic_query["query"]["bool"]["must_not"] = [
+            elastic_query["query"]["bool"]["must_not"].append(
                 {"term": {aggregate_field: "NULL"}}
-            ]
+            )
+
+        if include_time_data != TimeData.ALL:
+            term = {"term": {"time_interval": "NULL"}}
+
+            if include_time_data == TimeData.NO_TIMEDATA:
+                elastic_query["query"]["bool"]["must"].append(term)
+            elif include_time_data == TimeData.ONLY_TIMEDATA:
+                elastic_query["query"]["bool"]["must_not"].append(term)
 
         if sort:
             elastic_query["sort"] = sort
