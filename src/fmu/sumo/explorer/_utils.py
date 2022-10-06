@@ -1,5 +1,5 @@
 from enum import Enum
-class TimeData(Enum):
+class TimeData(str, Enum):
     ALL = "ALL"
     ONLY_TIMEDATA = "ONLY_TIMEDATA"
     NO_TIMEDATA = "NO_TIMEDATA"
