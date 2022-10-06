@@ -172,7 +172,7 @@ class Case:
         iteration_ids: List[str]=[],
         realization_ids: List[int]=[],
         aggregations: List[int]=[],
-        include_time_data: TimeData = TimeData.ALL
+        include_time_data: TimeData = None
     ):
         """
             Get a dictionary of unique values for a given property in case child objects.
@@ -250,7 +250,7 @@ class Case:
         iteration_ids: List[int]=[],
         realization_ids: List[int]=[],
         aggregations: List[str]=[],
-        include_time_data: TimeData = TimeData.ALL
+        include_time_data: TimeData = None
     ):
         """
             Search for child objects in a case.

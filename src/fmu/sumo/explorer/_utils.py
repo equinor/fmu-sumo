@@ -1,8 +1,10 @@
 from enum import Enum
+
 class TimeData(str, Enum):
     ALL = "ALL"
-    ONLY_TIMEDATA = "ONLY_TIMEDATA"
-    NO_TIMEDATA = "NO_TIMEDATA"
+    TIMESTAMP = "TIMESTAMP"
+    TIME_INTERVAL = "TIME_INTERVAL"
+    NONE = "NONE"
 
 
 OBJECT_TYPES = {
@@ -30,7 +32,7 @@ class Utils:
             terms={}, 
             fields_exists=[],
             aggregate_field=None,
-            include_time_data=TimeData.ALL
+            include_time_data=None
     ):
         if object_type not in list(OBJECT_TYPES.keys()):
             raise Exception(f"Invalid object_type: {object_type}. Accepted object_types: {OBJECT_TYPES.keys()}")
@@ -55,7 +57,30 @@ class Utils:
                                     emit(params['_source']['data']['time'][0]['value'].splitOnToken('T')[0]);
                                 }
                             }else {
-                                emit('NULL');
+                                emit('NONE');
+                            }
+                        """
+                    }
+                },
+                "time_type": {
+                    "type": "keyword",
+                    "script": {
+                        "lang": "painless",
+                        "source": """
+                            def time = params['_source']['data']['time'];
+            
+                            if(time != null) {
+                                if(time.length == 0) {
+                                    emit("NONE");
+                                } else if(time.length == 1) {
+                                    emit("TIMESTAMP");
+                                } else if (time.length == 2) {
+                                    emit("TIME_INTERVAL");
+                                } else {
+                                    emit("UNKNOWN");
+                                }
+                            } else {
+                                emit("NONE");
                             }
                         """
                     }
@@ -69,7 +94,7 @@ class Utils:
                             String[] split_file_name = file_name.splitOnToken('--');
 
                             if(split_file_name.length == 1) {{
-                                emit('NULL');
+                                emit('NONE');
                             }} else {{
                                 String surface_content = split_file_name[1].replace('{OBJECT_TYPES[object_type]}', '');
                                 emit(surface_content);
@@ -79,41 +104,24 @@ class Utils:
                 }
             },
             "query": {
-                "bool": {
-                    "must": [
-                        {"match": {"class": object_type}}
-                    ],
-                    "must_not": []
-                }
+                "bool": {}
             },
             "fields": ["tag_name", "time_interval"]
         }
 
-        if aggregate_field in ["tag_name", "time_interval"]:
-            elastic_query["query"]["bool"]["must_not"].append(
-                {"term": {aggregate_field: "NULL"}}
-            )
-
-        if include_time_data != TimeData.ALL:
-            term = {"term": {"time_interval": "NULL"}}
-
-            if include_time_data == TimeData.NO_TIMEDATA:
-                elastic_query["query"]["bool"]["must"].append(term)
-            elif include_time_data == TimeData.ONLY_TIMEDATA:
-                elastic_query["query"]["bool"]["must_not"].append(term)
-            else:
-                raise ValueError(f"Invalid value for include_time_data: {include_time_data}")
+        must = [{"match": {"class": object_type}}]
+        must_not = []
 
         if sort:
             elastic_query["sort"] = sort
 
         for field in terms:
-            elastic_query["query"]["bool"]["must"].append({
+            must.append({
                 "terms": {field: terms[field]}
             })
 
         for field in fields_exists:
-            elastic_query["query"]["bool"]["must"].append({
+            must.append({
                 "exists": { "field": field}
             })
 
@@ -126,5 +134,36 @@ class Utils:
                     }
                 }
             }
+
+        if aggregate_field in ["tag_name", "time_interval"]:
+            must_not.append({
+                "term": {aggregate_field: "NONE"}
+            })
+
+        if include_time_data is not None:
+            if include_time_data == TimeData.ALL:
+                must.append({
+                    "terms": {"time_type": ["TIMESTAMP", "TIME_INTERVAL"]}
+                })
+            elif include_time_data == TimeData.TIMESTAMP:
+                must.append({
+                    "term": {"time_type": "TIMESTAMP"}
+                })
+            elif include_time_data == TimeData.TIME_INTERVAL:
+                must.append({
+                    "term": {"time_type": "TIME_INTERVAL"}
+                })
+            elif include_time_data == TimeData.NONE:
+                must_not.append({
+                    "terms": {"time_type": ["TIMESTAMP", "TIME_INTERVAL"]}
+                })
+            else:
+                raise ValueError(f"Invalid value for include_time_data: {include_time_data}")
+
+        if len(must) > 0:
+            elastic_query["query"]["bool"]["must"] = must
+
+        if len(must_not) > 0:
+            elastic_query["query"]["bool"]["must_not"] = must_not
 
         return elastic_query
