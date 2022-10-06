@@ -178,7 +178,7 @@ class Case:
             Get a dictionary of unique values for a given property in case child objects.
 
             Arguments:
-                `property`: tag_name | time_interval | aggregation | object_name | iteration_id | realization_id (string)
+                `property`: tag_name | time_interval | time_type | aggregation | object_name | iteration_id | realization_id (string)
                 `object_type`: surface | polygons | table (string)
                 `object_names`: list of object names (strings)
                 `tag_names`: list of tag names (strings)
@@ -195,6 +195,7 @@ class Case:
         accepted_properties = {
             "tag_name": "tag_name",
             "time_interval": "time_interval",
+            "time_type": "time_type",
             "aggregation": "fmu.aggregation.operation.keyword",
             "object_name": "data.name.keyword",
             "iteration_id": "fmu.iteration.id",
