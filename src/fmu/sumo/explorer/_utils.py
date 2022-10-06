@@ -1,5 +1,19 @@
 from enum import Enum
 
+class ObjectType(str, Enum):
+    SURFACE = "surface"
+    POLYGONS = "polyons"
+    TABLE = "table"
+    
+class Property(str, Enum):
+    TAG_NAME = "tag_name"
+    TIME_INTERVAL = "time_interval"
+    TIME_TYPE = "time_type"
+    AGGREGATION = "aggregation"
+    OBJECT_NAME = "object_name"
+    ITERATION_ID = "iteration_id"
+    REALIZATION_ID = "realization_id"
+
 class TimeData(str, Enum):
     ALL = "ALL"
     TIMESTAMP = "TIMESTAMP"

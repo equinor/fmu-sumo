@@ -1,6 +1,6 @@
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer._case import Case
-from fmu.sumo.explorer._utils import Utils, TimeData
+from fmu.sumo.explorer._utils import Utils, TimeData, ObjectType
 from fmu.sumo.explorer._document_collection import DocumentCollection
 from typing import List
 from fmu.sumo.explorer._child_object import ChildObject
@@ -105,7 +105,7 @@ class Explorer:
         
     def get_objects(
         self,
-        object_type: str,
+        object_type: ObjectType,
         case_ids: List[str]=[],
         object_names: List[str]=[],
         tag_names: List[str]=[],
@@ -119,7 +119,7 @@ class Explorer:
             Search for child objects in a case.
 
             Arguments:
-                `object_type`: surface | polygons | table
+                `object_type`: surface | polygons | table (ObjectType)
                 `object_names`: list of object names (strings)
                 `tag_names`: list of tag names (strings)
                 `time_intervals`: list of time intervals (strings)

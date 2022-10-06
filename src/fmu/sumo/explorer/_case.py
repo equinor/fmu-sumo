@@ -1,14 +1,8 @@
 from typing import List
-from fmu.sumo.explorer._utils import Utils, TimeData
+from fmu.sumo.explorer._utils import Utils, TimeData, Property, ObjectType
 from fmu.sumo.explorer._document_collection import DocumentCollection
 from fmu.sumo.explorer._child_object import ChildObject
 import deprecation
-
-OBJECT_TYPES = {
-    'surface': '.gri',
-    'polygons': '.csv',
-    'table': '.csv'
-}
 
 class Case:
     def __init__(self, sumo_client, meta_data):
@@ -164,8 +158,8 @@ class Case:
     
     def get_object_property_values(
         self,
-        property: str,
-        object_type: str,
+        property: Property,
+        object_type: ObjectType,
         object_names: List[str]=[],
         tag_names: List[str]=[],
         time_intervals: List[str]=[],
@@ -178,8 +172,8 @@ class Case:
             Get a dictionary of unique values for a given property in case child objects.
 
             Arguments:
-                `property`: tag_name | time_interval | time_type | aggregation | object_name | iteration_id | realization_id (string)
-                `object_type`: surface | polygons | table (string)
+                `property`: tag_name | time_interval | time_type | aggregation | object_name | iteration_id | realization_id (Property)
+                `object_type`: surface | polygons | table (ObjectType)
                 `object_names`: list of object names (strings)
                 `tag_names`: list of tag names (strings)
                 `time_intervals`: list of time intervals (strings)
@@ -244,7 +238,7 @@ class Case:
 
     def get_objects(
         self,
-        object_type: str,
+        object_type: ObjectType,
         object_names: List[str]=[],
         tag_names: List[str]=[],
         time_intervals: List[str]=[],
@@ -257,7 +251,7 @@ class Case:
             Search for child objects in a case.
 
             Arguments:
-                `object_type`: surface | polygons | table
+                `object_type`: surface | polygons | table (ObjectType)
                 `object_names`: list of object names (strings)
                 `tag_names`: list of tag names (strings)
                 `time_intervals`: list of time intervals (strings)
