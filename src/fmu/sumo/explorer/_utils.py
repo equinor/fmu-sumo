@@ -101,6 +101,8 @@ class Utils:
                 elastic_query["query"]["bool"]["must"].append(term)
             elif include_time_data == TimeData.ONLY_TIMEDATA:
                 elastic_query["query"]["bool"]["must_not"].append(term)
+            else:
+                raise ValueError(f"Invalid value for include_time_data: {include_time_data}")
 
         if sort:
             elastic_query["sort"] = sort
