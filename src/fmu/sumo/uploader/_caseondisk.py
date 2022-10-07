@@ -1,6 +1,7 @@
 """Objectify an FMU case (results) as it appears on the disk."""
 
 import os
+from pathlib import Path
 import glob
 import time
 import logging
@@ -130,16 +131,16 @@ class CaseOnDisk:
 
         # If a relatively new cached file exists, and we are on scratch disk, 
         # we use that and avoid calling Sumo
-        cachedKey = "sumo-case-id"
-        cachedfilepath = ".." + os.path.sep + "sumo_parent_id.yml"
-        if os.path.isfile(cachedfilepath):
-            file_age = datetime.datetime.today() - datetime.datetime.fromtimestamp(os.path.getmtime(cachedfilepath))
-            if ("scratch" in os.getcwd()) and (file_age.days < 1):
-                with open(cachedfilepath, 'r') as infile:
+        cached_key = "sumo-case-id"
+        cached_file = Path.cwd() / "../../share/metadata/sumo_parent_id.yml"
+        if cached_file.exists():
+            file_age = datetime.datetime.today() - datetime.datetime.fromtimestamp(cached_file.lstat().st_mtime)
+            if ("scratch" in str(Path.cwd())) and (file_age.days < 1):
+                with open(str(cached_file), 'r') as infile:
                     filecontents = yaml.safe_load(infile)
                 infile.close
                 logger.debug("Getting sumo parent id from cached file")
-                sumo_parent_id = filecontents.get(cachedKey)
+                sumo_parent_id = filecontents.get(cached_key)
                 return sumo_parent_id
 
         # No cached file, need to call Sumo to get the parent id
@@ -158,12 +159,13 @@ class CaseOnDisk:
         if len(hits) == 1:
             sumo_parent_id = hits[0].get("_id")
 
-            # Cache the parent id in a file 
-            mydict = { cachedKey: sumo_parent_id }
-            with open(cachedfilepath, 'w') as outfile:
-                yaml.dump(mydict, outfile)
-            outfile.close
-            logger.debug("Caching sumo parent id")
+            # Cache the parent id in a file  sa
+            if cached_file.parent.exists():
+                dict = { cached_key: sumo_parent_id }
+                with open(str(cached_file), 'w') as outfile:
+                    yaml.dump(dict, outfile)
+                outfile.close
+                logger.debug("Caching sumo parent id")
             return sumo_parent_id
 
         raise ValueError(
