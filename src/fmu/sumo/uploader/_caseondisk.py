@@ -73,6 +73,7 @@ class CaseOnDisk:
         self.sumo_connection = sumo_connection
 
         logger.debug("case metadata path: %s", case_metadata_path)
+        self._case_metadata_path = Path(case_metadata_path)
         self.case_metadata = _load_case_metadata(case_metadata_path)
         self._fmu_case_uuid = self._get_fmu_case_uuid()
         logger.debug("self._fmu_case_uuid is %s", self._fmu_case_uuid)
@@ -129,13 +130,12 @@ class CaseOnDisk:
         
         If parent id is cached on disk, use that. Else call sumo to get it based on fmu_case_uuid."""
 
-        # If a relatively new cached file exists, and we are on scratch disk, 
-        # we use that and avoid calling Sumo
+        # If a relatively new cached file exists we use that and avoid calling Sumo
         cached_key = "sumo-case-id"
-        cached_file = Path.cwd() / "../../share/metadata/sumo_parent_id.yml"
+        cached_file = Path(self._case_metadata_path.parent / "sumo_parent_id.yml")
         if cached_file.exists():
             file_age = datetime.datetime.today() - datetime.datetime.fromtimestamp(cached_file.lstat().st_mtime)
-            if ("scratch" in str(Path.cwd())) and (file_age.days < 1):
+            if file_age.days < 1:
                 with open(str(cached_file), 'r') as infile:
                     filecontents = yaml.safe_load(infile)
                 infile.close
@@ -159,13 +159,13 @@ class CaseOnDisk:
         if len(hits) == 1:
             sumo_parent_id = hits[0].get("_id")
 
-            # Cache the parent id in a file  sa
-            if cached_file.parent.exists():
-                dict = { cached_key: sumo_parent_id }
-                with open(str(cached_file), 'w') as outfile:
-                    yaml.dump(dict, outfile)
-                outfile.close
-                logger.debug("Caching sumo parent id")
+            # Cache the parent id in a file 
+            dict = { cached_key: sumo_parent_id }
+            with open(str(cached_file), 'w') as outfile:
+                yaml.dump(dict, outfile)
+            outfile.close
+            logger.debug("Caching sumo parent id")
+
             return sumo_parent_id
 
         raise ValueError(
