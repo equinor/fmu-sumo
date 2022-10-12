@@ -139,13 +139,12 @@ class CaseOnDisk:
             if file_age.days < 14:
                 with open(str(cached_file), 'r') as infile:
                     filecontents = yaml.safe_load(infile)
-                infile.close
                 sumo_parent_id = filecontents.get(cached_key)
                 try:
                     test_uuid = uuid.UUID(sumo_parent_id)
                     logger.debug("Getting sumo parent id from cached file")
                     return sumo_parent_id
-                except: 
+                except ValueError: 
                     pass # Not a valid uuid, will call Sumo
 
         # No valid cached file, need to call Sumo to get the parent id
@@ -169,7 +168,6 @@ class CaseOnDisk:
                 my_dict = { cached_key: sumo_parent_id }
                 with open(str(cached_file), 'w') as outfile:
                     yaml.dump(my_dict, outfile)
-                outfile.close
                 logger.debug("Caching sumo parent id")
             except: 
                 # Might be concurrency issues, just skip caching to file this time
