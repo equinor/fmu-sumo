@@ -1,25 +1,28 @@
+"""Functionality for exploring results from sumo"""
+from typing import List
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer._case import Case
 from fmu.sumo.explorer._utils import Utils, TimeData, ObjectType
 from fmu.sumo.explorer._document_collection import DocumentCollection
-from typing import List
 from fmu.sumo.explorer._child_object import ChildObject
 
 
 class Explorer:
+    """Class for exploring sumo"""
     def __init__(self, env, token=None, interactive=True):
         self.utils = Utils()
         self.sumo = SumoClient(
-            env=env, 
+            env=env,
             token=token,
             interactive=interactive
         )
-    
+
 
     def get_fields(self):
-        result = self.sumo.get("/search", 
-            size=0, 
-            buckets=['masterdata.smda.field.identifier.keyword'], 
+        """Returns the fields with stored results in given sumo environment"""
+        result = self.sumo.get("/search",
+            size=0,
+            buckets=['masterdata.smda.field.identifier.keyword'],
             query="class:case",
             bucketsize=100
         )
@@ -31,9 +34,10 @@ class Explorer:
 
 
     def get_users(self):
-        result = self.sumo.get("/search", 
-            size=0, 
-            buckets=['fmu.case.user.id.keyword'], 
+        """Returns users that have stored results in given sumo environment"""
+        result = self.sumo.get("/search",
+            size=0,
+            buckets=['fmu.case.user.id.keyword'],
             query="class:case",
             bucketsize=500
         )
@@ -45,6 +49,9 @@ class Explorer:
 
 
     def get_status(self):
+        """Returns the status of the different cases
+           i.e. whether case is to be kept, scratched or to be deleted
+        """
         result = self.sumo.get("/searchroot",
             size=0,
             buckets=["_sumo.status.keyword"]
@@ -55,8 +62,25 @@ class Explorer:
 
         return status
 
+    def get_case_by_name(self, name):
+        """Fetches case from case name
+        args:
+            name (str): name of case
+
+        """
+        query = f"class:case AND fmu.case.name:{name}"
+        result = self.sumo.get("/search", select=["fmu.case"],
+                               sort=["_doc:desc"],
+                               query=query)
+        sumo_id = result["hits"]["hits"][0]["_id"]
+        return self.get_case_by_id(sumo_id)
 
     def get_case_by_id(self, sumo_id):
+        """Returns Case class with given id
+        args:
+        sumo_id (str): sumo id for case to extract
+        returns Case : Case given the sumo_id
+        """
         result = self.sumo.get("/searchroot", query=f"_id:{sumo_id}")
         hits = result["hits"]["hits"]
 
@@ -65,13 +89,18 @@ class Explorer:
 
         return Case(self.sumo, hits[0])
 
-
     def get_cases(
-        self, 
-        status=None, 
-        fields=None, 
+        self,
+        status=None,
+        fields=None,
         users=None
     ):
+        """Returns all cases in given sumo environment
+        args:
+        status (str or None): filter on status (i.e. whether they will be kept or not)
+        fields (list or None): filter on what fields that own the data
+        users (list or None): filter on what users that have generated the data
+        """
         query_string = "class:case"
 
         if status:
@@ -98,23 +127,23 @@ class Explorer:
         }
 
         return DocumentCollection(
-            self.sumo, 
-            elastic_query, 
+            self.sumo,
+            elastic_query,
             lambda d: list(map(lambda c: Case(self.sumo, c), d)),
         )
-        
+
     def get_objects(
         self,
         object_type: ObjectType,
-        case_ids: List[str]=[],
-        object_names: List[str]=[],
-        tag_names: List[str]=[],
-        time_intervals: List[str]=[],
-        iteration_ids: List[int]=[],
-        realization_ids: List[int]=[],
-        aggregations: List[str]=[],
+        case_ids: List[str]=(),
+        object_names: List[str]=(),
+        tag_names: List[str]=(),
+        time_intervals: List[str]=(),
+        iteration_ids: List[int]=(),
+        realization_ids: List[int]=(),
+        aggregations: List[str]=(),
         include_time_data: TimeData = None
-    ):
+    ): # noqa
         """
             Search for child objects in a case.
 
@@ -167,22 +196,41 @@ class Explorer:
         )
 
         return DocumentCollection(
-            self.sumo, 
+            self.sumo,
             query,
             lambda d: list(map(lambda c: ChildObject(self.sumo, c), d))
         )
 
     def get(self, path, **params):
+        """Performing the get operation to sumo
+        path (str): path to endpoint
+        params (dict): get parameters
+        """
         return self.sumo.get(path, **params)
 
 
     def post(self, path, json=None, blob=None):
+        """Performing the post operation to sumo
+        path (str): path to endpoint
+        json (dict): metadata
+        blob (?): the object to post
+        params (dict): get parameters
+        """
         return self.sumo.post(path, json=json, blob=blob)
 
 
     def put(self, path, json=None, blob=None):
+        """Performing the put operation to sumo
+        path (str): path to endpoint
+        json (dict): metadata
+        blob (?): the object to post
+        params (dict): get parameters
+        """
         return self.sumo.put(path, json=json, blob=blob)
 
 
     def delete(self, path):
+        """Performing the delete operation to sumo
+        path (str): path to endpoint
+        """
         return self.sumo.delete(path)

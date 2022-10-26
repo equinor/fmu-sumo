@@ -1,10 +1,13 @@
+"""Functions for interrogating specific case in sumo"""
 from typing import List
+import deprecation
 from fmu.sumo.explorer._utils import Utils, TimeData, Property, ObjectType
 from fmu.sumo.explorer._document_collection import DocumentCollection
 from fmu.sumo.explorer._child_object import ChildObject
-import deprecation
+
 
 class Case:
+    """Class for interogation of specific case in sumo"""
     def __init__(self, sumo_client, meta_data):
         self.sumo = sumo_client
         self.meta_data = meta_data
@@ -12,7 +15,7 @@ class Case:
 
         source = self.meta_data["_source"]
 
-        self.sumo_id = self.meta_data["_id"]
+        self._sumo_id = self.meta_data["_id"]
         self.fmu_id = source["fmu"]["case"]["uuid"]
         self.case_name = source["fmu"]["case"]["name"]
         self.field_name = source["masterdata"]["smda"]["field"][0]["identifier"]
@@ -21,7 +24,21 @@ class Case:
         self.object_type = "case"
 
 
+    @property
+    def sumo_id(self):
+        """Returns attribute _sumo_id"""
+        return self._sumo_id
+
+    @sumo_id.setter
+    def sumo_id(self, sumo_id):
+        """Sets attribute _sumo_id
+        args:
+            sumo_id (str): a sumo_id
+        """
+        self._sumo_id = sumo_id
+
     def get_object_types(self):
+        """Getting histograms of object types for case"""
         result = self.sumo.get("/search",
             query=f"_sumo.parent_object:{self.sumo_id}",
             buckets=["class.keyword"]
@@ -33,6 +50,7 @@ class Case:
 
 
     def get_iterations(self):
+        """Getting iterations connected to case"""
         elastic_query = {
             "query": {
                 "query_string": {
@@ -61,16 +79,21 @@ class Case:
         result = self.sumo.post("/search", json=elastic_query)
         buckets = result.json()["aggregations"]["iteration_ids"]["buckets"]
         iterations = list(map(lambda b: {'id': b['key'], 'name': b['iteration_names']['buckets'][0]['key'], 'doc_count': b['doc_count']}, buckets))
-        
+
         return iterations
 
 
-    @deprecation.deprecated(details="Use get_object_property_values to retrieve list of unique values for a property")
+    @deprecation.deprecated(
+        details="Use get_object_property_values to retrieve list of unique" +
+        "values for a property"
+    )
     def get_realizations(self, iteration_id):
+        """Getting realizations for case"""
         elastic_query = {
             "query": {
                 "query_string": {
-                    "query": f"_sumo.parent_object:{self.sumo_id} AND fmu.iteration.id:{iteration_id}"
+                    "query": f"_sumo.parent_object:{self.sumo_id} " +
+                    f"AND fmu.iteration.id:{iteration_id}"
                 }
             },
             "size": 0,
@@ -95,15 +118,15 @@ class Case:
         result = self.sumo.post("/search", json=elastic_query)
         buckets = result.json()["aggregations"]["realization_ids"]["buckets"]
         realizations = list(map(lambda b: {'id': b['key'], 'name': b['realization_names']['buckets'][0]['key'], 'doc_count': b['doc_count']}, buckets))
-        
+
         return realizations
 
 
     @deprecation.deprecated(details="Use get_object_property_values to retrieve list of unique values for a property")
     def get_object_tag_names(
-        self, 
+        self,
         object_type,
-        iteration_id=None, 
+        iteration_id=None,
         realization_id=None,
         aggregation=None
     ):
@@ -118,11 +141,11 @@ class Case:
 
     @deprecation.deprecated(details="Use get_object_property_values to retrieve list of unique values for a property")
     def get_object_names(
-        self, 
+        self,
         object_type,
         tag_name=None,
-        iteration_id=None, 
-        realization_id=None, 
+        iteration_id=None,
+        realization_id=None,
         aggregation=None
     ):
         return self.get_object_property_values(
@@ -139,9 +162,9 @@ class Case:
     def get_object_time_intervals(
         self,
         object_type,
-        object_name=None, 
+        object_name=None,
         tag_name=None,
-        iteration_id=None, 
+        iteration_id=None,
         realization_id=None,
         aggregation=None
     ):
@@ -158,11 +181,11 @@ class Case:
 
     @deprecation.deprecated(details="Use get_object_property_values to retrieve list of unique values for a property")
     def get_object_aggregations(
-        self, 
+        self,
         object_type,
-        object_name=None, 
+        object_name=None,
         tag_name=None,
-        iteration_id=None, 
+        iteration_id=None,
     ):
         return self.get_object_property_values(
             "aggregation",
@@ -174,19 +197,20 @@ class Case:
 
 
     def _list_wrap(self, value):
+        """Don't know what this one is doing"""
         return [value] if value is not None else []
 
-    
+
     def get_object_property_values(
         self,
         property: Property,
         object_type: ObjectType,
-        object_names: List[str]=[],
-        tag_names: List[str]=[],
-        time_intervals: List[str]=[],
-        iteration_ids: List[str]=[],
-        realization_ids: List[int]=[],
-        aggregations: List[int]=[],
+        object_names: List[str]=(),
+        tag_names: List[str]=(),
+        time_intervals: List[str]=(),
+        iteration_ids: List[str]=(),
+        realization_ids: List[int]=(),
+        aggregations: List[int]=(),
         include_time_data: TimeData = None
     ):
         """
@@ -217,7 +241,7 @@ class Case:
             "realization_id": "fmu.realization.id"
         }
 
-        if property not in accepted_properties.keys():
+        if property not in accepted_properties:
             raise Exception(f"Invalid field: {property}. Accepted fields: {accepted_properties.keys()}")
 
         terms = {
@@ -260,12 +284,12 @@ class Case:
     def get_objects(
         self,
         object_type: ObjectType,
-        object_names: List[str]=[],
-        tag_names: List[str]=[],
-        time_intervals: List[str]=[],
-        iteration_ids: List[int]=[],
-        realization_ids: List[int]=[],
-        aggregations: List[str]=[],
+        object_names: List[str]=(),
+        tag_names: List[str]=(),
+        time_intervals: List[str]=(),
+        iteration_ids: List[int]=(),
+        realization_ids: List[int]=(),
+        aggregations: List[str]=(),
         include_time_data: TimeData = None
     ):
         """
@@ -320,7 +344,7 @@ class Case:
         )
 
         return DocumentCollection(
-            self.sumo, 
+            self.sumo,
             query,
             lambda d: list(map(lambda c: ChildObject(self.sumo, c), d))
         )
