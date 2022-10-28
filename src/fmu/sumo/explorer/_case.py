@@ -15,7 +15,7 @@ class Case:
 
         source = self.meta_data["_source"]
 
-        self._sumo_id = self.meta_data["_id"]
+        self.sumo_id = self.meta_data["_id"]
         self.fmu_id = source["fmu"]["case"]["uuid"]
         self.case_name = source["fmu"]["case"]["name"]
         self.field_name = source["masterdata"]["smda"]["field"][0]["identifier"]
@@ -38,7 +38,7 @@ class Case:
         self._sumo_id = sumo_id
 
     def get_object_types(self):
-        """Getting histograms of object types for case"""
+        """Getting count of object types for case"""
         result = self.sumo.get("/search",
             query=f"_sumo.parent_object:{self.sumo_id}",
             buckets=["class.keyword"]

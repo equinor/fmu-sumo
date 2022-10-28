@@ -1,7 +1,8 @@
 try:
-    from collections import Sequence
-except ImportError:
     from collections.abc import Sequence
+except ImportError:
+    from collections import Sequence
+
 
 from io import BytesIO
 import zipfile
@@ -9,9 +10,9 @@ import zipfile
 
 class DocumentCollection(Sequence):
     def __init__(
-        self, 
-        sumo_client, 
-        query, 
+        self,
+        sumo_client,
+        query,
         mapper_function=None
     ):
         self.sumo = sumo_client
@@ -58,7 +59,7 @@ class DocumentCollection(Sequence):
     def __len__(self):
         return self.result_count
 
-    
+
     def __getitem__(self, key):
         start = key
         stop = None

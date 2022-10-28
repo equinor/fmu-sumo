@@ -1,24 +1,7 @@
+"""Utilities for explorer"""
+import warnings
+from abc import ABCMeta
 from enum import Enum
-
-class ObjectType(str, Enum):
-    SURFACE = "surface"
-    POLYGONS = "polyons"
-    TABLE = "table"
-    
-class Property(str, Enum):
-    TAG_NAME = "tag_name"
-    TIME_INTERVAL = "time_interval"
-    TIME_TYPE = "time_type"
-    AGGREGATION = "aggregation"
-    OBJECT_NAME = "object_name"
-    ITERATION_ID = "iteration_id"
-    REALIZATION_ID = "realization_id"
-
-class TimeData(str, Enum):
-    ALL = "ALL"
-    TIMESTAMP = "TIMESTAMP"
-    TIME_INTERVAL = "TIME_INTERVAL"
-    NONE = "NONE"
 
 
 OBJECT_TYPES = {
@@ -27,8 +10,102 @@ OBJECT_TYPES = {
     'table': '.csv'
 }
 
+
+class ObjectType(str, Enum):
+    """Class containing object type"""
+    SURFACE = "surface"
+    POLYGONS = "polyons"
+    TABLE = "table"
+
+
+class Property(str, Enum):
+    """Class containing property types"""
+    TAG_NAME = "tag_name"
+    TIME_INTERVAL = "time_interval"
+    TIME_TYPE = "time_type"
+    AGGREGATION = "aggregation"
+    OBJECT_NAME = "object_name"
+    ITERATION_ID = "iteration_id"
+    REALIZATION_ID = "realization_id"
+
+
+class TimeData(str, Enum):
+    """Class containing TimeData types"""
+    ALL = "ALL"
+    TIMESTAMP = "TIMESTAMP"
+    TIME_INTERVAL = "TIME_INTERVAL"
+    NONE = "NONE"
+
+
+class WarnTemplate(Warning):
+    """template for custom templates"""
+    __metaclass__ = ABCMeta
+
+    def __init__(self, message):
+        """Init"""
+        self._message = message
+
+    def __str__(self):
+        return self._message
+
+
+class TooManyCasesWarning(WarnTemplate):
+
+    """Warning about too many cases"""
+
+
+class TooLowSizeWarning(Warning):
+
+    """Warning about request for too small size"""
+
+
+def return_case_sumo_id(case_name, query_results):
+    """
+    args:
+    query_results (dict): elastic search results
+    returns sumo_id (str): the sumo id
+    """
+    hits = return_hits(query_results)
+
+    if len(hits) > 1:
+        message = (
+            f"Several cases called {case_name} ({len(hits)}, returning first " +
+            "match, this might not be the case you wanted!! Having several " +
+            "cases with the same name is unwise, and strongly discouraged."
+        )
+        warnings.warn(message, TooManyCasesWarning)
+
+    return hits
+
+
+def return_hits(query_results):
+    """takes query results gives basic info, and returns hits
+    args:
+        query_results (dict): elastic search results
+    returns (hits): return data from search, stripped of uneccesaries
+    """
+    total_count = query_results["hits"]["total"]["value"]
+    hits = query_results["hits"]["hits"]
+    return_count = len(hits)
+    if return_count < total_count:
+        message = (
+            "Your query returned less than the total number of hits\n" +
+            f"({return_count} vs {total_count}). You might wanna rerun \n" +
+            f"the query with size set to {total_count}"
+        )
+        warnings.warn(message, TooLowSizeWarning)
+    return hits
+
+
 class Utils:
+    """Utility class for explorer"""
+
     def map_buckets(self, buckets):
+        """Mapping count of docs to name
+        args:
+            buckets (list): from elastic search query
+        returns: mapped (dict): key is bucket_name, value is count
+        """
         mapped = {}
         buckets_sorted = sorted(buckets, key=lambda b: b['key'])
 
@@ -37,35 +114,35 @@ class Utils:
 
         return mapped
 
-
     def create_elastic_query(
-            self, 
+            self,
             object_type='surface',
-            size=0, 
+            size=0,
             sort=None,
-            terms={}, 
-            fields_exists=[],
+            terms=None,
+            fields_exists=None,
             aggregate_field=None,
             include_time_data=None
     ):
-        if object_type not in list(OBJECT_TYPES.keys()):
-            raise Exception(f"Invalid object_type: {object_type}. Accepted object_types: {OBJECT_TYPES.keys()}")
+        """Creates elastic query"""
+        if object_type not in list(OBJECT_TYPES):
+            raise Exception(f"Invalid object_type: {object_type}. Accepted object_types: {OBJECT_TYPES}")
 
         elastic_query = {
-            "size": size, 
+            "size": size,
             "runtime_mappings": {
                 "time_interval": {
                     "type": "keyword",
                     "script": {
-                        "lang": "painless", 
+                        "lang": "painless",
                         "source": """
                             def time = params['_source']['data']['time'];
-                            
+
                             if(time != null) {
                                 if(time.length > 1) {
                                     String start = params['_source']['data']['time'][1]['value'].splitOnToken('T')[0];
                                     String end = params['_source']['data']['time'][0]['value'].splitOnToken('T')[0];
-                                
+
                                     emit(start + ' - ' + end);
                                 } else if(time.length > 0) {
                                     emit(params['_source']['data']['time'][0]['value'].splitOnToken('T')[0]);
@@ -82,7 +159,7 @@ class Utils:
                         "lang": "painless",
                         "source": """
                             def time = params['_source']['data']['time'];
-            
+
                             if(time != null) {
                                 if(time.length == 0) {
                                     emit("NONE");
@@ -136,7 +213,7 @@ class Utils:
 
         for field in fields_exists:
             must.append({
-                "exists": { "field": field}
+                "exists": {"field": field}
             })
 
         if aggregate_field:

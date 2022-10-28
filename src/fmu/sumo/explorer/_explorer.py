@@ -10,6 +10,7 @@ from fmu.sumo.explorer._child_object import ChildObject
 class Explorer:
     """Class for exploring sumo"""
     def __init__(self, env, token=None, interactive=True):
+        self._env = env
         self.utils = Utils()
         self.sumo = SumoClient(
             env=env,
@@ -17,6 +18,11 @@ class Explorer:
             interactive=interactive
         )
 
+    @property
+    def env(self):
+        """Returning the _env attribute
+        """
+        return self._env
 
     def get_fields(self):
         """Returns the fields with stored results in given sumo environment"""
@@ -72,7 +78,11 @@ class Explorer:
         result = self.sumo.get("/search", select=["fmu.case"],
                                sort=["_doc:desc"],
                                query=query)
-        sumo_id = result["hits"]["hits"][0]["_id"]
+        hits = result["hits"]["hits"]
+        if len(hits) > 1:
+            warnings.warn(name, TooManyCasesWarning)
+
+        sumo_id = hits[0]["_id"]
         return self.get_case_by_id(sumo_id)
 
     def get_case_by_id(self, sumo_id):
