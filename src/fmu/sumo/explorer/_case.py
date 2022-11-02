@@ -2,6 +2,7 @@
 from typing import List
 import deprecation
 from fmu.sumo.explorer._utils import Utils, TimeData, Property, ObjectType
+from fmu.sumo.explorer._utils import get_object_blobs
 from fmu.sumo.explorer._document_collection import DocumentCollection
 from fmu.sumo.explorer._child_object import ChildObject
 
@@ -58,6 +59,28 @@ class Case:
 
         return self.utils.map_buckets(buckets)
 
+    def get_summary_blob_paths(self, size=100):
+        """Gets the summary data aggregated per vector
+        args:
+        size (int): number of hits to return
+        """
+        return get_object_blobs(self, data_type="table", content="timeseries",
+                                size=size)
+
+    def get_blob_paths(self, name, tag, data_type="surface", content="depth",
+                       iteration=0, size=100):
+        """Gets blob paths for most datatypes, for
+        summary data use get_summary_blob_paths
+        args:
+        name (str): name of data object
+        tag (str): what type of tag, more or less the same as representation
+                   in rms
+        data_type (str): what type
+        content (str): what type of content depth, time, timeseries etc
+        """
+        return get_object_blobs(self, name=name, tag=tag, content=content,
+                                data_type=data_type, iteration=iteration,
+                                size=size)
 
     def get_iterations(self):
         """Getting iterations connected to case"""

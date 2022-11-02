@@ -112,7 +112,7 @@ def return_hits(query_results):
     total_count = query_results["hits"]["total"]["value"]
     logger.debug(total_count)
     hits = query_results["hits"]["hits"]
-    logger.debug(f"hits: {len(hits)}")
+    logger.debug("hits: %s", len(hits))
     logger.debug(hits)
     return_count = len(hits)
     if return_count < total_count:
@@ -133,6 +133,50 @@ def get_vector_name(source):
     return name
 
 
+def deal_w_tag(kwargs):
+    """Works on what to do with tag
+    kwargs (dict): dictionary"""
+    print(kwargs)
+    name_of_tags = "tagname"
+    tagname = kwargs.get(name_of_tags, None)
+    standard_get_name = True
+    if tagname is not None:
+        del kwargs[name_of_tags]
+    if (kwargs["data_type"] == "table" and
+        kwargs["content"] == "timeseries"):
+        standard_get_name = False
+    return tagname, standard_get_name
+
+
+def perform_query(case, **kwargs):
+    """Performs an elastic search
+    args:
+    case (explorer.Case): case to explore
+    kwargs (dict): keword argument
+    """
+    logger = init_logging(__name__ + ".get_object_blobs")
+    logger.debug("Calling function with %s", kwargs)
+    convert = {"data_type": "class", "content": "data.content",
+               "name": "data.name", "tag": "data.tagname",
+               "iteration": "fmu.iteration.id"}
+
+    size = kwargs.get("size", 10)
+    try:
+        del kwargs["size"]
+    except KeyError:
+        logger.debug("Size is predefined")
+
+    query = f"_sumo.parent_object:{case.sumo_id}"
+    for key, value in kwargs.items():
+        if key == "tag":
+            # Somehow the tagname doesn't work
+            continue
+        query += f" AND {convert[key]}:{value}"
+    logger.debug("sending query: %s", query)
+    results = return_hits(case.sumo.get("/search", query=query, size=size))
+    return results
+
+
 def get_object_blobs(case, **kwargs):
     """Makes dictionary pointing to blob files
     args:
@@ -142,41 +186,15 @@ def get_object_blobs(case, **kwargs):
                              value is blob path
     """
     logger = init_logging(__name__ + ".get_object_blobs")
-    logger.debug("Calling function with %s", kwargs)
-    convert = {"data_type": "class", "content": "data.content",
-               "name": "data.name", "tag": "data.tagname"}
-    standard_get_name = True
+    print(kwargs)
+    tagname, standard_get_name = deal_w_tag(kwargs)
 
-    data_class = kwargs.get("data_type", "surface")
-    data_content = kwargs.get("content", "depth")
-    size = kwargs.get("size", 10)
-    try:
-        del kwargs["size"]
-    except KeyError:
-        logger.debug("Size is predefined")
-
-    name_of_tags = "tagname"
-    tagname = kwargs.get(name_of_tags, None)
-    filter_w_tag = False
-    if tagname is not None:
-        del kwargs[name_of_tags]
-        filter_w_tag = True
-    if data_class == "table" and data_content == "timeseries":
-        standard_get_name = False
-
-    query = f"_sumo.parent_object:{case.sumo_id}"
-    for key, value in kwargs.items():
-        if key == "tag":
-            # Somehow the tagname doesn't work
-            continue
-        query += f" AND {convert[key]}:{value}"
-    logger.debug("sending query: " + query)
-    results = return_hits(case.sumo.get("/search", query=query, size=size))
+    results = perform_query(case, **kwargs)
     logger.debug(len(results))
     blobs = {}
     for result in results:
         source = result["_source"]
-        if filter_w_tag:
+        if tagname is not None:
             if source["data"]["tagname"] != tagname:
                 continue
         if standard_get_name:
@@ -185,7 +203,7 @@ def get_object_blobs(case, **kwargs):
             name = get_vector_name(source)
 
         blobs[name] = source["_sumo"]["blob_url"]
-    logger.info(f"returning {len(blobs.keys())} blob paths")
+    logger.info("returning %s blob paths", len(blobs.keys()))
     return blobs
 
 

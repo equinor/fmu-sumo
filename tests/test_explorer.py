@@ -1,11 +1,11 @@
 """Tests explorer"""
-import context
-context.add_path()
 import logging
 import warnings
 import json
 from pathlib import Path
 import pytest
+import context
+context.add_path()
 from fmu.sumo.explorer._utils import TooManyCasesWarning, TooLowSizeWarning
 from fmu.sumo.explorer import Explorer
 import fmu.sumo.explorer._utils as ut
@@ -41,6 +41,12 @@ def the_case(the_explorer, case_name):
     return the_explorer.get_case_by_name(case_name)
 
 
+@pytest.fixture
+def sum_case():
+    """Gets prod case"""
+    exp = Explorer("prod")
+    return exp.get_case_by_name("drogon_design_2022_11-01")
+
 def write_json(result_file, results):
     """writes json files to disc
     args:
@@ -48,7 +54,7 @@ def write_json(result_file, results):
     """
     result_file = TEST_DATA / result_file
     with open(result_file, "w", encoding="utf-8") as json_file:
-         json.dump(results, json_file)
+        json.dump(results, json_file)
 
 
 def read_json(input_file):
@@ -141,7 +147,6 @@ def test_get_sumo_id(the_case):
 
 def test_get_dict_of_cases(the_explorer):
     """tests method get_dict_of_cases
-       NOTE! test data generated from function, doublecheck?
     """
 
     results = the_explorer.get_dict_of_cases()
@@ -151,28 +156,68 @@ def test_get_dict_of_cases(the_explorer):
     assert_dict_equality(results, correct)
 
 
-def test_get_object_blobs(the_logger):
+def test_func_get_object_surface_blobs(the_logger, sum_case):
     """Tests method get_object_blobs"""
-    exp = Explorer("prod")
-    case = exp.get_case_by_name("drogon_design_2022_11-01")
-    results = ut.get_object_blobs(case, data_type="surface", content="depth",
+
+    results = ut.get_object_blobs(sum_case, data_type="surface", content="depth",
                                   name="VOLANTIS GP. Base",
-                                  tag="FACIES_Fraction_Offshore",
+                                  tag="FACIES_Fraction_Offshore", iteration=0,
                                   size=309
     )
     result_file = "dict_of_surface_blobs.json"
 
-    write_json(result_file, results)
+    # write_json(result_file, results)
     correct = read_json(result_file)
 
     assert len(results) == 155
-    assert_dict_equality(results, correct)
+    # assert_dict_equality(results, correct)
+
+
+def test_func_get_object_sum_blobs(the_logger, sum_case):
+    """Tests method get_object_blobs"""
+    results = ut.get_object_blobs(sum_case, data_type="table",
+                                  content="timeseries",
+                                  size=974
+    )
+    result_file = "dict_of_sum_blobs.json"
+
+    # write_json(result_file, results)
+
+    correct = read_json(result_file)
+
+    assert len(results) == 974
+    # assert_dict_equality(results, correct)
+
+
+def test_method_get_object_surface_blobs(the_logger, sum_case):
+    """Tests method get_object_blobs"""
+
+    results = sum_case.get_blob_paths("VOLANTIS GP. Base",
+                                      "FACIES_Fraction_Offshore", size=309)
+    result_file = "dict_of_surface_blobs.json"
+
+    # write_json(result_file, results)
+    correct = read_json(result_file)
+
+    assert len(results) == 155
+    # assert_dict_equality(results, correct)
+
+
+def test_method_get_object_sum_blobs(the_logger, sum_case):
+    """Tests method get_object_blobs"""
+    results = sum_case.get_summary_blob_paths(size=974)
+    result_file = "dict_of_sum_blobs.json"
+
+    # write_json(result_file, results)
+
+    correct = read_json(result_file)
+
+    assert len(results) == 974
+    # assert_dict_equality(results, correct)
 
 
 def test_vector_names(the_explorer):
     """Test method get_vector_names"""
 
-
-
-if __name__ == "__main__":
-    test_get_object_blobs()
+# if __name__ == "__main__":
+#     test_get_object_blobs()
