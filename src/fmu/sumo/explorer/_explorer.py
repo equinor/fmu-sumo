@@ -2,7 +2,9 @@
 from typing import List
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer._case import Case
-from fmu.sumo.explorer._utils import Utils, TimeData, ObjectType
+from fmu.sumo.explorer._utils import (
+    Utils, TimeData, ObjectType, return_hits, return_case_sumo_id
+)
 from fmu.sumo.explorer._document_collection import DocumentCollection
 from fmu.sumo.explorer._child_object import ChildObject
 
@@ -68,6 +70,16 @@ class Explorer:
 
         return status
 
+    def get_dict_of_cases(self, size=10):
+
+        """returns dictionary of cases where key is name, value sumo_id"""
+        results = return_hits(self.get("/searchroot", query="class:case",
+                                       select=["fmu.case.name"], size=size))
+        case_dict = {}
+        for result in results:
+            case_dict[result["_source"]["fmu"]["case"]["name"]] = result["_id"]
+        return case_dict
+
     def get_case_by_name(self, name):
         """Fetches case from case name
         args:
@@ -78,12 +90,7 @@ class Explorer:
         result = self.sumo.get("/search", select=["fmu.case"],
                                sort=["_doc:desc"],
                                query=query)
-        hits = result["hits"]["hits"]
-        if len(hits) > 1:
-            warnings.warn(name, TooManyCasesWarning)
-
-        sumo_id = hits[0]["_id"]
-        return self.get_case_by_id(sumo_id)
+        return self.get_case_by_id(return_case_sumo_id(name, result))
 
     def get_case_by_id(self, sumo_id):
         """Returns Case class with given id

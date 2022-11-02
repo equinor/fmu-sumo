@@ -1,4 +1,5 @@
 """Utilities for explorer"""
+import logging
 import warnings
 from abc import ABCMeta
 from enum import Enum
@@ -59,6 +60,27 @@ class TooLowSizeWarning(Warning):
     """Warning about request for too small size"""
 
 
+def init_logging(name, loglevel=None):
+    """Init of logger instance
+    args:
+    name (str): name that will appear when logger is activated
+    loglevel (None or string): the log level
+    returns logger (logging.Logger)
+    """
+    dateformat = '%m/%d/%Y %I:%M:%S'
+    mess_format = "%(name)s %(levelname)s: %(message)s"
+
+    if loglevel is None:
+        logger = logging.getLogger(name)
+        logger.addHandler(logging.NullHandler())
+    else:
+        #Allow use both lower and upper case with upper
+        logging.basicConfig(level=loglevel.upper(), format=mess_format,
+                            datefmt=dateformat)
+        logger = logging.getLogger(name)
+    return logger
+
+
 def return_case_sumo_id(case_name, query_results):
     """
     args:
@@ -75,7 +97,8 @@ def return_case_sumo_id(case_name, query_results):
         )
         warnings.warn(message, TooManyCasesWarning)
 
-    return hits
+    sumo_id = hits[0]["_id"]
+    return sumo_id
 
 
 def return_hits(query_results):
@@ -84,8 +107,13 @@ def return_hits(query_results):
         query_results (dict): elastic search results
     returns (hits): return data from search, stripped of uneccesaries
     """
+    logger = init_logging(__name__ + ".return_hits")
+    logger.debug(query_results)
     total_count = query_results["hits"]["total"]["value"]
+    logger.debug(total_count)
     hits = query_results["hits"]["hits"]
+    logger.debug(f"hits: {len(hits)}")
+    logger.debug(hits)
     return_count = len(hits)
     if return_count < total_count:
         message = (
@@ -95,6 +123,70 @@ def return_hits(query_results):
         )
         warnings.warn(message, TooLowSizeWarning)
     return hits
+
+
+def get_vector_name(source):
+    """Gets name of vector from query results
+    source (dict): results from elastic search query _source
+    """
+    name = source["data"]["spec"]["columns"][-1]
+    return name
+
+
+def get_object_blobs(case, **kwargs):
+    """Makes dictionary pointing to blob files
+    args:
+    case (explorer.Case): case to explore
+    kwargs (dict): keword argument
+    return blob_dict (dict): dictionary of blobs, key is name
+                             value is blob path
+    """
+    logger = init_logging(__name__ + ".get_object_blobs")
+    logger.debug("Calling function with %s", kwargs)
+    convert = {"data_type": "class", "content": "data.content",
+               "name": "data.name", "tag": "data.tagname"}
+    standard_get_name = True
+
+    data_class = kwargs.get("data_type", "surface")
+    data_content = kwargs.get("content", "depth")
+    size = kwargs.get("size", 10)
+    try:
+        del kwargs["size"]
+    except KeyError:
+        logger.debug("Size is predefined")
+
+    name_of_tags = "tagname"
+    tagname = kwargs.get(name_of_tags, None)
+    filter_w_tag = False
+    if tagname is not None:
+        del kwargs[name_of_tags]
+        filter_w_tag = True
+    if data_class == "table" and data_content == "timeseries":
+        standard_get_name = False
+
+    query = f"_sumo.parent_object:{case.sumo_id}"
+    for key, value in kwargs.items():
+        if key == "tag":
+            # Somehow the tagname doesn't work
+            continue
+        query += f" AND {convert[key]}:{value}"
+    logger.debug("sending query: " + query)
+    results = return_hits(case.sumo.get("/search", query=query, size=size))
+    logger.debug(len(results))
+    blobs = {}
+    for result in results:
+        source = result["_source"]
+        if filter_w_tag:
+            if source["data"]["tagname"] != tagname:
+                continue
+        if standard_get_name:
+            name = source["fmu"]["realization"]["id"]
+        else:
+            name = get_vector_name(source)
+
+        blobs[name] = source["_sumo"]["blob_url"]
+    logger.info(f"returning {len(blobs.keys())} blob paths")
+    return blobs
 
 
 class Utils:
