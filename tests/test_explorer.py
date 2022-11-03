@@ -4,12 +4,14 @@ import warnings
 import json
 from pathlib import Path
 import pytest
+from uuid import UUID
 import context
+# Runs function in context. Adds src to path. This should be done automatically,
+# but not working need to figure out
 context.add_path()
 from fmu.sumo.explorer._utils import TooManyCasesWarning, TooLowSizeWarning
 from fmu.sumo.explorer import Explorer
 import fmu.sumo.explorer._utils as ut
-
 
 
 TEST_DATA = Path("data")
@@ -17,10 +19,12 @@ logging.basicConfig(level="DEBUG")
 LOGGER = logging.getLogger()
 LOGGER.debug("Tjohei")
 
+
 @pytest.fixture
 def the_logger():
     """Defining a logger"""
     return ut.init_logging("tests", "debug")
+
 
 @pytest.fixture
 def case_name():
@@ -28,24 +32,33 @@ def case_name():
     """
     return "21.x.0.dev_rowh2022_08-17"
 
+
 @pytest.fixture
-def the_explorer():
+def test_explorer():
     """Returns explorer"""
     return Explorer("test")
 
+
 @pytest.fixture
-def the_case(the_explorer, case_name):
+def prod_explorer():
+    """Returns explorer"""
+    return Explorer("prod")
+
+
+@pytest.fixture
+def test_case(test_explorer, case_name):
     """Basis for test of method get_case_by_name for Explorer,
        but also other attributes
     """
-    return the_explorer.get_case_by_name(case_name)
+    return test_explorer.get_case_by_name(case_name)
 
 
 @pytest.fixture
 def sum_case():
-    """Gets prod case"""
+    """Gets case with summary data from prod"""
     exp = Explorer("prod")
     return exp.get_case_by_name("drogon_design_2022_11-01")
+
 
 def write_json(result_file, results):
     """writes json files to disc
@@ -68,6 +81,26 @@ def read_json(input_file):
     with open(result_file, "r", encoding="utf-8") as json_file:
         contents = json.load(json_file)
     return contents
+
+
+def assert_correct_uuid(uuid_to_check, version=4):
+    """Checks if uuid has correct structure
+    args:
+    uuid_to_check (str): to be checked
+    version (int): what version of uuid to compare to
+    """
+    # Concepts stolen from stackoverflow.com
+    # questions/19989481/how-to-determine-if-a-string-is-a-valid-v4-uuid
+    type_mess = f"{uuid_to_check} not valid type"
+    assert isinstance(uuid_to_check, str), type_message
+    works_for_me = True
+    try:
+        UUID(uuid_to_check, version=version)
+    except ValueError:
+        works_for_me = False
+    structure_mess = f"{uuid_to_check}, does not have correct structure"
+    assert works_for_me, structure_mess
+
 
 def assert_dict_equality(results, correct):
     """Asserts whether two dictionaries are the same
@@ -112,6 +145,7 @@ def test_toomany_warning_content():
 
         assert warn_message == test_message, assert_mess
 
+
 def test_cast_toolowsize_warning():
     """Tests custom made warning"""
     with pytest.warns(TooLowSizeWarning):
@@ -134,90 +168,80 @@ def test_toolowsize_warning_content():
         assert warn_message == test_message, assert_mess
 
 
-def test_get_sumo_id(the_case):
+def test_sumo_id_attribute(sum_case):
     """Tests getting sumo_id
     args
     test_explorer (sumo.Explorer):
     """
-    test_id = "67d105f3-a2b1-693e-7653-090d91fb1981"
-    case_id = the_case.sumo_id
-    assert_mess = f"sumo id for was {case_id}, should be {test_id}"
-    assert case_id == test_id, assert_mess
+    assert_correct_uuid(sum_case.sumo_id)
 
 
-def test_get_dict_of_cases(the_explorer):
+def test_get_dict_of_cases(prod_explorer):
     """tests method get_dict_of_cases
     """
 
-    results = the_explorer.get_dict_of_cases()
-    result_file = "dict_of_cases.json"
-    # write_json(result_file, results)
-    correct = read_json(result_file)
-    assert_dict_equality(results, correct)
+    results = prod_explorer.get_dict_of_cases()
+    for case_name in results:
+        assert_mess = f"{case_name} is not of type str"
+        assert isinstance(case_name, str), assert_mess
+        assert_correct_uuid(results[case_name])
 
 
-def test_func_get_object_surface_blobs(the_logger, sum_case):
-    """Tests method get_object_blobs"""
-
-    results = ut.get_object_blobs(sum_case, data_type="surface", content="depth",
-                                  name="VOLANTIS GP. Base",
-                                  tag="FACIES_Fraction_Offshore", iteration=0,
-                                  size=309
-    )
-    result_file = "dict_of_surface_blobs.json"
-
-    # write_json(result_file, results)
-    correct = read_json(result_file)
-
-    assert len(results) == 155
-    # assert_dict_equality(results, correct)
-
-
-def test_func_get_object_sum_blobs(the_logger, sum_case):
-    """Tests method get_object_blobs"""
-    results = ut.get_object_blobs(sum_case, data_type="table",
-                                  content="timeseries",
-                                  size=974
-    )
-    result_file = "dict_of_sum_blobs.json"
-
-    # write_json(result_file, results)
-
-    correct = read_json(result_file)
-
-    assert len(results) == 974
-    # assert_dict_equality(results, correct)
-
-
-def test_method_get_object_surface_blobs(the_logger, sum_case):
-    """Tests method get_object_blobs"""
-
-    results = sum_case.get_blob_paths("VOLANTIS GP. Base",
-                                      "FACIES_Fraction_Offshore", size=309)
-    result_file = "dict_of_surface_blobs.json"
-
-    # write_json(result_file, results)
-    correct = read_json(result_file)
-
-    assert len(results) == 155
-    # assert_dict_equality(results, correct)
+# def test_func_get_object_surface_blobs(the_logger, sum_case):
+#     """Tests method get_object_blobs"""
+#
+#     results = ut.get_object_blobs(sum_case, data_type="surface", content="depth",
+#                                   name="VOLANTIS GP. Base",
+#                                   tag="FACIES_Fraction_Offshore", iteration=0,
+#                                   size=309
+#     )
+#     result_file = "dict_of_surface_blobs.json"
+#
+#     # write_json(result_file, results)
+#     correct = read_json(result_file)
+#
+#     assert len(results) == 155
+#     # assert_dict_equality(results, correct)
+#
+#
+# def test_func_get_object_sum_blobs(the_logger, sum_case):
+#     """Tests method get_object_blobs"""
+#     results = ut.get_object_blobs(sum_case, data_type="table",
+#                                   content="timeseries",
+#                                   size=974
+#     )
+#     result_file = "dict_of_sum_blobs.json"
+#
+#     # write_json(result_file, results)
+#
+#     correct = read_json(result_file)
+#
+#     assert len(results) == 974
+#     # assert_dict_equality(results, correct)
 
 
-def test_method_get_object_sum_blobs(the_logger, sum_case):
-    """Tests method get_object_blobs"""
-    results = sum_case.get_summary_blob_paths(size=974)
-    result_file = "dict_of_sum_blobs.json"
-
-    # write_json(result_file, results)
-
-    correct = read_json(result_file)
-
-    assert len(results) == 974
-    # assert_dict_equality(results, correct)
-
-
-def test_vector_names(the_explorer):
-    """Test method get_vector_names"""
-
-# if __name__ == "__main__":
-#     test_get_object_blobs()
+# def test_method_get_object_surface_blobs(the_logger, sum_case):
+#     """Tests method get_object_blobs"""
+#
+#     results = sum_case.get_blob_paths("VOLANTIS GP. Base",
+#                                       "FACIES_Fraction_Offshore", size=309)
+#     result_file = "dict_of_surface_blobs.json"
+#
+#     # write_json(result_file, results)
+#     correct = read_json(result_file)
+#
+#     assert len(results) == 155
+#     # assert_dict_equality(results, correct)
+#
+#
+# def test_method_get_object_sum_blobs(the_logger, sum_case):
+#     """Tests method get_object_blobs"""
+#     results = sum_case.get_summary_blob_paths(size=974)
+#     result_file = "dict_of_sum_blobs.json"
+#
+#     # write_json(result_file, results)
+#
+#     correct = read_json(result_file)
+#
+#     assert len(results) == 974
+#     # assert_dict_equality(results, correct)
