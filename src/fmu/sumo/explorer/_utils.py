@@ -74,7 +74,7 @@ def init_logging(name, loglevel=None):
         logger = logging.getLogger(name)
         logger.addHandler(logging.NullHandler())
     else:
-        #Allow use both lower and upper case with upper
+        # Allow use both lower and upper case with upper
         logging.basicConfig(level=loglevel.upper(), format=mess_format,
                             datefmt=dateformat)
         logger = logging.getLogger(name)
@@ -133,7 +133,10 @@ def get_vector_name(source):
     """Gets name of vector from query results
     source (dict): results from elastic search query _source
     """
-    name = source["data"]["spec"]["columns"][-1]
+
+    name = [
+        col for col in source["data"]["spec"]["columns"] if "REAL" not in col
+    ][-1]
     return name
 
 
@@ -181,7 +184,7 @@ def perform_query(case, **kwargs):
     return results
 
 
-def get_object_blobs(case, **kwargs):
+def get_object_blob_ids(case, **kwargs):
     """Makes dictionary pointing to blob files
     args:
     case (explorer.Case): case to explore
@@ -195,20 +198,20 @@ def get_object_blobs(case, **kwargs):
 
     results = perform_query(case, **kwargs)
     logger.debug(len(results))
-    blobs = {}
+    blob_ids = {}
     for result in results:
         source = result["_source"]
         if tagname is not None:
             if source["data"]["tagname"] != tagname:
                 continue
         if standard_get_name:
-            name = source["fmu"]["realization"]["id"]
+            name = str(source["fmu"]["realization"]["id"])
         else:
             name = get_vector_name(source)
 
-        blobs[name] = source["_sumo"]["blob_url"]
-    logger.info("returning %s blob paths", len(blobs.keys()))
-    return blobs
+        blob_ids[name] = result["_id"]
+    logger.info("returning %s blob ids", len(blob_ids.keys()))
+    return blob_ids
 
 
 class Utils:

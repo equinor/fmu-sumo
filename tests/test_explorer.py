@@ -91,8 +91,8 @@ def assert_correct_uuid(uuid_to_check, version=4):
     """
     # Concepts stolen from stackoverflow.com
     # questions/19989481/how-to-determine-if-a-string-is-a-valid-v4-uuid
-    type_mess = f"{uuid_to_check} not valid type"
-    assert isinstance(uuid_to_check, str), type_message
+    type_mess = f"{uuid_to_check} is not str ({type(uuid_to_check)}"
+    assert isinstance(uuid_to_check, str), type_mess
     works_for_me = True
     try:
         UUID(uuid_to_check, version=version)
@@ -100,6 +100,17 @@ def assert_correct_uuid(uuid_to_check, version=4):
         works_for_me = False
     structure_mess = f"{uuid_to_check}, does not have correct structure"
     assert works_for_me, structure_mess
+
+
+def assert_uuid_dict(uuid_dict):
+    """Tests that dict has string keys, and valid uuid's as value
+    args:
+    uuid_dict (dict): dict to test
+    """
+    for key in uuid_dict:
+        assert_mess = f"{key} is not of type str"
+        assert isinstance(key, str), assert_mess
+        assert_correct_uuid(uuid_dict[key])
 
 
 def assert_dict_equality(results, correct):
@@ -180,68 +191,69 @@ def test_get_dict_of_cases(prod_explorer):
     """tests method get_dict_of_cases
     """
 
-    results = prod_explorer.get_dict_of_cases()
-    for case_name in results:
-        assert_mess = f"{case_name} is not of type str"
-        assert isinstance(case_name, str), assert_mess
-        assert_correct_uuid(results[case_name])
+    assert_uuid_dict(prod_explorer.get_dict_of_cases())
 
 
-# def test_func_get_object_surface_blobs(the_logger, sum_case):
-#     """Tests method get_object_blobs"""
-#
-#     results = ut.get_object_blobs(sum_case, data_type="surface", content="depth",
-#                                   name="VOLANTIS GP. Base",
-#                                   tag="FACIES_Fraction_Offshore", iteration=0,
-#                                   size=309
-#     )
-#     result_file = "dict_of_surface_blobs.json"
-#
-#     # write_json(result_file, results)
-#     correct = read_json(result_file)
-#
-#     assert len(results) == 155
-#     # assert_dict_equality(results, correct)
-#
-#
-# def test_func_get_object_sum_blobs(the_logger, sum_case):
-#     """Tests method get_object_blobs"""
-#     results = ut.get_object_blobs(sum_case, data_type="table",
-#                                   content="timeseries",
-#                                   size=974
-#     )
-#     result_file = "dict_of_sum_blobs.json"
-#
-#     # write_json(result_file, results)
-#
-#     correct = read_json(result_file)
-#
-#     assert len(results) == 974
-#     # assert_dict_equality(results, correct)
+def test_func_get_object_surface_blob_ids(the_logger, sum_case):
+    """Tests method get_object_blob_ids"""
+
+    results = ut.get_object_blob_ids(sum_case, data_type="surface", content="depth",
+                                     name="VOLANTIS GP. Base",
+                                     tag="FACIES_Fraction_Offshore", iteration=0,
+                                     size=309
+    )
+    # |result_file = "dict_of_surface_blob_ids.json"
+
+    # write_json(result_file, results)
+    # correct = read_json(result_file)
+
+    assert len(results) == 155
+    assert_uuid_dict(results)
+    # assert_dict_equality(results, correct)
 
 
-# def test_method_get_object_surface_blobs(the_logger, sum_case):
-#     """Tests method get_object_blobs"""
-#
-#     results = sum_case.get_blob_paths("VOLANTIS GP. Base",
-#                                       "FACIES_Fraction_Offshore", size=309)
-#     result_file = "dict_of_surface_blobs.json"
-#
-#     # write_json(result_file, results)
-#     correct = read_json(result_file)
-#
-#     assert len(results) == 155
-#     # assert_dict_equality(results, correct)
-#
-#
-# def test_method_get_object_sum_blobs(the_logger, sum_case):
-#     """Tests method get_object_blobs"""
-#     results = sum_case.get_summary_blob_paths(size=974)
-#     result_file = "dict_of_sum_blobs.json"
-#
-#     # write_json(result_file, results)
-#
-#     correct = read_json(result_file)
-#
-#     assert len(results) == 974
-#     # assert_dict_equality(results, correct)
+def test_func_get_object_sum_blob_ids(the_logger, sum_case):
+    """Tests method get_object_blob_ids"""
+    results = ut.get_object_blob_ids(sum_case, data_type="table",
+                                     content="timeseries",
+                                     size=974
+    )
+    # result_file = "dict_of_sum_blob_ids.json"
+
+    # write_json(result_file, results)
+
+    # correct = read_json(result_file)
+
+    assert len(results) == 974
+    assert_uuid_dict(results)
+    # assert_dict_equality(results, correct)
+
+
+def test_method_get_object_surface_blob_ids(the_logger, sum_case):
+    """Tests method get_object_blob_ids"""
+
+    results = sum_case.get_blob_ids("VOLANTIS GP. Base",
+                                    "FACIES_Fraction_Offshore", size=309)
+
+    # result_file = "dict_of_surface_blob_ids.json"
+
+    # write_json(result_file, results)
+    # correct = read_json(result_file)
+
+    assert len(results) == 155
+    assert_uuid_dict(results)
+    # assert_dict_equality(results, correct)
+
+
+def test_method_get_object_sum_blob_ids(the_logger, sum_case):
+    """Tests method get_object_blob_ids"""
+    results = sum_case.get_summary_blob_ids(size=974)
+    # result_file = "dict_of_sum_blob_ids.json"
+
+    # write_json(result_file, results)
+
+    # |correct = read_json(result_file)
+
+    assert len(results) == 974
+    assert_uuid_dict(results)
+    # assert_dict_equality(results, correct)

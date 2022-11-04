@@ -2,7 +2,7 @@
 from typing import List
 import deprecation
 from fmu.sumo.explorer._utils import Utils, TimeData, Property, ObjectType
-from fmu.sumo.explorer._utils import get_object_blobs
+from fmu.sumo.explorer._utils import get_object_blob_ids
 from fmu.sumo.explorer._document_collection import DocumentCollection
 from fmu.sumo.explorer._child_object import ChildObject
 
@@ -23,7 +23,6 @@ class Case:
         self.status = source["_sumo"]["status"]
         self.user = source["fmu"]["case"]["user"]["id"]
         self.object_type = "case"
-
 
     @property
     def sumo_id(self):
@@ -51,26 +50,25 @@ class Case:
     def get_object_types(self):
         """Getting count of object types for case"""
         result = self.sumo.get("/search",
-            query=f"_sumo.parent_object:{self.sumo_id}",
-            buckets=["class.keyword"]
-        )
+                               query=f"_sumo.parent_object:{self.sumo_id}",
+                               buckets=["class.keyword"])
 
         buckets = result["aggregations"]["class.keyword"]["buckets"]
 
         return self.utils.map_buckets(buckets)
 
-    def get_summary_blob_paths(self, size=100):
-        """Gets the summary data aggregated per vector
+    def get_summary_blob_ids(self, size=100):
+        """Gets blob_ids for summary data aggregated per vector
         args:
         size (int): number of hits to return
         """
-        return get_object_blobs(self, data_type="table", content="timeseries",
-                                size=size)
+        return get_object_blob_ids(self, data_type="table", content="timeseries",
+                                   size=size)
 
-    def get_blob_paths(self, name, tag, data_type="surface", content="depth",
-                       iteration=0, size=100):
-        """Gets blob paths for most datatypes, for
-        summary data use get_summary_blob_paths
+    def get_blob_ids(self, name, tag, data_type="surface", content="depth",
+                     iteration=0, size=100):
+        """Gets blob ids for most datatypes, for
+        summary data use get_summary_blob_ids
         args:
         name (str): name of data object
         tag (str): what type of tag, more or less the same as representation
@@ -78,9 +76,9 @@ class Case:
         data_type (str): what type
         content (str): what type of content depth, time, timeseries etc
         """
-        return get_object_blobs(self, name=name, tag=tag, content=content,
-                                data_type=data_type, iteration=iteration,
-                                size=size)
+        return get_object_blob_ids(self, name=name, tag=tag, content=content,
+                                   data_type=data_type, iteration=iteration,
+                                   size=size)
 
     def get_iterations(self):
         """Getting iterations connected to case"""
@@ -114,7 +112,6 @@ class Case:
         iterations = list(map(lambda b: {'id': b['key'], 'name': b['iteration_names']['buckets'][0]['key'], 'doc_count': b['doc_count']}, buckets))
 
         return iterations
-
 
     @deprecation.deprecated(
         details="Use get_object_property_values to retrieve list of unique" +
@@ -154,7 +151,6 @@ class Case:
 
         return realizations
 
-
     @deprecation.deprecated(details="Use get_object_property_values to retrieve list of unique values for a property")
     def get_object_tag_names(
         self,
@@ -170,7 +166,6 @@ class Case:
             realization_ids=self._list_wrap(realization_id),
             aggregations=self._list_wrap(aggregation)
         )
-
 
     @deprecation.deprecated(details="Use get_object_property_values to retrieve list of unique values for a property")
     def get_object_names(
@@ -189,7 +184,6 @@ class Case:
             realization_ids=self._list_wrap(realization_id),
             aggregations=self._list_wrap(aggregation)
         )
-
 
     @deprecation.deprecated(details="Use get_object_property_values to retrieve list of unique values for a property")
     def get_object_time_intervals(
@@ -211,7 +205,6 @@ class Case:
             aggregations=self._list_wrap(aggregation)
         )
 
-
     @deprecation.deprecated(details="Use get_object_property_values to retrieve list of unique values for a property")
     def get_object_aggregations(
         self,
@@ -228,22 +221,20 @@ class Case:
             iteration_ids=self._list_wrap(iteration_id)
         )
 
-
     def _list_wrap(self, value):
         """Don't know what this one is doing"""
         return [value] if value is not None else []
-
 
     def get_object_property_values(
         self,
         prop: Property,
         object_type: ObjectType,
-        object_names: List[str]=(),
-        tag_names: List[str]=(),
-        time_intervals: List[str]=(),
-        iteration_ids: List[str]=(),
-        realization_ids: List[int]=(),
-        aggregations: List[int]=(),
+        object_names: List[str] = (),
+        tag_names: List[str] = (),
+        time_intervals: List[str] = (),
+        iteration_ids: List[str] = (),
+        realization_ids: List[int] = (),
+        aggregations: List[int] = (),
         include_time_data: TimeData = None
     ):
         """
@@ -313,16 +304,15 @@ class Case:
 
         return self.utils.map_buckets(buckets)
 
-
     def get_objects(
         self,
         object_type: ObjectType,
-        object_names: List[str]=(),
-        tag_names: List[str]=(),
-        time_intervals: List[str]=(),
-        iteration_ids: List[int]=(),
-        realization_ids: List[int]=(),
-        aggregations: List[str]=(),
+        object_names: List[str] = (),
+        tag_names: List[str] = (),
+        time_intervals: List[str] = (),
+        iteration_ids: List[int] = (),
+        realization_ids: List[int] = (),
+        aggregations: List[str] = (),
         include_time_data: TimeData = None
     ):
         """
