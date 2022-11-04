@@ -87,6 +87,7 @@ def return_case_sumo_id(case_name, query_results):
     query_results (dict): elastic search results
     returns sumo_id (str): the sumo id
     """
+    sumo_id = None
     hits = return_hits(query_results)
 
     if len(hits) > 1:
@@ -97,7 +98,10 @@ def return_case_sumo_id(case_name, query_results):
         )
         warnings.warn(message, TooManyCasesWarning)
 
-    sumo_id = hits[0]["_id"]
+    try:
+        sumo_id = hits[0]["_id"]
+    except IndexError:
+        warnings.warn(f"No hits for case {case_name}")
     return sumo_id
 
 
