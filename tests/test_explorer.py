@@ -3,8 +3,8 @@ import logging
 import warnings
 import json
 from pathlib import Path
-import pytest
 from uuid import UUID
+import pytest
 import context
 # Runs function in context. Adds src to path. This should be done automatically,
 # but not working need to figure out
@@ -187,11 +187,11 @@ def test_sumo_id_attribute(sum_case):
     assert_correct_uuid(sum_case.sumo_id)
 
 
-def test_get_dict_of_cases(prod_explorer):
+def test_get_dict_of_case_names(prod_explorer):
     """tests method get_dict_of_cases
     """
 
-    assert_uuid_dict(prod_explorer.get_dict_of_cases())
+    assert_uuid_dict(prod_explorer.get_dict_of_case_names())
 
 
 def test_func_get_object_surface_blob_ids(the_logger, sum_case):

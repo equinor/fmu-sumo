@@ -143,7 +143,10 @@ def get_vector_name(source):
 def deal_w_tag(kwargs):
     """Works on what to do with tag
     kwargs (dict): dictionary"""
-    print(kwargs)
+    # This function is here just because of an inability to use content.tagname
+    # in elastic search. Remove when this is solved
+    logger = init_logging(__name__ + ".deal_w_tag")
+    logger.debug(kwargs)
     name_of_tags = "tagname"
     tagname = kwargs.get(name_of_tags, None)
     standard_get_name = True
@@ -193,7 +196,7 @@ def get_object_blob_ids(case, **kwargs):
                              value is blob path
     """
     logger = init_logging(__name__ + ".get_object_blobs")
-    print(kwargs)
+    logger.debug(kwargs)
     tagname, standard_get_name = deal_w_tag(kwargs)
 
     results = perform_query(case, **kwargs)

@@ -1,5 +1,5 @@
 """Functions for interrogating specific case in sumo"""
-from typing import List
+from typing import List, Dict
 import deprecation
 from fmu.sumo.explorer._utils import Utils, TimeData, Property, ObjectType
 from fmu.sumo.explorer._utils import get_object_blob_ids
@@ -25,16 +25,16 @@ class Case:
         self.object_type = "case"
 
     @property
-    def sumo_id(self):
+    def sumo_id(self) -> str:
         """Returns attribute _sumo_id"""
         return self._sumo_id
 
     @property
-    def name(self):
+    def name(self) -> str:
         """returns name attribute"""
         return self._name
 
-    def get_object_types(self):
+    def get_object_types(self) -> Dict[str, int]:
         """Getting count of object types for case"""
         result = self.sumo.get("/search",
                                query=f"_sumo.parent_object:{self.sumo_id}",
@@ -44,7 +44,7 @@ class Case:
 
         return self.utils.map_buckets(buckets)
 
-    def get_summary_blob_ids(self, size=100):
+    def get_summary_blob_ids(self, size=100) -> Dict[str, str]:
         """Gets blob_ids for summary data aggregated per vector
         args:
         size (int): number of hits to return
@@ -53,7 +53,7 @@ class Case:
                                    size=size)
 
     def get_blob_ids(self, name, tag, data_type="surface", content="depth",
-                     iteration=0, size=100):
+                     iteration=0, size=100) -> Dict[str, str]:
         """Gets blob ids for most datatypes, for
         summary data use get_summary_blob_ids
         args:
@@ -104,7 +104,7 @@ class Case:
         details="Use get_object_property_values to retrieve list of unique" +
         "values for a property"
     )
-    def get_realizations(self, iteration_id):
+    def get_realizations(self, iteration_id) -> List[dict]:
         """Getting realizations for case"""
         elastic_query = {
             "query": {

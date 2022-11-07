@@ -1,5 +1,5 @@
 """Functionality for exploring results from sumo"""
-from typing import List
+from typing import List, Dict
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer._case import Case
 from fmu.sumo.explorer._utils import (
@@ -21,7 +21,7 @@ class Explorer:
         )
 
     @property
-    def env(self):
+    def env(self) -> str:
         """Returning the _env attribute
         """
         return self._env
@@ -41,8 +41,9 @@ class Explorer:
         return fields
 
 
-    def get_users(self):
-        """Returns users that have stored results in given sumo environment"""
+    def get_users(self) -> Dict[str, int]:
+        """Returns users that have stored results in given sumo environment
+        returns users (dict): key is user name, value is how many cases"""
         result = self.sumo.get("/search",
             size=0,
             buckets=['fmu.case.user.id.keyword'],
@@ -56,7 +57,7 @@ class Explorer:
         return users
 
 
-    def get_status(self):
+    def get_status(self) -> Dict[str, int]:
         """Returns the status of the different cases
            i.e. whether case is to be kept, scratched or to be deleted
         """
@@ -70,9 +71,10 @@ class Explorer:
 
         return status
 
-    def get_dict_of_cases(self, size=10):
+    def get_dict_of_case_names(self, size=1000) -> Dict[str, str]:
 
-        """returns dictionary of cases where key is name, value sumo_id"""
+        """returns dictionary of cases where key is name, value sumo_id
+        returns: case_dict (dict): key is name, value is sumo id"""
         results = return_hits(self.get("/searchroot", query="class:case",
                                        select=["fmu.case.name"], size=size))
         case_dict = {}
@@ -80,19 +82,19 @@ class Explorer:
             case_dict[result["_source"]["fmu"]["case"]["name"]] = result["_id"]
         return case_dict
 
-    def get_case_by_name(self, name):
+    def get_case_by_name(self, name: str) -> Case:
         """Fetches case from case name
         args:
             name (str): name of case
 
         """
-        query = f"class:case AND fmu.case.name:{name}"
+        query = f"class:case AND fmu.case.name:\'{name}\'"
         result = self.sumo.get("/search", select=["fmu.case"],
                                sort=["_doc:desc"],
                                query=query)
         return self.get_case_by_id(return_case_sumo_id(name, result))
 
-    def get_case_by_id(self, sumo_id):
+    def get_case_by_id(self, sumo_id: str) -> Case:
         """Returns Case class with given id
         args:
         sumo_id (str): sumo id for case to extract
@@ -111,7 +113,7 @@ class Explorer:
         status=None,
         fields=None,
         users=None
-    ):
+    ) -> DocumentCollection:
         """Returns all cases in given sumo environment
         args:
         status (str or None): filter on status (i.e. whether they will be kept or not)
