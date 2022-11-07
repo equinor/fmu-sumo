@@ -16,9 +16,9 @@ class Case:
 
         source = self.meta_data["_source"]
 
-        self.sumo_id = self.meta_data["_id"]
+        self._sumo_id = self.meta_data["_id"]
         self.fmu_id = source["fmu"]["case"]["uuid"]
-        self.name = source["fmu"]["case"]["name"]
+        self._name = source["fmu"]["case"]["name"]
         self.field_name = source["masterdata"]["smda"]["field"][0]["identifier"]
         self.status = source["_sumo"]["status"]
         self.user = source["fmu"]["case"]["user"]["id"]
@@ -29,23 +29,10 @@ class Case:
         """Returns attribute _sumo_id"""
         return self._sumo_id
 
-    @sumo_id.setter
-    def sumo_id(self, sumo_id):
-        """Sets attribute _sumo_id
-        args:
-            sumo_id (str): a sumo_id
-        """
-        self._sumo_id = sumo_id
-
     @property
     def name(self):
         """returns name attribute"""
         return self._name
-
-    @name.setter
-    def name(self, name):
-        """sets the name attribute"""
-        self._name = name
 
     def get_object_types(self):
         """Getting count of object types for case"""
