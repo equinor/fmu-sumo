@@ -140,6 +140,17 @@ def get_vector_name(source):
     return name
 
 
+def choose_naming_convention(kwargs):
+    """Figures out how to name keys in functions dealing with blob_ids
+    kwargs (dict): dictionary
+    returns name_per_real (bool): """
+    name_per_real = True
+    if (kwargs["data_type"] == "table" and
+        kwargs["content"] == "timeseries"):
+        name_per_real = False
+    return name_per_real
+
+
 def deal_w_tag(kwargs):
     """Works on what to do with tag
     kwargs (dict): dictionary"""
@@ -149,12 +160,10 @@ def deal_w_tag(kwargs):
     logger.debug(kwargs)
     name_of_tags = "tagname"
     tagname = kwargs.get(name_of_tags, None)
-    standard_get_name = True
+    standard_get_name = choose_naming_convention(kwargs)
     if tagname is not None:
         del kwargs[name_of_tags]
-    if (kwargs["data_type"] == "table" and
-        kwargs["content"] == "timeseries"):
-        standard_get_name = False
+
     return tagname, standard_get_name
 
 
@@ -168,7 +177,8 @@ def perform_query(case, **kwargs):
     logger.debug("Calling function with %s", kwargs)
     convert = {"data_type": "class", "content": "data.content",
                "name": "data.name", "tag": "data.tagname",
-               "iteration": "fmu.iteration.id"}
+               "iteration": "fmu.iteration.id",
+               "aggregation": "fmu.aggregation.operation"}
 
     size = kwargs.get("size", 10)
     try:
@@ -187,32 +197,70 @@ def perform_query(case, **kwargs):
     return results
 
 
+def get_aggregated_object_blob_ids(case, **kwargs):
+    """Makes dictionary for aggregated object blob ids
+    args:
+    case (explorer.Case): case to explore
+    kwargs (dict): keword argument
+    return blob_ids (dict): dictionary of blobs, key is name
+                             value is blob path
+    """
+    logger = init_logging(__name__ + ".get_aggregated_object_blob_ids")
+    results = perform_query(case, **kwargs)
+    blob_ids = {}
+    for result in results:
+        source = result["_source"]
+        name = source["data"]["name"]
+        operation = source["fmu"]["aggregation"]["operation"]
+        blob_ids[name] = blob_ids.get(name, {})
+        blob_ids[name][operation] = result["_id"]
+    logger.info("returning %s blob ids", len(blob_ids.keys()))
+    return blob_ids
+
+
+def get_real_object_blob_ids(case, **kwargs):
+    """Makes dictionary pointing to blob ids
+    args:
+    case (explorer.Case): case to explore
+    kwargs (dict): keword argument
+    return blob_ids (dict): dictionary of blobs, key is name
+                             value is blob path
+    """
+    logger = init_logging(__name__ + ".get_real_object_blob_ids")
+    results = perform_query(case, **kwargs)
+    name_per_real = choose_naming_convention(kwargs)
+    logger.debug("%s results", len(results))
+    blob_ids = {}
+    for result in results:
+        source = result["_source"]
+
+        if name_per_real:
+            try:
+                name = str(source["fmu"]["realization"]["id"])
+            except KeyError:
+                logger.debug("could not find realization")
+        else:
+            name = get_vector_name(source)
+
+        blob_ids[name] = result["_id"]
+    logger.info("returning %s blob ids", len(blob_ids.keys()))
+    return blob_ids
+
+
 def get_object_blob_ids(case, **kwargs):
     """Makes dictionary pointing to blob files
     args:
     case (explorer.Case): case to explore
     kwargs (dict): keword argument
-    return blob_dict (dict): dictionary of blobs, key is name
+    return blob_ids (dict): dictionary of blobs, key is name
                              value is blob path
     """
     logger = init_logging(__name__ + ".get_object_blobs")
     logger.debug(kwargs)
-    tagname, standard_get_name = deal_w_tag(kwargs)
-
-    results = perform_query(case, **kwargs)
-    logger.debug(len(results))
-    blob_ids = {}
-    for result in results:
-        source = result["_source"]
-        if tagname is not None:
-            if source["data"]["tagname"] != tagname:
-                continue
-        if standard_get_name:
-            name = str(source["fmu"]["realization"]["id"])
-        else:
-            name = get_vector_name(source)
-
-        blob_ids[name] = result["_id"]
+    if "aggregation" in kwargs:
+        blob_ids = get_aggregated_object_blob_ids(case, **kwargs)
+    else:
+        blob_ids = get_real_object_blob_ids(case, **kwargs)
     logger.info("returning %s blob ids", len(blob_ids.keys()))
     return blob_ids
 

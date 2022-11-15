@@ -5,13 +5,7 @@ import json
 from pathlib import Path
 from uuid import UUID
 import pytest
-import context
-# Runs function in context. Adds src to path. This should be done automatically,
-# but not working need to figure out
-context.add_path()
-from fmu.sumo.explorer._utils import TooManyCasesWarning, TooLowSizeWarning
-from fmu.sumo.explorer import Explorer
-import fmu.sumo.explorer._utils as ut
+from context import Explorer, ut
 
 
 TEST_DATA = Path("data")
@@ -137,8 +131,8 @@ def assert_dict_equality(results, correct):
 
 def test_cast_toomany_warning():
     """Tests custom made warning"""
-    with pytest.warns(TooManyCasesWarning):
-        warnings.warn("Dummy", TooManyCasesWarning)
+    with pytest.warns(ut.TooManyCasesWarning):
+        warnings.warn("Dummy", ut.TooManyCasesWarning)
 
 
 def test_toomany_warning_content():
@@ -146,7 +140,7 @@ def test_toomany_warning_content():
     test_message = "testing testing"
 
     with warnings.catch_warnings(record=True) as w_list:
-        warnings.warn(test_message, TooManyCasesWarning)
+        warnings.warn(test_message, ut.TooManyCasesWarning)
         warn_message = str(w_list[0].message)
         print(warn_message)
         print(test_message)
@@ -159,8 +153,8 @@ def test_toomany_warning_content():
 
 def test_cast_toolowsize_warning():
     """Tests custom made warning"""
-    with pytest.warns(TooLowSizeWarning):
-        warnings.warn("Dummy", TooLowSizeWarning)
+    with pytest.warns(ut.TooLowSizeWarning):
+        warnings.warn("Dummy", ut.TooLowSizeWarning)
 
 
 def test_toolowsize_warning_content():
@@ -168,7 +162,7 @@ def test_toolowsize_warning_content():
     test_message = "testing testing"
 
     with warnings.catch_warnings(record=True) as w_list:
-        warnings.warn(test_message, TooManyCasesWarning)
+        warnings.warn(test_message, ut.TooManyCasesWarning)
         warn_message = str(w_list[0].message)
         print(warn_message)
         print(test_message)
@@ -210,6 +204,17 @@ def test_func_get_object_surface_blob_ids(the_logger, sum_case):
     assert len(results) == 155
     assert_uuid_dict(results)
     # assert_dict_equality(results, correct)
+
+
+def test_funct_get_object_surface_blob_ids_w_aggregation(sum_case):
+
+    """Tests function get_object_blob_ids with aggregation"""
+    results = ut.get_aggregated_object_blob_ids(sum_case, data_type="surface", content="depth",
+                                                name="VOLANTIS GP. Base",
+                                                tag="FACIES_Fraction_Offshore", iteration=0,
+                                                size=309, aggregation="*"
+    )
+    print(results)
 
 
 def test_func_get_object_sum_blob_ids(the_logger, sum_case):
