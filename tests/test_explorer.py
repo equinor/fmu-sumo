@@ -213,7 +213,11 @@ def test_funct_get_object_surface_blob_ids_w_aggregation(sum_case):
                                                 tag="FACIES_Fraction_Offshore", iteration=0,
                                                 aggregation="*"
     )
-    print(results)
+    assert len(results.keys()) == 1
+    for surf_name in results:
+        assert len(results[surf_name]) == 7
+        assert isinstance(surf_name, str)
+        assert_uuid_dict(results[surf_name])
 
 
 def test_func_get_object_sum_blob_ids(the_logger, sum_case):
