@@ -4,6 +4,9 @@ import warnings
 from abc import ABCMeta
 from enum import Enum
 
+# This is set as a global variables in case another userfriendly name
+# is introduced
+AGG_NAME = "aggregation"
 
 OBJECT_TYPES = {
     'surface': '.gri',
@@ -24,7 +27,7 @@ class Property(str, Enum):
     TAG_NAME = "tag_name"
     TIME_INTERVAL = "time_interval"
     TIME_TYPE = "time_type"
-    AGGREGATION = "aggregation"
+    AGGREGATION = AGG_NAME
     OBJECT_NAME = "object_name"
     ITERATION_ID = "iteration_id"
     REALIZATION_ID = "realization_id"
@@ -151,22 +154,6 @@ def choose_naming_convention(kwargs):
     return name_per_real
 
 
-def deal_w_tag(kwargs):
-    """Works on what to do with tag
-    kwargs (dict): dictionary"""
-    # This function is here just because of an inability to use content.tagname
-    # in elastic search. Remove when this is solved
-    logger = init_logging(__name__ + ".deal_w_tag")
-    logger.debug(kwargs)
-    name_of_tags = "tagname"
-    tagname = kwargs.get(name_of_tags, None)
-    standard_get_name = choose_naming_convention(kwargs)
-    if tagname is not None:
-        del kwargs[name_of_tags]
-
-    return tagname, standard_get_name
-
-
 def perform_query(case, **kwargs):
     """Performs an elastic search
     args:
@@ -178,9 +165,9 @@ def perform_query(case, **kwargs):
     convert = {"data_type": "class", "content": "data.content",
                "name": "data.name", "tag": "data.tagname",
                "iteration": "fmu.iteration.id",
-               "aggregation": "fmu.aggregation.operation"}
+               AGG_NAME: "fmu.aggregation.operation"}
 
-    size = kwargs.get("size", 10)
+    size = kwargs.get("size", 1000)
     try:
         del kwargs["size"]
     except KeyError:
@@ -256,8 +243,15 @@ def get_object_blob_ids(case, **kwargs):
                              value is blob path
     """
     logger = init_logging(__name__ + ".get_object_blobs")
+
     logger.debug(kwargs)
-    if "aggregation" in kwargs:
+    try:
+        if kwargs[AGG_NAME] == "all":
+            kwargs[AGG_NAME] = "*"
+    except KeyError:
+        logger.debug("No aggregations in query")
+
+    if AGG_NAME in kwargs:
         blob_ids = get_aggregated_object_blob_ids(case, **kwargs)
     else:
         blob_ids = get_real_object_blob_ids(case, **kwargs)

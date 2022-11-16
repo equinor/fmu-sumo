@@ -194,7 +194,6 @@ def test_func_get_object_surface_blob_ids(the_logger, sum_case):
     results = ut.get_object_blob_ids(sum_case, data_type="surface", content="depth",
                                      name="VOLANTIS GP. Base",
                                      tag="FACIES_Fraction_Offshore", iteration=0,
-                                     size=309
     )
     # |result_file = "dict_of_surface_blob_ids.json"
 
@@ -212,7 +211,7 @@ def test_funct_get_object_surface_blob_ids_w_aggregation(sum_case):
     results = ut.get_aggregated_object_blob_ids(sum_case, data_type="surface", content="depth",
                                                 name="VOLANTIS GP. Base",
                                                 tag="FACIES_Fraction_Offshore", iteration=0,
-                                                size=309, aggregation="*"
+                                                aggregation="*"
     )
     print(results)
 
@@ -221,7 +220,6 @@ def test_func_get_object_sum_blob_ids(the_logger, sum_case):
     """Tests method get_object_blob_ids"""
     results = ut.get_object_blob_ids(sum_case, data_type="table",
                                      content="timeseries",
-                                     size=974
     )
     # result_file = "dict_of_sum_blob_ids.json"
 
@@ -238,7 +236,7 @@ def test_method_get_object_surface_blob_ids(the_logger, sum_case):
     """Tests method get_object_blob_ids"""
 
     results = sum_case.get_blob_ids("VOLANTIS GP. Base",
-                                    "FACIES_Fraction_Offshore", size=309)
+                                    "FACIES_Fraction_Offshore")
 
     # result_file = "dict_of_surface_blob_ids.json"
 
@@ -252,7 +250,7 @@ def test_method_get_object_surface_blob_ids(the_logger, sum_case):
 
 def test_method_get_object_sum_blob_ids(the_logger, sum_case):
     """Tests method get_object_blob_ids"""
-    results = sum_case.get_summary_blob_ids(size=974)
+    results = sum_case.get_summary_blob_ids()
     # result_file = "dict_of_sum_blob_ids.json"
 
     # write_json(result_file, results)

@@ -44,16 +44,16 @@ class Case:
 
         return self.utils.map_buckets(buckets)
 
-    def get_summary_blob_ids(self, size=100) -> Dict[str, str]:
+    def get_summary_blob_ids(self, **kwargs) -> Dict[str, str]:
         """Gets blob_ids for summary data aggregated per vector
-        args:
-        size (int): number of hits to return
+        args kwargs (dict): various keyword arguments
+        returns dictionary with vector name as key, value object id
         """
         return get_object_blob_ids(self, data_type="table", content="timeseries",
-                                   size=size)
+                                   **kwargs)
 
     def get_blob_ids(self, name, tag, data_type="surface", content="depth",
-                     iteration=0, size=100) -> Dict[str, str]:
+                     iteration=0, **kwargs) -> Dict[str, str]:
         """Gets blob ids for most datatypes, for
         summary data use get_summary_blob_ids
         args:
@@ -62,10 +62,12 @@ class Case:
                    in rms
         data_type (str): what type
         content (str): what type of content depth, time, timeseries etc
+        iteration (int): the iteration to get data for
+        kwargs (dict): other variables to put in, the obvious one is aggregation
+                       either use name of aggregation, e.g. MEAN, or all for all
         """
         return get_object_blob_ids(self, name=name, tag=tag, content=content,
-                                   data_type=data_type, iteration=iteration,
-                                   size=size)
+                                   data_type=data_type, iteration=iteration, **kwargs)
 
     def get_iterations(self):
         """Getting iterations connected to case"""
