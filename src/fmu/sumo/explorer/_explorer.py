@@ -11,7 +11,7 @@ from fmu.sumo.explorer._child_object import ChildObject
 
 class Explorer:
     """Class for exploring sumo"""
-    def __init__(self, env, token=None, interactive=True):
+    def __init__(self, env="prod", token=None, interactive=True):
         self._env = env
         self.utils = Utils()
         self.sumo = SumoClient(
@@ -40,7 +40,6 @@ class Explorer:
 
         return fields
 
-
     def get_users(self) -> Dict[str, int]:
         """Returns users that have stored results in given sumo environment
         returns users (dict): key is user name, value is how many cases"""
@@ -55,7 +54,6 @@ class Explorer:
         users = self.utils.map_buckets(buckets)
 
         return users
-
 
     def get_status(self) -> Dict[str, int]:
         """Returns the status of the different cases
@@ -154,13 +152,13 @@ class Explorer:
     def get_objects(
         self,
         object_type: ObjectType,
-        case_ids: List[str]=(),
-        object_names: List[str]=(),
-        tag_names: List[str]=(),
-        time_intervals: List[str]=(),
-        iteration_ids: List[int]=(),
-        realization_ids: List[int]=(),
-        aggregations: List[str]=(),
+        case_ids: List[str] = (),
+        object_names: List[str] = (),
+        tag_names: List[str] = (),
+        time_intervals: List[str] = (),
+        iteration_ids: List[int] = (),
+        realization_ids: List[int] = (),
+        aggregations: List[str] = (),
         include_time_data: TimeData = None
     ): # noqa
         """
@@ -227,7 +225,6 @@ class Explorer:
         """
         return self.sumo.get(path, **params)
 
-
     def post(self, path, json=None, blob=None):
         """Performing the post operation to sumo
         path (str): path to endpoint
@@ -237,7 +234,6 @@ class Explorer:
         """
         return self.sumo.post(path, json=json, blob=blob)
 
-
     def put(self, path, json=None, blob=None):
         """Performing the put operation to sumo
         path (str): path to endpoint
@@ -246,7 +242,6 @@ class Explorer:
         params (dict): get parameters
         """
         return self.sumo.put(path, json=json, blob=blob)
-
 
     def delete(self, path):
         """Performing the delete operation to sumo

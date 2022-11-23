@@ -2,7 +2,7 @@
 from typing import List, Dict
 import deprecation
 from fmu.sumo.explorer._utils import Utils, TimeData, Property, ObjectType
-from fmu.sumo.explorer._utils import get_object_blob_ids
+from fmu.sumo.explorer._utils import get_object_ids
 from fmu.sumo.explorer._document_collection import DocumentCollection
 from fmu.sumo.explorer._child_object import ChildObject
 
@@ -44,16 +44,16 @@ class Case:
 
         return self.utils.map_buckets(buckets)
 
-    def get_summary_blob_ids(self, **kwargs) -> Dict[str, str]:
+    def get_summary_object_ids(self, **kwargs) -> Dict[str, str]:
         """Gets blob_ids for summary data aggregated per vector
         args kwargs (dict): various keyword arguments
         returns dictionary with vector name as key, value object id
         """
-        return get_object_blob_ids(self, data_type="table", content="timeseries",
-                                   **kwargs)
+        return get_object_ids(self, data_type="table", content="timeseries",
+                              **kwargs)
 
-    def get_blob_ids(self, name, tag, data_type="surface", content="depth",
-                     iteration=0, **kwargs) -> Dict[str, str]:
+    def get_object_ids(self, name, tag, data_type="surface", content="depth",
+                       iteration=0, **kwargs) -> Dict[str, str]:
         """Gets blob ids for most datatypes, for
         summary data use get_summary_blob_ids
         args:
@@ -66,8 +66,8 @@ class Case:
         kwargs (dict): other variables to put in, the obvious one is aggregation
                        either use name of aggregation, e.g. MEAN, or all for all
         """
-        return get_object_blob_ids(self, name=name, tag=tag, content=content,
-                                   data_type=data_type, iteration=iteration, **kwargs)
+        return get_object_ids(self, name=name, tag=tag, content=content,
+                              data_type=data_type, iteration=iteration, **kwargs)
 
     def get_iterations(self):
         """Getting iterations connected to case"""

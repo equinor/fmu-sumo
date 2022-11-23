@@ -14,41 +14,41 @@ LOGGER = logging.getLogger()
 LOGGER.debug("Tjohei")
 
 
-@pytest.fixture
-def the_logger():
+@pytest.fixture(name="the_logger")
+def fixture_the_logger():
     """Defining a logger"""
     return ut.init_logging("tests", "debug")
 
 
-@pytest.fixture
-def case_name():
+@pytest.fixture(name="case_name")
+def fixture_case_name():
     """Returns case name
     """
     return "21.x.0.dev_rowh2022_08-17"
 
 
-@pytest.fixture
-def test_explorer():
+@pytest.fixture(name="test_explorer")
+def fixture_test_explorer():
     """Returns explorer"""
     return Explorer("test")
 
 
-@pytest.fixture
-def prod_explorer():
+@pytest.fixture(name="prod_explorer")
+def fixture_prod_explorer():
     """Returns explorer"""
     return Explorer("prod")
 
 
-@pytest.fixture
-def test_case(test_explorer, case_name):
+@pytest.fixture(name="test_case")
+def fixture_test_case(test_explorer, case_name):
     """Basis for test of method get_case_by_name for Explorer,
        but also other attributes
     """
     return test_explorer.get_case_by_name(case_name)
 
 
-@pytest.fixture
-def sum_case():
+@pytest.fixture(name="sum_case")
+def fixture_sum_case():
     """Gets case with summary data from prod"""
     exp = Explorer("prod")
     return exp.get_case_by_name("drogon_design_2022_11-01")
@@ -188,12 +188,12 @@ def test_get_dict_of_case_names(prod_explorer):
     assert_uuid_dict(prod_explorer.get_dict_of_case_names())
 
 
-def test_func_get_object_surface_blob_ids(the_logger, sum_case):
+def test_func_get_surface_object_ids(the_logger, sum_case):
     """Tests method get_object_blob_ids"""
 
-    results = ut.get_object_blob_ids(sum_case, data_type="surface", content="depth",
-                                     name="VOLANTIS GP. Base",
-                                     tag="FACIES_Fraction_Offshore", iteration=0,
+    results = ut.get_object_ids(sum_case, data_type="surface", content="depth",
+                                name="VOLANTIS GP. Base",
+                                tag="FACIES_Fraction_Offshore", iteration=0,
     )
     # |result_file = "dict_of_surface_blob_ids.json"
 
@@ -205,13 +205,13 @@ def test_func_get_object_surface_blob_ids(the_logger, sum_case):
     # assert_dict_equality(results, correct)
 
 
-def test_funct_get_object_surface_blob_ids_w_aggregation(sum_case):
+def test_funct_get_surface_object_ids_w_aggregation(sum_case):
 
     """Tests function get_object_blob_ids with aggregation"""
-    results = ut.get_aggregated_object_blob_ids(sum_case, data_type="surface", content="depth",
-                                                name="VOLANTIS GP. Base",
-                                                tag="FACIES_Fraction_Offshore", iteration=0,
-                                                aggregation="*"
+    results = ut.get_aggregated_object_ids(sum_case, data_type="surface", content="depth",
+                                           name="VOLANTIS GP. Base",
+                                           tag="FACIES_Fraction_Offshore", iteration=0,
+                                           aggregation="*"
     )
     assert len(results.keys()) == 1
     for surf_name in results:
@@ -220,10 +220,10 @@ def test_funct_get_object_surface_blob_ids_w_aggregation(sum_case):
         assert_uuid_dict(results[surf_name])
 
 
-def test_func_get_object_sum_blob_ids(the_logger, sum_case):
+def test_func_get_sum_object_ids(the_logger, sum_case):
     """Tests method get_object_blob_ids"""
-    results = ut.get_object_blob_ids(sum_case, data_type="table",
-                                     content="timeseries",
+    results = ut.get_object_ids(sum_case, data_type="table",
+                                content="timeseries",
     )
     # result_file = "dict_of_sum_blob_ids.json"
 
@@ -236,10 +236,10 @@ def test_func_get_object_sum_blob_ids(the_logger, sum_case):
     # assert_dict_equality(results, correct)
 
 
-def test_method_get_object_surface_blob_ids(the_logger, sum_case):
+def test_method_get_surface_object_ids(the_logger, sum_case):
     """Tests method get_object_blob_ids"""
 
-    results = sum_case.get_blob_ids("VOLANTIS GP. Base",
+    results = sum_case.get_object_ids("VOLANTIS GP. Base",
                                     "FACIES_Fraction_Offshore")
 
     # result_file = "dict_of_surface_blob_ids.json"
@@ -252,9 +252,9 @@ def test_method_get_object_surface_blob_ids(the_logger, sum_case):
     # assert_dict_equality(results, correct)
 
 
-def test_method_get_object_sum_blob_ids(the_logger, sum_case):
+def test_method_get_sum_object_ids(the_logger, sum_case):
     """Tests method get_object_blob_ids"""
-    results = sum_case.get_summary_blob_ids()
+    results = sum_case.get_summary_object_ids()
     # result_file = "dict_of_sum_blob_ids.json"
 
     # write_json(result_file, results)

@@ -1,5 +1,18 @@
+"""Contains child object classes"""
+
+from fmu.sumo.explorer._utils import get_surface
+
 class ChildObject:
+
+    """Object containing some easy metadata, and object"""
+
     def __init__(self, sumo_client, meta_data):
+        """Init
+        args:
+        sumo_client (SumoClient): client to do queries with
+        meta_data (dict): metadata for the object
+        """
+
         self.sumo = sumo_client
         self.__blob = None
         self.__png = None
@@ -27,22 +40,51 @@ class ChildObject:
 
     @property
     def blob(self):
+        """Returns the __blob attribute"""
         if self.__blob is None:
             self.__blob = self.__get_blob()
 
         return self.__blob
 
     def __get_blob(self):
+        """Gets the object from blob store"""
         blob = self.sumo.get(f"/objects('{self.sumo_id}')/blob")
         return blob
 
     @property
     def png(self):
+        """returns the __png attribute"""
         if self.__png is None:
             self.__png = self.__get_png()
 
         return self.__png
 
     def __get_png(self):
+        """Gets the object as png"""
         png = self.sumo.get(f"/objects('{self.sumo_id}')/blob", encoder="png")
         return png
+
+
+class ChildObjects:
+
+    """Container for a set of objects"""
+
+    def __init__(object_ids, sumo_client):
+        """Init of objects
+        args:
+        object_ids (dict): key is real, value is object id
+        """
+        self._object_ids = object_ids
+        self._sumo = sumo_client
+
+    @property
+    def object_ids(self):
+        """Returns _object_ids attribute"""
+        return self._object_ids
+
+    def get_surface(self, **kwargs):
+        """Returns xtgeo surface
+        args:
+        kwargs (dict): dictionary of input
+        """
+        return get_surface(self.object_ids, **kwargs)
