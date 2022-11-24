@@ -3,6 +3,14 @@
 
 from setuptools import setup, find_packages
 
+try:
+    from sphinx.setup_command import BuildDoc
+
+    CMDCLASS.update({"build_sphinx": BuildDoc})
+except ImportError:
+    # sphinx not installed - do not provide build_sphinx cmd
+    pass
+
 setup(
     name="fmu-sumo",
     description="Python package for interacting with Sumo in an FMU setting",
@@ -35,7 +43,7 @@ setup(
         "oneseismic",
         "azure-core",
         "deprecation",
-        "ert>=2.38.0-b5"
+        "ert>=2.38.0-b5",
     ],
     python_requires=">=3.6",
     packages=find_packages("src"),
