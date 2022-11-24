@@ -8,13 +8,13 @@ import sys
 cwd = os.getcwd()
 project_root = os.path.dirname(cwd) + "/src/fmu"
 sys.path.insert(0, project_root)
+
 print(sys.path)
 
 from datetime import date
 
 import fmu.sumo
-import fmu.sumo.explorer
-import fmu.sumo.uploader
+from fmu.sumo import explorer, uploader
 
 # -- General configuration ---------------------------------------------
 
@@ -33,7 +33,7 @@ extensions = [
 
 togglebutton_hint = "Expand"
 
-apidoc_module_dir = "../src/fmu/sumo"
+apidoc_module_dir = "../src/fmu/"
 apidoc_output_dir = "apiref"
 apidoc_excluded_paths = ["tests"]
 apidoc_separate_modules = True
