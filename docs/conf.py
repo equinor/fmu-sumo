@@ -40,9 +40,9 @@ extensions = [
 
 togglebutton_hint = "Expand"
 
-apidoc_module_dir = "../src/fmu/"
+apidoc_module_dir = "../src/fmu/sumo"
 apidoc_output_dir = "apiref"
-apidoc_excluded_paths = ["tests"]
+apidoc_excluded_paths = ["tests", "version.py"]
 apidoc_separate_modules = True
 apidoc_module_first = True
 apidoc_extra_args = ["-H", "API reference for fmu.sumo"]

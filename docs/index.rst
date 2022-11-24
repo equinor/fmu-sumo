@@ -1,16 +1,23 @@
-fmu-sumo -
+fmu-sumo
 ======================================
 
-Contents:
+``fmu-sumo`` is a Python library for interaction with Sumo in the FMU context. It contains
+two modules; The Uploader and The Explorer.
 
-.. toctree::
-   :maxdepth: 2
 
-   overview
+Sumo Uploader:
+--------------------------------------
 
-Indices and tables
-==================
+The **Uploader** is a Python plugin for uploading data to Sumo during FMU runs.
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+- `Usage and examples <uploader.html>`_
+- `API reference <apiref/sumo.uploader.html>`_
+
+
+Sumo Explorer:
+--------------------------------------
+
+The **Explorer** is a Python plugin for reading data from Sumo in the FMU context.
+
+- `Usage and examples <explorer.html>`_
+- `API reference <apiref/sumo.explorer.html>`_
