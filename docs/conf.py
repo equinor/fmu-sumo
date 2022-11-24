@@ -5,9 +5,11 @@
 import os
 import sys
 
-cwd = os.getcwd()
-project_root = os.path.dirname(cwd) + "/src/fmu"
-sys.path.insert(0, project_root)
+# cwd = os.getcwd()
+# project_root = os.path.dirname(cwd) + "/src/fmu"
+# sys.path.insert(0, project_root)
+
+# Below is a hack to make Sphinx import other modules
 
 from pathlib import Path
 import sphinx
