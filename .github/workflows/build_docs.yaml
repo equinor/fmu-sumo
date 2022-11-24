@@ -9,7 +9,7 @@ on:
 
 jobs:
   build_pywheels:
-    name: PY ${{ matrix.python-version }} on ${{ matrix.os }}
+    name: Build docs with Python ${{ matrix.python-version }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
