@@ -1,3 +1,6 @@
+[![Documentation Status](https://readthedocs.org/projects/fmu-sumo/badge/?version=latest)](https://fmu-sumo.readthedocs.io/en/latest/?badge=latest)
+
+
 # fmu-sumo
 This package is intended for interaction with Sumo within the FMU (Fast Model Update(TM)) ecosystem. 
 The current primary use case is uploading data from FMU to Sumo.
