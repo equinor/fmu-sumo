@@ -9,6 +9,11 @@ cwd = os.getcwd()
 project_root = os.path.dirname(cwd) + "/src/fmu"
 sys.path.insert(0, project_root)
 
+from pathlib import Path
+import sphinx
+
+sys.path.insert(0, str(Path(sphinx.__file__).parent.parent))  # for helvete
+
 print(sys.path)
 
 from datetime import date
