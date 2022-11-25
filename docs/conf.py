@@ -14,6 +14,7 @@ import sys
 from pathlib import Path
 import sphinx
 
+# directly inject into sys.path the path where all modules are installed
 sys.path.insert(0, str(Path(sphinx.__file__).parent.parent))  # for helvete
 
 print(sys.path)
@@ -40,9 +41,11 @@ extensions = [
 
 togglebutton_hint = "Expand"
 
-apidoc_module_dir = "../src/fmu/sumo"
+autodoc_mock_imports = ["ert", "ert_shared"]
+
+apidoc_module_dir = "../src/fmu"
 apidoc_output_dir = "apiref"
-apidoc_excluded_paths = ["tests", "version.py"]
+apidoc_excluded_paths = ["version.py", "hook_implementations"]
 apidoc_separate_modules = True
 apidoc_module_first = True
 apidoc_extra_args = ["-H", "API reference for fmu.sumo"]
@@ -130,4 +133,4 @@ html_theme_options = {
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "sumo"
+htmlhelp_basename = "fmu-sumo"

@@ -12,6 +12,7 @@ def add_path():
         sys.path.remove(package_path)
     sys.path.insert(0, package_path)
 
+
 add_path()
 
 from fmu.sumo.explorer import Explorer

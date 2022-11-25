@@ -1,4 +1,4 @@
-setuptools>=28
+setuptools>=45
 setuptools_scm
 pytest-runner
 black
