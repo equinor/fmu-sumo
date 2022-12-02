@@ -1,4 +1,5 @@
-"""Functionality for exploring results from sumo"""
+"""Module for reading FMU results from Sumo in the FMU context."""
+
 from typing import List, Dict
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer._case import Case
@@ -14,9 +15,22 @@ from fmu.sumo.explorer._child_object import ChildObject
 
 
 class Explorer:
-    """Class for exploring sumo"""
+    """Class for consuming FMU results from Sumo.
+
+    The Sumo Explorer is a Python package for consuming FMU results stored in Sumo. It
+    is FMU aware, and creates an abstraction on top of the Sumo API. The purpose of the
+    package is to create an FMU-oriented Python interface towards FMU data in Sumo, and
+    make it easy for FMU users in various contexts to use data stored in Sumo. Examples
+    of use cases:
+
+      - Applications (example: Webviz)
+      - Scripts (example: Local post-processing functions)
+      - Manual data browsing and visualization (example: A Jupyter Notebook)
+
+    """
 
     def __init__(self, env, token=None, interactive=True):
+        """Initialize the Explorer class."""
         self._env = env
         self.utils = Utils()
         self.sumo = SumoClient(env=env, token=token, interactive=interactive)
@@ -26,8 +40,8 @@ class Explorer:
         """Returning the _env attribute"""
         return self._env
 
-    def get_fields(self):
-        """Returns the fields with stored results in given sumo environment"""
+    def get_fields(self) -> Dict[str, int]:
+        """Returns a dictionary of case count per field."""
         result = self.sumo.get(
             "/search",
             size=0,
@@ -44,8 +58,7 @@ class Explorer:
         return fields
 
     def get_users(self) -> Dict[str, int]:
-        """Returns users that have stored results in given sumo environment
-        returns users (dict): key is user name, value is how many cases"""
+        """Returns dictionary of case count per user."""
         result = self.sumo.get(
             "/search",
             size=0,
@@ -60,9 +73,7 @@ class Explorer:
         return users
 
     def get_status(self) -> Dict[str, int]:
-        """Returns the status of the different cases
-        i.e. whether case is to be kept, scratched or to be deleted
-        """
+        """Returns dictionary of status per case."""
         result = self.sumo.get("/searchroot", size=0, buckets=["_sumo.status.keyword"])
 
         buckets = result["aggregations"]["_sumo.status.keyword"]["buckets"]
@@ -71,9 +82,7 @@ class Explorer:
         return status
 
     def get_dict_of_case_names(self, size=1000) -> Dict[str, str]:
-
-        """returns dictionary of cases where key is name, value sumo_id
-        returns: case_dict (dict): key is name, value is sumo id"""
+        """Returns mapping of case names to Sumo case ID"""
         results = return_hits(
             self.get(
                 "/searchroot", query="class:case", select=["fmu.case.name"], size=size
@@ -85,7 +94,8 @@ class Explorer:
         return case_dict
 
     def get_case_by_name(self, name: str) -> Case:
-        """Fetches case from case name
+        """Gets a case from its name.
+
         args:
             name (str): name of case
 
@@ -97,7 +107,7 @@ class Explorer:
         return self.get_case_by_id(return_case_sumo_id(name, result))
 
     def get_case_by_id(self, sumo_id: str) -> Case:
-        """Returns Case class with given id
+        """Returns case from its unique Sumo ID.
         args:
         sumo_id (str): sumo id for case to extract
         returns Case : Case given the sumo_id
@@ -111,11 +121,12 @@ class Explorer:
         return Case(self.sumo, hits[0])
 
     def get_cases(self, status=None, fields=None, users=None) -> DocumentCollection:
-        """Returns all cases in given sumo environment
+        """Returns all cases in given sumo environment.
+
         args:
-        status (str or None): filter on status (i.e. whether they will be kept or not)
-        fields (list or None): filter on what fields that own the data
-        users (list or None): filter on what users that have generated the data
+            status (str or None): filter on status
+            fields (list or None): filter on field(s)
+            users (list or None): filter on user(s)
         """
         query_string = "class:case"
 
