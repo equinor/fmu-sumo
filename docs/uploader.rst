@@ -15,17 +15,25 @@ Usage and examples
 Assumptions:
 
 - An FMU case is being ran.
-
 - fmu-dataio is being used to export data with rich metadata.
+
+.. note::
+
   **fmu-dataio** is the FMU plugin for exporting data out of FMU workflows with rich metadata.
   For more information and instructions/documentation, please see the
   `fmu-dataio documentation <https://fmu-dataio.readthedocs.io/en/latest/>`_
 
 - User has necessary accesses
+
+.. note::
+
   Within Equinor, apply for Sumo on your respective asset in AccessIT. With Komodo activated,
-  run ``sumo_login`` from the unix command line to confirm/establish the local access.
+  run ``sumo_login`` from the Equinor unix command line to confirm/establish the local access.
 
 - Case metadata is being generated for this case, and the case is registered on Sumo.
+
+.. note::
+
   Use the ``--sumo`` argument flag to the `create_case_metadata` job in an ERT hook workflow,
   see `fmu-dataio documentation <https://fmu-dataio.readthedocs.io/en/latest/>`_ for more
   details.
