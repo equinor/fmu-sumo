@@ -1,4 +1,4 @@
-"""Functionality for exploring results from sumo"""
+"""Module for reading FMU results from Sumo in the FMU context."""
 from typing import List, Dict
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer._case import Case
@@ -14,7 +14,8 @@ from fmu.sumo.explorer._child_object import ChildObject
 
 
 class Explorer:
-    """
+    """Class for consuming FMU results from Sumo.
+
     The Sumo Explorer is a Python package for consuming FMU results stored in Sumo. It
     is FMU aware, and creates an abstraction on top of the Sumo API. The purpose of the
     package is to create an FMU-oriented Python interface towards FMU data in Sumo, and
@@ -27,7 +28,8 @@ class Explorer:
 
     """
 
-    def __init__(self, env="prod", token=None, interactive=True):
+    def __init__(self, env, token=None, interactive=True):
+        """Initialize the Explorer class."""
         self._env = env
         self.utils = Utils()
         self.sumo = SumoClient(env=env, token=token, interactive=interactive)
@@ -37,7 +39,7 @@ class Explorer:
         """Returning the _env attribute"""
         return self._env
 
-    def get_fields(self):
+    def get_fields(self) -> Dict[str, int]:
         """Returns a dictionary of case count per field."""
         result = self.sumo.get(
             "/search",
@@ -81,7 +83,6 @@ class Explorer:
         return status
 
     def get_dict_of_case_names(self, size=1000) -> Dict[str, str]:
-
         """ "Returns mapping of case names to Sumo case ID
         returns: case_dict (dict): key is name, value is sumo id
         """
@@ -123,11 +124,12 @@ class Explorer:
         return Case(self.sumo, hits[0])
 
     def get_cases(self, status=None, fields=None, users=None) -> DocumentCollection:
-        """Returns all cases in given sumo environment
+        """Returns all cases in given sumo environment.
+
         args:
-        status (str or None): filter on status
-        fields (list or None): filter on field(s)
-        users (list or None): filter user(s)
+            status (str or None): filter on status
+            fields (list or None): filter on field(s)
+            users (list or None): filter on user(s)
         """
         query_string = "class:case"
 
