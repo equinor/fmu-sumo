@@ -3,51 +3,65 @@ from typing import List, Dict
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer._case import Case
 from fmu.sumo.explorer._utils import (
-    Utils, TimeData, ObjectType, return_hits, return_case_sumo_id
+    Utils,
+    TimeData,
+    ObjectType,
+    return_hits,
+    return_case_sumo_id,
 )
 from fmu.sumo.explorer._document_collection import DocumentCollection
 from fmu.sumo.explorer._child_object import ChildObject
 
 
 class Explorer:
-    """Class for exploring sumo"""
+    """
+    The Sumo Explorer is a Python package for consuming FMU results stored in Sumo. It
+    is FMU aware, and creates an abstraction on top of the Sumo API. The purpose of the
+    package is to create an FMU-oriented Python interface towards FMU data in Sumo, and
+    make it easy for FMU users in various contexts to use data stored in Sumo. Examples
+    of use cases:
+
+      - Applications (example: Webviz)
+      - Scripts (example: Local post-processing functions)
+      - Manual data browsing and visualization (example: A Jupyter Notebook)
+
+    """
+
     def __init__(self, env="prod", token=None, interactive=True):
         self._env = env
         self.utils = Utils()
-        self.sumo = SumoClient(
-            env=env,
-            token=token,
-            interactive=interactive
-        )
+        self.sumo = SumoClient(env=env, token=token, interactive=interactive)
 
     @property
     def env(self) -> str:
-        """Returning the _env attribute
-        """
+        """Returning the _env attribute"""
         return self._env
 
     def get_fields(self):
-        """Returns the fields with stored results in given sumo environment"""
-        result = self.sumo.get("/search",
+        """Returns a dictionary of case count per field."""
+        result = self.sumo.get(
+            "/search",
             size=0,
-            buckets=['masterdata.smda.field.identifier.keyword'],
+            buckets=["masterdata.smda.field.identifier.keyword"],
             query="class:case",
-            bucketsize=100
+            bucketsize=100,
         )
 
-        buckets = result["aggregations"]["masterdata.smda.field.identifier.keyword"]["buckets"]
+        buckets = result["aggregations"]["masterdata.smda.field.identifier.keyword"][
+            "buckets"
+        ]
         fields = self.utils.map_buckets(buckets)
 
         return fields
 
     def get_users(self) -> Dict[str, int]:
-        """Returns users that have stored results in given sumo environment
-        returns users (dict): key is user name, value is how many cases"""
-        result = self.sumo.get("/search",
+        """Returns dictionary of case count per user."""
+        result = self.sumo.get(
+            "/search",
             size=0,
-            buckets=['fmu.case.user.id.keyword'],
+            buckets=["fmu.case.user.id.keyword"],
             query="class:case",
-            bucketsize=500
+            bucketsize=500,
         )
 
         buckets = result["aggregations"]["fmu.case.user.id.keyword"]["buckets"]
@@ -56,13 +70,10 @@ class Explorer:
         return users
 
     def get_status(self) -> Dict[str, int]:
-        """Returns the status of the different cases
-           i.e. whether case is to be kept, scratched or to be deleted
+        """Returns dictionary of status of per case
+        i.e. whether case is to be kept, scratched or to be deleted
         """
-        result = self.sumo.get("/searchroot",
-            size=0,
-            buckets=["_sumo.status.keyword"]
-        )
+        result = self.sumo.get("/searchroot", size=0, buckets=["_sumo.status.keyword"])
 
         buckets = result["aggregations"]["_sumo.status.keyword"]["buckets"]
         status = self.utils.map_buckets(buckets)
@@ -71,29 +82,34 @@ class Explorer:
 
     def get_dict_of_case_names(self, size=1000) -> Dict[str, str]:
 
-        """returns dictionary of cases where key is name, value sumo_id
-        returns: case_dict (dict): key is name, value is sumo id"""
-        results = return_hits(self.get("/searchroot", query="class:case",
-                                       select=["fmu.case.name"], size=size))
+        """ "Returns mapping of case names to Sumo case ID
+        returns: case_dict (dict): key is name, value is sumo id
+        """
+        results = return_hits(
+            self.get(
+                "/searchroot", query="class:case", select=["fmu.case.name"], size=size
+            )
+        )
         case_dict = {}
         for result in results:
             case_dict[result["_source"]["fmu"]["case"]["name"]] = result["_id"]
         return case_dict
 
     def get_case_by_name(self, name: str) -> Case:
-        """Fetches case from case name
+        """Gets a case from its name.
+
         args:
             name (str): name of case
 
         """
-        query = f"class:case AND fmu.case.name:\'{name}\'"
-        result = self.sumo.get("/search", select=["fmu.case"],
-                               sort=["_doc:desc"],
-                               query=query)
+        query = f"class:case AND fmu.case.name:'{name}'"
+        result = self.sumo.get(
+            "/search", select=["fmu.case"], sort=["_doc:desc"], query=query
+        )
         return self.get_case_by_id(return_case_sumo_id(name, result))
 
     def get_case_by_id(self, sumo_id: str) -> Case:
-        """Returns Case class with given id
+        """Returns case from its unique Sumo ID.
         args:
         sumo_id (str): sumo id for case to extract
         returns Case : Case given the sumo_id
@@ -106,17 +122,12 @@ class Explorer:
 
         return Case(self.sumo, hits[0])
 
-    def get_cases(
-        self,
-        status=None,
-        fields=None,
-        users=None
-    ) -> DocumentCollection:
+    def get_cases(self, status=None, fields=None, users=None) -> DocumentCollection:
         """Returns all cases in given sumo environment
         args:
-        status (str or None): filter on status (i.e. whether they will be kept or not)
-        fields (list or None): filter on what fields that own the data
-        users (list or None): filter on what users that have generated the data
+        status (str or None): filter on status
+        fields (list or None): filter on field(s)
+        users (list or None): filter user(s)
         """
         query_string = "class:case"
 
@@ -134,13 +145,10 @@ class Explorer:
 
         elastic_query = {
             "query": {
-                "query_string": {
-                    "query": query_string,
-                    "default_operator": "AND"
-                }
+                "query_string": {"query": query_string, "default_operator": "AND"}
             },
             "sort": [{"tracklog.datetime": "desc"}],
-            "size": 500
+            "size": 500,
         }
 
         return DocumentCollection(
@@ -159,22 +167,22 @@ class Explorer:
         iteration_ids: List[int] = (),
         realization_ids: List[int] = (),
         aggregations: List[str] = (),
-        include_time_data: TimeData = None
-    ): # noqa
+        include_time_data: TimeData = None,
+    ):  # noqa
         """
-            Search for child objects in a case.
+        Search for child objects in a case.
 
-            Arguments:
-                `object_type`: surface | polygons | table (ObjectType)
-                `object_names`: list of object names (strings)
-                `tag_names`: list of tag names (strings)
-                `time_intervals`: list of time intervals (strings)
-                `iteration_ids`: list of iteration ids (integers)
-                `realization_ids`: list of realizatio ids (intergers)
-                `aggregations`: list of aggregation operations (strings)
+        Arguments:
+            `object_type`: surface | polygons | table (ObjectType)
+            `object_names`: list of object names (strings)
+            `tag_names`: list of tag names (strings)
+            `time_intervals`: list of time intervals (strings)
+            `iteration_ids`: list of iteration ids (integers)
+            `realization_ids`: list of realizatio ids (intergers)
+            `aggregations`: list of aggregation operations (strings)
 
-            Returns:
-                `DocumentCollection` used for retrieving search results
+        Returns:
+            `DocumentCollection` used for retrieving search results
         """
 
         terms = {}
@@ -209,13 +217,13 @@ class Explorer:
             terms=terms,
             size=20,
             sort=[{"tracklog.datetime": "desc"}],
-            include_time_data=include_time_data
+            include_time_data=include_time_data,
         )
 
         return DocumentCollection(
             self.sumo,
             query,
-            lambda d: list(map(lambda c: ChildObject(self.sumo, c), d))
+            lambda d: list(map(lambda c: ChildObject(self.sumo, c), d)),
         )
 
     def get(self, path, **params):

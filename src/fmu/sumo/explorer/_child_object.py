@@ -2,6 +2,7 @@
 
 from fmu.sumo.explorer._utils import get_surface
 
+
 class ChildObject:
 
     """Object containing some easy metadata, and object"""

@@ -12,15 +12,12 @@ from xtgeo import surface_from_file
 # is introduced
 AGG_NAME = "aggregation"
 
-OBJECT_TYPES = {
-    'surface': '.gri',
-    'polygons': '.csv',
-    'table': '.csv'
-}
+OBJECT_TYPES = {"surface": ".gri", "polygons": ".csv", "table": ".csv"}
 
 
 class ObjectType(str, Enum):
     """Class containing object type"""
+
     SURFACE = "surface"
     POLYGONS = "polyons"
     TABLE = "table"
@@ -28,6 +25,7 @@ class ObjectType(str, Enum):
 
 class Property(str, Enum):
     """Class containing property types"""
+
     TAG_NAME = "tag_name"
     TIME_INTERVAL = "time_interval"
     TIME_TYPE = "time_type"
@@ -39,6 +37,7 @@ class Property(str, Enum):
 
 class TimeData(str, Enum):
     """Class containing TimeData types"""
+
     ALL = "ALL"
     TIMESTAMP = "TIMESTAMP"
     TIME_INTERVAL = "TIME_INTERVAL"
@@ -47,6 +46,7 @@ class TimeData(str, Enum):
 
 class WarnTemplate(Warning):
     """template for custom templates"""
+
     __metaclass__ = ABCMeta
 
     def __init__(self, message):
@@ -79,7 +79,7 @@ def init_logging(name, loglevel=None):
     loglevel (None or string): the log level
     returns logger (logging.Logger)
     """
-    dateformat = '%m/%d/%Y %I:%M:%S'
+    dateformat = "%m/%d/%Y %I:%M:%S"
     mess_format = "%(name)s %(levelname)s: %(message)s"
 
     if loglevel is None:
@@ -87,8 +87,9 @@ def init_logging(name, loglevel=None):
         logger.addHandler(logging.NullHandler())
     else:
         # Allow use both lower and upper case with upper
-        logging.basicConfig(level=loglevel.upper(), format=mess_format,
-                            datefmt=dateformat)
+        logging.basicConfig(
+            level=loglevel.upper(), format=mess_format, datefmt=dateformat
+        )
         logger = logging.getLogger(name)
     return logger
 
@@ -104,9 +105,9 @@ def return_case_sumo_id(case_name, query_results):
 
     if len(hits) > 1:
         message = (
-            f"Several cases called {case_name} ({len(hits)}, returning first " +
-            "match, this might not be the case you wanted!! Having several " +
-            "cases with the same name is unwise, and strongly discouraged."
+            f"Several cases called {case_name} ({len(hits)}, returning first "
+            + "match, this might not be the case you wanted!! Having several "
+            + "cases with the same name is unwise, and strongly discouraged."
         )
         warnings.warn(message, TooManyCasesWarning)
 
@@ -133,9 +134,9 @@ def return_hits(query_results):
     return_count = len(hits)
     if return_count < total_count:
         message = (
-            "Your query returned less than the total number of hits\n" +
-            f"({return_count} vs {total_count}). You might wanna rerun \n" +
-            f"the query with size set to {total_count}"
+            "Your query returned less than the total number of hits\n"
+            + f"({return_count} vs {total_count}). You might wanna rerun \n"
+            + f"the query with size set to {total_count}"
         )
         warnings.warn(message, TooLowSizeWarning)
     return hits
@@ -146,19 +147,16 @@ def get_vector_name(source):
     source (dict): results from elastic search query _source
     """
 
-    name = [
-        col for col in source["data"]["spec"]["columns"] if "REAL" not in col
-    ][-1]
+    name = [col for col in source["data"]["spec"]["columns"] if "REAL" not in col][-1]
     return name
 
 
 def choose_naming_convention(kwargs):
     """Figures out how to name keys in functions dealing with object_ids
     kwargs (dict): dictionary
-    returns name_per_real (bool): """
+    returns name_per_real (bool):"""
     name_per_real = True
-    if (kwargs["data_type"] == "table" and
-        kwargs["content"] == "timeseries"):
+    if kwargs["data_type"] == "table" and kwargs["content"] == "timeseries":
         name_per_real = False
     return name_per_real
 
@@ -171,10 +169,14 @@ def perform_query(case, **kwargs):
     """
     logger = init_logging(__name__ + ".perform_query")
     logger.debug("Calling function with %s", kwargs)
-    convert = {"data_type": "class", "content": "data.content",
-               "name": "data.name", "tag": "data.tagname",
-               "iteration": "fmu.iteration.id",
-               AGG_NAME: "fmu.aggregation.operation"}
+    convert = {
+        "data_type": "class",
+        "content": "data.content",
+        "name": "data.name",
+        "tag": "data.tagname",
+        "iteration": "fmu.iteration.id",
+        AGG_NAME: "fmu.aggregation.operation",
+    }
 
     size = kwargs.get("size", 1000)
     try:
@@ -304,10 +306,10 @@ def get_vector_data(object_ids, vector_name, exp):
 
 def get_surface_object(surf_id, exp):
     """Fetches a surface as xtgeo object from blob store
-   args:
-    surf_id (str): object id for surface
-    exp (fmu.sumo.Explorer): the explorer to find data with
-    returns surface (xtgeo.surface): the extracted object
+    args:
+     surf_id (str): object id for surface
+     exp (fmu.sumo.Explorer): the explorer to find data with
+     returns surface (xtgeo.surface): the extracted object
     """
     surface = surface_from_file(BytesIO(get_object(surf_id, exp)))
     return surface
@@ -353,14 +355,14 @@ def get_surface(object_ids, exp, **kwargs):
 
         surf = get_surface_from_real(object_ids, real_nr, exp)
 
-    elif ((name is not None) and (agg_type is not None)):
+    elif (name is not None) and (agg_type is not None):
         surf = get_aggregated_surface(object_ids, name, agg_type, exp)
     else:
         raise SumoGetObjectError(
-            f"Cannot get object from dict {object_ids} either real_nr or" +
-            " combination of name, and agg_type needs to be defined\n" +
-            f"Your call {keywords}"
-            )
+            f"Cannot get object from dict {object_ids} either real_nr or"
+            + " combination of name, and agg_type needs to be defined\n"
+            + f"Your call {keywords}"
+        )
     return surf
 
 
@@ -374,7 +376,7 @@ class Utils:
         returns: mapped (dict): key is bucket_name, value is count
         """
         mapped = {}
-        buckets_sorted = sorted(buckets, key=lambda b: b['key'])
+        buckets_sorted = sorted(buckets, key=lambda b: b["key"])
 
         for bucket in buckets_sorted:
             mapped[bucket["key"]] = bucket["doc_count"]
@@ -382,18 +384,20 @@ class Utils:
         return mapped
 
     def create_elastic_query(
-            self,
-            object_type='surface',
-            size=0,
-            sort=None,
-            terms=None,
-            fields_exists=None,
-            aggregate_field=None,
-            include_time_data=None
+        self,
+        object_type="surface",
+        size=0,
+        sort=None,
+        terms=None,
+        fields_exists=None,
+        aggregate_field=None,
+        include_time_data=None,
     ):
         """Creates elastic query"""
         if object_type not in list(OBJECT_TYPES):
-            raise Exception(f"Invalid object_type: {object_type}. Accepted object_types: {OBJECT_TYPES}")
+            raise Exception(
+                f"Invalid object_type: {object_type}. Accepted object_types: {OBJECT_TYPES}"
+            )
 
         elastic_query = {
             "size": size,
@@ -417,8 +421,8 @@ class Utils:
                             }else {
                                 emit('NONE');
                             }
-                        """
-                    }
+                        """,
+                    },
                 },
                 "time_type": {
                     "type": "keyword",
@@ -440,8 +444,8 @@ class Utils:
                             } else {
                                 emit("NONE");
                             }
-                        """
-                    }
+                        """,
+                    },
                 },
                 "tag_name": {
                     "type": "keyword",
@@ -458,13 +462,11 @@ class Utils:
                                 emit(surface_content);
                             }}
                         """
-                    }
-                }
+                    },
+                },
             },
-            "query": {
-                "bool": {}
-            },
-            "fields": ["tag_name", "time_interval"]
+            "query": {"bool": {}},
+            "fields": ["tag_name", "time_interval"],
         }
 
         must = [{"match": {"class": object_type}}]
@@ -474,49 +476,34 @@ class Utils:
             elastic_query["sort"] = sort
 
         for field in terms:
-            must.append({
-                "terms": {field: terms[field]}
-            })
+            must.append({"terms": {field: terms[field]}})
 
         for field in fields_exists:
-            must.append({
-                "exists": {"field": field}
-            })
+            must.append({"exists": {"field": field}})
 
         if aggregate_field:
             elastic_query["aggs"] = {
-                aggregate_field: {
-                    "terms": {
-                        "field": aggregate_field,
-                        "size": 300
-                    }
-                }
+                aggregate_field: {"terms": {"field": aggregate_field, "size": 300}}
             }
 
         if aggregate_field in ["tag_name", "time_interval"]:
-            must_not.append({
-                "term": {aggregate_field: "NONE"}
-            })
+            must_not.append({"term": {aggregate_field: "NONE"}})
 
         if include_time_data is not None:
             if include_time_data == TimeData.ALL:
-                must.append({
-                    "terms": {"time_type": ["TIMESTAMP", "TIME_INTERVAL"]}
-                })
+                must.append({"terms": {"time_type": ["TIMESTAMP", "TIME_INTERVAL"]}})
             elif include_time_data == TimeData.TIMESTAMP:
-                must.append({
-                    "term": {"time_type": "TIMESTAMP"}
-                })
+                must.append({"term": {"time_type": "TIMESTAMP"}})
             elif include_time_data == TimeData.TIME_INTERVAL:
-                must.append({
-                    "term": {"time_type": "TIME_INTERVAL"}
-                })
+                must.append({"term": {"time_type": "TIME_INTERVAL"}})
             elif include_time_data == TimeData.NONE:
-                must_not.append({
-                    "terms": {"time_type": ["TIMESTAMP", "TIME_INTERVAL"]}
-                })
+                must_not.append(
+                    {"terms": {"time_type": ["TIMESTAMP", "TIME_INTERVAL"]}}
+                )
             else:
-                raise ValueError(f"Invalid value for include_time_data: {include_time_data}")
+                raise ValueError(
+                    f"Invalid value for include_time_data: {include_time_data}"
+                )
 
         if len(must) > 0:
             elastic_query["query"]["bool"]["must"] = must

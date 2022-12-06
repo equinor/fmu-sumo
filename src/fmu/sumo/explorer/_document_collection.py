@@ -9,12 +9,7 @@ import zipfile
 
 
 class DocumentCollection(Sequence):
-    def __init__(
-        self,
-        sumo_client,
-        query,
-        mapper_function=None
-    ):
+    def __init__(self, sumo_client, query, mapper_function=None):
         self.sumo = sumo_client
         self.result_count = None
         self.search_after = None
@@ -22,7 +17,6 @@ class DocumentCollection(Sequence):
         self.query = self.__validate_query__(query)
 
         self.documents = self.__next_batch__()
-
 
     def __validate_query__(self, query):
         required_keys = ["size", "sort"]
@@ -34,7 +28,6 @@ class DocumentCollection(Sequence):
 
         return query
 
-
     def __next_batch__(self):
         query = self.query.copy()
 
@@ -44,21 +37,21 @@ class DocumentCollection(Sequence):
         result = self.sumo.post("/search", json=query).json()
         documents = result["hits"]["hits"]
 
-        if(len(documents) > 0):
+        if len(documents) > 0:
             self.search_after = documents[-1]["sort"]
 
             if not self.result_count:
                 self.result_count = result["hits"]["total"]["value"]
 
-            return self.mapper_function(documents) if self.mapper_function else documents
+            return (
+                self.mapper_function(documents) if self.mapper_function else documents
+            )
         else:
             self.result_count = 0
             return []
 
-
     def __len__(self):
         return self.result_count
-
 
     def __getitem__(self, key):
         start = key
@@ -77,7 +70,6 @@ class DocumentCollection(Sequence):
         else:
             return self.documents[start:stop] if stop else self.documents[start]
 
-
     def aggregate(self, operations):
         if self.documents[0].object_type != "surface":
             raise Exception(f"Can't aggregate: {self.documents[0].object_type}")
@@ -94,15 +86,11 @@ class DocumentCollection(Sequence):
         query = {**self.query, "size": self.result_count}
         result = self.sumo.post("/search", json=query)
 
-        object_ids = list(map(
-            lambda s : s["_id"],
-            result.json()["hits"]["hits"]
-        ))
+        object_ids = list(map(lambda s: s["_id"], result.json()["hits"]["hits"]))
 
-        response = self.sumo.post("/aggregate", json={
-            "operation": operation_list,
-            "object_ids": object_ids
-        })
+        response = self.sumo.post(
+            "/aggregate", json={"operation": operation_list, "object_ids": object_ids}
+        )
 
         if multiple_operations:
             result = {}
