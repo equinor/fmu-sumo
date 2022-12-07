@@ -289,6 +289,17 @@ def get_object(object_id, exp):
     return obj
 
 
+def read_arrow(object_id, exp):
+    """Reads arrow from sumo object
+    args:
+    object_id (str): id of the object
+    returns: table (pa.Table)
+    """
+    with pa.ipc.open_file(get_object(object_id, exp)) as reader:
+        table = reader.read_table()
+    return table
+
+
 def get_vector_data(object_ids, vector_name, exp):
 
     """Reads from dictionary of object id's
@@ -296,12 +307,11 @@ def get_vector_data(object_ids, vector_name, exp):
     object_ids (dict): dictionary with key vector name, and value object id
     vector_name (str): name of vector
     exp (fmu.sumo.Explorer): the explorer to find data with
-    returns table (pd.DataFrame): the fetched data
+    returns frame (pd.DataFrame): the fetched data
     """
     object_id = object_ids[vector_name]
-    with pa.ipc.open_file(get_object(object_id, exp)) as reader:
-        table = reader.read_pandas()
-    return table
+    frame = read_arrow(object_id, exp).to_pandas()
+    return frame
 
 
 def get_surface_object(surf_id, exp):
