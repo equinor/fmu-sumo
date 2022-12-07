@@ -1,6 +1,6 @@
 """Contains child object classes"""
-
-from fmu.sumo.explorer._utils import get_surface
+# Uncomment if SurfaceObject id is matured
+# from fmu.sumo.explorer._utils import get_surface
 
 
 class ChildObject:
@@ -66,33 +66,34 @@ class ChildObject:
         return png
 
 
-class SurfaceObjects:
-
-    """Container for a set of objects"""
-
-    def __init__(object_ids, case):
-        """Init of objects
-        args:
-        object_ids (dict): key is real, value is object id
-        case fmu.sumo.Ex
-        """
-        self._object_ids = object_ids
-        self._sumo = case
-
-    @property
-    def object_ids(self):
-        """Returns _object_ids attribute"""
-        return self._object_ids
-
-    @property
-    def sumo(self):
-        """Returns _sumo attribute"""
-        return self._sumo
-
-    def get_surface(self, **kwargs):
-        """Returns xtgeo surface
-        args:
-        kwargs (dict): dictionary of input
-
-        """
-        return get_surface(self.object_ids, self.sumo, **kwargs)
+# Commented out, immature. But idea should be persued further
+# class SurfaceObjects:
+#
+#     """Container for a set of objects"""
+#
+#     def __init__(object_ids, case):
+#         """Init of objects
+#         args:
+#         object_ids (dict): key is real, value is object id
+#         case fmu.sumo.Ex
+#         """
+#         self._object_ids = object_ids
+#         self._sumo = case
+#
+#     @property
+#     def object_ids(self):
+#         """Returns _object_ids attribute"""
+#         return self._object_ids
+#
+#     @property
+#     def sumo(self):
+#         """Returns _sumo attribute"""
+#         return self._sumo
+#
+#     def get_surface(self, **kwargs):
+#         """Returns xtgeo surface
+#         args:
+#         kwargs (dict): dictionary of input
+#
+#         """
+#         return get_surface(self.object_ids, self.sumo, **kwargs)

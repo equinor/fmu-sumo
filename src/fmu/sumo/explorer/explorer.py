@@ -72,9 +72,7 @@ class Explorer:
         return users
 
     def get_status(self) -> Dict[str, int]:
-        """Returns dictionary of status of per case
-        i.e. whether case is to be kept, scratched or to be deleted
-        """
+        """Returns dictionary with status of per case"""
         result = self.sumo.get("/searchroot", size=0, buckets=["_sumo.status.keyword"])
 
         buckets = result["aggregations"]["_sumo.status.keyword"]["buckets"]

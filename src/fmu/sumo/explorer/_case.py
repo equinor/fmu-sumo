@@ -48,7 +48,6 @@ class Case:
 
         return self.utils.map_buckets(buckets)
 
-
     def get_summary_object_ids(self, **kwargs) -> Dict[str, str]:
         """Gets blob_ids for summary data aggregated per vector
         args kwargs (dict): various keyword arguments
@@ -57,7 +56,6 @@ class Case:
         return get_object_ids(self, data_type="table", content="timeseries", **kwargs)
 
     def get_object_ids(
-
         self, name, tag, data_type="surface", content="depth", iteration=0, **kwargs
     ) -> Dict[str, str]:
         """Gets blob ids for most datatypes.
@@ -75,7 +73,6 @@ class Case:
 
         """
         return get_object_ids(
-
             self,
             name=name,
             tag=tag,
