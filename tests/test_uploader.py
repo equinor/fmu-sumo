@@ -18,14 +18,15 @@ logger.setLevel(level="DEBUG")
 
 
 class SumoConnection:
-    def __init__(self, env):
+    def __init__(self, env, token=None):
         self.env = env
         self._connection = None
+        self.token = token
 
     @property
     def connection(self):
         if self._connection is None:
-            self._connection = uploader.SumoConnection(env=self.env)
+            self._connection = uploader.SumoConnection(env=self.env, token=self.token)
         return self._connection
 
 
@@ -39,9 +40,9 @@ def _remove_cached_case_id():
 ### TESTS ###
 
 
-def test_initialization():
+def test_initialization(token):
     """Assert that the CaseOnDisk object can be initialized"""
-    sumo_connection = SumoConnection(env=ENV).connection
+    sumo_connection = SumoConnection(env=ENV, token=token).connection
 
     case = uploader.CaseOnDisk(
         case_metadata_path="tests/data/test_case_080/case.yml",
@@ -49,14 +50,14 @@ def test_initialization():
     )
 
 
-def test_pre_teardown():
+def test_pre_teardown(token):
     """Run teardown first to remove remnants from other test runs."""
-    test_teardown()
+    test_teardown(token)
 
 
-def test_upload_without_registration():
+def test_upload_without_registration(token):
     """Assert that attempting to upload to a non-existing case gives warning."""
-    sumo_connection = uploader.SumoConnection(env=ENV)
+    sumo_connection = uploader.SumoConnection(env=ENV, token=token)
 
     _remove_cached_case_id()
 
@@ -71,9 +72,9 @@ def test_upload_without_registration():
         case.upload(threads=1)
 
 
-def test_case():
+def test_case(token):
     """Assert that after uploading case to Sumo, the case is there and the only one."""
-    sumo_connection = uploader.SumoConnection(env=ENV)
+    sumo_connection = uploader.SumoConnection(env=ENV, token=token)
 
     _remove_cached_case_id()
 
@@ -109,10 +110,10 @@ def test_case():
     assert len(hits) == 1
 
 
-def test_one_file():
+def test_one_file(token):
     """Upload one file to Sumo. Assert that it is there."""
 
-    sumo_connection = uploader.SumoConnection(env=ENV)
+    sumo_connection = uploader.SumoConnection(env=ENV, token=token)
 
     _remove_cached_case_id()
 
@@ -134,12 +135,12 @@ def test_one_file():
     assert total == 2
 
 
-def test_missing_metadata():
+def test_missing_metadata(token):
     """
     Try to upload files where one does not have metadata. Assert that warning is given
     and that upload commences with the other files. Check that the children are present.
     """
-    sumo_connection = uploader.SumoConnection(env=ENV)
+    sumo_connection = uploader.SumoConnection(env=ENV, token=token)
 
     _remove_cached_case_id()
 
@@ -170,12 +171,12 @@ def test_missing_metadata():
     assert total == 2
 
 
-def test_wrong_metadata():
+def test_wrong_metadata(token):
     """
     Try to upload files where one does have metadata with error. Assert that warning is given
     and that upload commences with the other files. Check that the children are present.
     """
-    sumo_connection = uploader.SumoConnection(env=ENV)
+    sumo_connection = uploader.SumoConnection(env=ENV, token=token)
 
     _remove_cached_case_id()
 
@@ -201,9 +202,9 @@ def test_wrong_metadata():
 
 # TEMPORARILY REMOVE SEISMIC TEST PENDING SUMO SUPPORT
 
-# def test_seismic_file():
+# def test_seismic_file(token):
 #     """Upload one seimic file to Sumo. Assert that it is there."""
-#     sumo_connection = uploader.SumoConnection(env=ENV)
+#     sumo_connection = uploader.SumoConnection(env=ENV, token=token)
 #     e = uploader.CaseOnDisk(
 #         case_metadata_path="tests/data/test_case_080/case.yml",
 #         sumo_connection=sumo_connection,
@@ -223,9 +224,9 @@ def test_wrong_metadata():
 #     assert total == 3
 
 
-def test_teardown():
+def test_teardown(token):
     """Teardown all testdata"""
-    sumo_connection = uploader.SumoConnection(env=ENV)
+    sumo_connection = uploader.SumoConnection(env=ENV, token=token)
 
     _remove_cached_case_id()
 

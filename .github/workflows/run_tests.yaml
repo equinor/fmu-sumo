@@ -26,6 +26,10 @@ jobs:
           pip install pip -U &&
           pip install .
       - name: Run tests
-        run: >
+        run: |
+          access_token=$(az account get-access-token --scope api://88d2b022-3539-4dda-9e66-853801334a86/.default --query accessToken --output tsv)
+          echo ${#access_token}
+          export ACCESS_TOKEN=$access_token
+
           pip install -r requirements/requirements_test.txt &&
-          pytest --disable-warnings -x
+          pytest -x --disable-warnings
