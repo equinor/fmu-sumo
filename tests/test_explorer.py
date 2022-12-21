@@ -173,12 +173,12 @@ def test_toolowsize_warning_content():
         assert warn_message == test_message, assert_mess
 
 
-def test_sumo_id_attribute(sum_case):
-    """Tests getting sumo_id
-    args
-    test_explorer (sumo.Explorer):
-    """
-    assert_correct_uuid(sum_case.sumo_id)
+# def test_sumo_id_attribute(sum_case):
+#     """Tests getting sumo_id
+#     args
+#     test_explorer (sumo.Explorer):
+#     """
+#     assert_correct_uuid(sum_case.sumo_id)
 
 
 def test_get_dict_of_case_names(test_explorer):
@@ -188,79 +188,79 @@ def test_get_dict_of_case_names(test_explorer):
     assert_uuid_dict(test_explorer.get_dict_of_case_names())
 
 
-def test_func_get_surface_object_ids(the_logger, sum_case):
-    """Tests method get_object_blob_ids"""
+# def test_func_get_surface_object_ids(the_logger, sum_case):
+#     """Tests method get_object_blob_ids"""
 
-    results = ut.get_object_ids(sum_case, data_type="surface", content="depth",
-                                name="VOLANTIS GP. Base",
-                                tag="FACIES_Fraction_Offshore", iteration=0,
-    )
-    # |result_file = "dict_of_surface_blob_ids.json"
+#     results = ut.get_object_ids(sum_case, data_type="surface", content="depth",
+#                                 name="VOLANTIS GP. Base",
+#                                 tag="FACIES_Fraction_Offshore", iteration=0,
+#     )
+#     # |result_file = "dict_of_surface_blob_ids.json"
 
-    # write_json(result_file, results)
-    # correct = read_json(result_file)
+#     # write_json(result_file, results)
+#     # correct = read_json(result_file)
 
-    assert len(results) == 155
-    assert_uuid_dict(results)
+#     assert len(results) == 155
+#     assert_uuid_dict(results)
     # assert_dict_equality(results, correct)
 
 
-def test_funct_get_surface_object_ids_w_aggregation(sum_case):
+# def test_funct_get_surface_object_ids_w_aggregation(sum_case):
 
-    """Tests function get_object_blob_ids with aggregation"""
-    results = ut.get_aggregated_object_ids(sum_case, data_type="surface", content="depth",
-                                           name="VOLANTIS GP. Base",
-                                           tag="FACIES_Fraction_Offshore", iteration=0,
-                                           aggregation="*"
-    )
-    assert len(results.keys()) == 1
-    for surf_name in results:
-        assert len(results[surf_name]) == 7
-        assert isinstance(surf_name, str)
-        assert_uuid_dict(results[surf_name])
-
-
-def test_func_get_sum_object_ids(the_logger, sum_case):
-    """Tests method get_object_blob_ids"""
-    results = ut.get_object_ids(sum_case, data_type="table",
-                                content="timeseries",
-    )
-    # result_file = "dict_of_sum_blob_ids.json"
-
-    # write_json(result_file, results)
-
-    # correct = read_json(result_file)
-
-    assert len(results) == 974
-    assert_uuid_dict(results)
-    # assert_dict_equality(results, correct)
+#     """Tests function get_object_blob_ids with aggregation"""
+#     results = ut.get_aggregated_object_ids(sum_case, data_type="surface", content="depth",
+#                                            name="VOLANTIS GP. Base",
+#                                            tag="FACIES_Fraction_Offshore", iteration=0,
+#                                            aggregation="*"
+#     )
+#     assert len(results.keys()) == 1
+#     for surf_name in results:
+#         assert len(results[surf_name]) == 7
+#         assert isinstance(surf_name, str)
+#         assert_uuid_dict(results[surf_name])
 
 
-def test_method_get_surface_object_ids(the_logger, sum_case):
-    """Tests method get_object_blob_ids"""
+# def test_func_get_sum_object_ids(the_logger, sum_case):
+#     """Tests method get_object_blob_ids"""
+#     results = ut.get_object_ids(sum_case, data_type="table",
+#                                 content="timeseries",
+#     )
+#     # result_file = "dict_of_sum_blob_ids.json"
 
-    results = sum_case.get_object_ids("VOLANTIS GP. Base",
-                                    "FACIES_Fraction_Offshore")
+#     # write_json(result_file, results)
 
-    # result_file = "dict_of_surface_blob_ids.json"
+#     # correct = read_json(result_file)
 
-    # write_json(result_file, results)
-    # correct = read_json(result_file)
-
-    assert len(results) == 155
-    assert_uuid_dict(results)
-    # assert_dict_equality(results, correct)
+#     assert len(results) == 974
+#     assert_uuid_dict(results)
+#     # assert_dict_equality(results, correct)
 
 
-def test_method_get_sum_object_ids(the_logger, sum_case):
-    """Tests method get_object_blob_ids"""
-    results = sum_case.get_summary_object_ids()
-    # result_file = "dict_of_sum_blob_ids.json"
+# def test_method_get_surface_object_ids(the_logger, sum_case):
+#     """Tests method get_object_blob_ids"""
 
-    # write_json(result_file, results)
+#     results = sum_case.get_object_ids("VOLANTIS GP. Base",
+#                                     "FACIES_Fraction_Offshore")
 
-    # |correct = read_json(result_file)
+#     # result_file = "dict_of_surface_blob_ids.json"
 
-    assert len(results) == 974
-    assert_uuid_dict(results)
-    # assert_dict_equality(results, correct)
+#     # write_json(result_file, results)
+#     # correct = read_json(result_file)
+
+#     assert len(results) == 155
+#     assert_uuid_dict(results)
+#     # assert_dict_equality(results, correct)
+
+
+# def test_method_get_sum_object_ids(the_logger, sum_case):
+#     """Tests method get_object_blob_ids"""
+#     results = sum_case.get_summary_object_ids()
+#     # result_file = "dict_of_sum_blob_ids.json"
+
+#     # write_json(result_file, results)
+
+#     # |correct = read_json(result_file)
+
+#     assert len(results) == 974
+#     assert_uuid_dict(results)
+#     # assert_dict_equality(results, correct)
