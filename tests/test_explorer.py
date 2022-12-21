@@ -181,11 +181,11 @@ def test_toolowsize_warning_content():
 #     assert_correct_uuid(sum_case.sumo_id)
 
 
-def test_get_dict_of_case_names(test_explorer):
-    """tests method get_dict_of_cases
-    """
+# def test_get_dict_of_case_names(prod_explorer):
+#     """tests method get_dict_of_cases
+#     """
 
-    assert_uuid_dict(test_explorer.get_dict_of_case_names())
+#     assert_uuid_dict(prod_explorer.get_dict_of_case_names())
 
 
 # def test_func_get_surface_object_ids(the_logger, sum_case):
