@@ -42,4 +42,4 @@ jobs:
           export ACCESS_TOKEN=$access_token
 
           pip install -r requirements/requirements_test.txt
-          pytest -x
+          pytest -q -s -x
