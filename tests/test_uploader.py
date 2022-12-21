@@ -11,7 +11,7 @@ from fmu.sumo import uploader
 TEST_DIR = Path(__file__).parent / "../"
 os.chdir(TEST_DIR)
 
-ENV = "dev"
+ENV = "test"
 
 logger = logging.getLogger(__name__)
 logger.setLevel(level="DEBUG")

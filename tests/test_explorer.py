@@ -33,10 +33,10 @@ def fixture_test_explorer(token):
     return Explorer("test", token=token)
 
 
-@pytest.fixture(name="prod_explorer")
-def fixture_prod_explorer(token):
-    """Returns explorer"""
-    return Explorer("prod", token=token)
+# @pytest.fixture(name="prod_explorer")
+# def fixture_prod_explorer(token):
+#     """Returns explorer"""
+#     return Explorer("prod", token=token)
 
 
 @pytest.fixture(name="test_case")
@@ -47,11 +47,11 @@ def fixture_test_case(test_explorer, case_name):
     return test_explorer.get_case_by_name(case_name)
 
 
-@pytest.fixture(name="sum_case")
-def fixture_sum_case(token):
-    """Gets case with summary data from prod"""
-    exp = Explorer("prod",token=token)
-    return exp.get_case_by_name("drogon_design_2022_11-01")
+# @pytest.fixture(name="sum_case")
+# def fixture_sum_case(token):
+#     """Gets case with summary data from prod"""
+#     exp = Explorer("prod",token=token)
+#     return exp.get_case_by_name("drogon_design_2022_11-01")
 
 
 def write_json(result_file, results):
@@ -181,11 +181,11 @@ def test_sumo_id_attribute(sum_case):
     assert_correct_uuid(sum_case.sumo_id)
 
 
-def test_get_dict_of_case_names(prod_explorer):
+def test_get_dict_of_case_names(test_explorer):
     """tests method get_dict_of_cases
     """
 
-    assert_uuid_dict(prod_explorer.get_dict_of_case_names())
+    assert_uuid_dict(test_explorer.get_dict_of_case_names())
 
 
 def test_func_get_surface_object_ids(the_logger, sum_case):
