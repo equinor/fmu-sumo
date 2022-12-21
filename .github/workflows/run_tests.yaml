@@ -41,5 +41,5 @@ jobs:
           echo ${#access_token}
           export ACCESS_TOKEN=$access_token
 
-          pip install -r requirements/requirements_test.txt &&
+          pip install -r requirements/requirements_test.txt
           pytest -x --disable-warnings
