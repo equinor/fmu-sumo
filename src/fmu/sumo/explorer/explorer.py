@@ -28,7 +28,7 @@ class Explorer:
 
     """
 
-    def __init__(self, env, token=None, interactive=True):
+    def __init__(self, env="prod", token=None, interactive=True):
         """Initialize the Explorer class."""
         self._env = env
         self.utils = Utils()
