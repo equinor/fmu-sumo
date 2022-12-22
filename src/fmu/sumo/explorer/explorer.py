@@ -121,13 +121,18 @@ class Explorer:
 
         return Case(self.sumo, hits[0])
 
-    def get_cases(self, status=None, fields=None, users=None) -> DocumentCollection:
+    def get_cases(
+        self,
+        status: List[str] = None,
+        fields: List[str] = None,
+        users: List[str] = None,
+    ) -> DocumentCollection:
         """Returns all cases in given sumo environment.
 
         args:
-            status (str or None): filter on status
-            fields (list or None): filter on field(s)
-            users (list or None): filter on user(s)
+            status (list[str] or None): filter on status
+            fields (list[str] or None): filter on field(s)
+            users (list[str] or None): filter on user(s)
         """
         query_string = "class:case"
 

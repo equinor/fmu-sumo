@@ -175,6 +175,59 @@ def test_toolowsize_warning_content():
 
 # def test_sumo_id_attribute(sum_case):
 #     """Tests getting sumo_id
+def test_get_cases():
+    """Test the get_cases method."""
+
+    exp = Explorer()
+    cases = exp.get_cases()
+    assert isinstance(cases, DocumentCollection)
+    assert isinstance(cases[0], Case)
+
+
+def test_get_cases_fields():
+    """Test get_cases method with the fields argument.
+
+    Shall be case insensitive.
+    """
+    exp = Explorer()
+    cases = exp.get_cases(fields=["dRoGoN"])
+    for case in cases:
+        assert case.field_name.lower() == "drogon"
+
+
+def test_get_cases_status():
+    """Test the get_cases method with the status argument."""
+
+    exp = Explorer()
+    cases = exp.get_cases(status=["keep"])
+    for case in cases:
+        assert case.status == "keep"
+
+
+def test_get_cases_user():
+    """Test the get_cases method with the users argument."""
+
+    exp = Explorer()
+    cases = exp.get_cases(users=["peesv"])
+    for case in cases:
+        assert case.user == "peesv"
+
+
+def test_get_cases_combinations():
+    """Test the get_cases method with combined arguments."""
+
+    exp = Explorer()
+    cases = exp.get_cases(
+        fields=["Drogon", "Johan_Sverdrup"], users=["peesv", "dbs"], status=["keep"]
+    )
+    for case in cases:
+        assert (
+            case.user in ["peesv", "dbs"]
+            and case.field_name.lower() in ["drogon", "johan_sverdrup"]
+            and case.status == "keep"
+        )
+
+
 #     args
 #     test_explorer (sumo.Explorer):
 #     """
