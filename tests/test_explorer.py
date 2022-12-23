@@ -7,11 +7,12 @@ from uuid import UUID
 import pytest
 from context import Explorer, ut
 
+from fmu.sumo.explorer._document_collection import DocumentCollection
+from fmu.sumo.explorer._case import Case
 
 TEST_DATA = Path("data")
 logging.basicConfig(level="DEBUG")
 LOGGER = logging.getLogger()
-LOGGER.debug("Tjohei")
 
 
 @pytest.fixture(name="the_logger")
@@ -22,36 +23,22 @@ def fixture_the_logger():
 
 @pytest.fixture(name="case_name")
 def fixture_case_name():
-    """Returns case name
-    """
+    """Returns case name"""
     return "21.x.0.dev_rowh2022_08-17"
 
 
-@pytest.fixture(name="test_explorer")
-def fixture_test_explorer(token):
+@pytest.fixture(name="explorer")
+def fixture_explorer(token):
     """Returns explorer"""
-    return Explorer("test", token=token)
-
-
-# @pytest.fixture(name="prod_explorer")
-# def fixture_prod_explorer(token):
-#     """Returns explorer"""
-#     return Explorer("prod", token=token)
+    return Explorer("dev", token=token)
 
 
 @pytest.fixture(name="test_case")
 def fixture_test_case(test_explorer, case_name):
     """Basis for test of method get_case_by_name for Explorer,
-       but also other attributes
+    but also other attributes
     """
     return test_explorer.get_case_by_name(case_name)
-
-
-# @pytest.fixture(name="sum_case")
-# def fixture_sum_case(token):
-#     """Gets case with summary data from prod"""
-#     exp = Explorer("prod",token=token)
-#     return exp.get_case_by_name("drogon_design_2022_11-01")
 
 
 def write_json(result_file, results):
@@ -114,19 +101,9 @@ def assert_dict_equality(results, correct):
     correct (dict): the one to compare to
     """
     incorrect_mess = (
-        f"the dictionary produced ({results}) is not equal to \n" +
-        f" ({correct})")
+        f"the dictionary produced ({results}) is not equal to \n" + f" ({correct})"
+    )
     assert results == correct, incorrect_mess
-
-# Come back to this
-# def test_logger(caplog):
-#     """Tests the defined logger in explorer"""
-#     logger_name = "tests"
-#     logger = ut.init_logging(logger_name, "debug")
-#     message = "works!"
-#     logger.debug(message)
-#     with caplog:
-#         assert caplog.record_tuples == [(logger_name, logging.DEBUG, message)]
 
 
 def test_cast_toomany_warning():
@@ -173,56 +150,50 @@ def test_toolowsize_warning_content():
         assert warn_message == test_message, assert_mess
 
 
-# def test_sumo_id_attribute(sum_case):
-#     """Tests getting sumo_id
-def test_get_cases():
+def test_get_cases(explorer):
     """Test the get_cases method."""
 
-    exp = Explorer()
-    cases = exp.get_cases()
+    cases = explorer.get_cases()
     assert isinstance(cases, DocumentCollection)
     assert isinstance(cases[0], Case)
 
 
-def test_get_cases_fields():
+def test_get_cases_fields(explorer):
     """Test get_cases method with the fields argument.
 
     Shall be case insensitive.
     """
-    exp = Explorer()
-    cases = exp.get_cases(fields=["dRoGoN"])
+
+    cases = explorer.get_cases(fields=["dRoGoN"])
     for case in cases:
         assert case.field_name.lower() == "drogon"
 
 
-def test_get_cases_status():
+def test_get_cases_status(explorer):
     """Test the get_cases method with the status argument."""
 
-    exp = Explorer()
-    cases = exp.get_cases(status=["keep"])
+    cases = explorer.get_cases(status=["keep"])
     for case in cases:
         assert case.status == "keep"
 
 
-def test_get_cases_user():
+def test_get_cases_user(explorer):
     """Test the get_cases method with the users argument."""
 
-    exp = Explorer()
-    cases = exp.get_cases(users=["peesv"])
+    cases = explorer.get_cases(users=["peesv"])
     for case in cases:
         assert case.user == "peesv"
 
 
-def test_get_cases_combinations():
+def test_get_cases_combinations(explorer):
     """Test the get_cases method with combined arguments."""
 
-    exp = Explorer()
-#     # result_file = "dict_of_sum_blob_ids.json"
-
-#     # write_json(result_file, results)
-
-#     # |correct = read_json(result_file)
-
-#     assert len(results) == 974
-#     assert_uuid_dict(results)
-#     # assert_dict_equality(results, correct)
+    cases = explorer.get_cases(
+        fields=["Drogon", "Johan_Sverdrup"], users=["peesv", "dbs"], status=["keep"]
+    )
+    for case in cases:
+        assert (
+            case.user in ["peesv", "dbs"]
+            and case.field_name.lower() in ["drogon", "johan_sverdrup"]
+            and case.status == "keep"
+        )
