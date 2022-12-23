@@ -17,3 +17,5 @@ add_path()
 
 from fmu.sumo.explorer import Explorer
 import fmu.sumo.explorer._utils as ut
+from fmu.sumo.explorer._document_collection import DocumentCollection
+from fmu.sumo.explorer._case import Case

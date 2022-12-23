@@ -5,10 +5,8 @@ import json
 from pathlib import Path
 from uuid import UUID
 import pytest
-from context import Explorer, ut
+from context import Explorer, Case, DocumentCollection, ut
 
-from fmu.sumo.explorer._document_collection import DocumentCollection
-from fmu.sumo.explorer._case import Case
 
 TEST_DATA = Path("data")
 logging.basicConfig(level="DEBUG")
