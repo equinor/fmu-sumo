@@ -35,7 +35,11 @@ class DocumentCollection(Sequence):
             query["search_after"] = self.search_after
 
         result = self.sumo.post("/search", json=query).json()
-        documents = result["hits"]["hits"]
+        try:
+            documents = result["hits"]["hits"]
+        except:
+            print(result)
+            raise Exception(f"Search failed: {result}");
 
         if len(documents) > 0:
             self.search_after = documents[-1]["sort"]
