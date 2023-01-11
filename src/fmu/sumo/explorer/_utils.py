@@ -417,20 +417,30 @@ class Utils:
                     "script": {
                         "lang": "painless",
                         "source": """
-                            def time = params['_source']['data']['time'];
+def time = params['_source']['data']['time'];
 
-                            if(time != null) {
-                                if(time.length > 1) {
-                                    String start = params['_source']['data']['time'][1]['value'].splitOnToken('T')[0];
-                                    String end = params['_source']['data']['time'][0]['value'].splitOnToken('T')[0];
+try {
+  if(time != null) {
+    if(time.length > 1) {
+      String start = params['_source']['data']['time'][1]['value'].splitOnToken('T')[0];
+      String end = params['_source']['data']['time'][0]['value'].splitOnToken('T')[0];
+      emit(start + ' - ' + end);
+    } else if(time.length > 0) {
+      emit(params['_source']['data']['time'][0]['value'].splitOnToken('T')[0]);
+    }
+  }else {
+    emit('NONE');
+  }
+} catch (Exception ex) {
+  def start = params['_source']['data']['time']['t0'];
+  def end = params['_source']['data']['time']['t1'];
+  if (end != null) {
+    emit(start['value'].splitOnToken('T')[0] + ' - ' + end['value'].splitOnToken('T')[0]);
+  } else {
+    emit(start['value'].splitOnToken('T')[0]);
+  }
+}
 
-                                    emit(start + ' - ' + end);
-                                } else if(time.length > 0) {
-                                    emit(params['_source']['data']['time'][0]['value'].splitOnToken('T')[0]);
-                                }
-                            }else {
-                                emit('NONE');
-                            }
                         """,
                     },
                 },
@@ -439,21 +449,32 @@ class Utils:
                     "script": {
                         "lang": "painless",
                         "source": """
-                            def time = params['_source']['data']['time'];
+def time = params['_source']['data']['time'];
 
-                            if(time != null) {
-                                if(time.length == 0) {
-                                    emit("NONE");
-                                } else if(time.length == 1) {
-                                    emit("TIMESTAMP");
-                                } else if (time.length == 2) {
-                                    emit("TIME_INTERVAL");
-                                } else {
-                                    emit("UNKNOWN");
-                                }
-                            } else {
-                                emit("NONE");
-                            }
+if(time != null) {
+  try {
+    if (time['t0'].value == null) {
+      emit("NONE");
+    } else if (time['t1'].value == null) {
+      emit("TIMESTAMP");
+    } else {
+      emit("TIME_INTERVAL");
+    }
+  }
+  catch (Exception ex) {
+    if(time.length == 0) {
+      emit("NONE");
+    } else if(time.length == 1) {
+      emit("TIMESTAMP");
+    } else if (time.length == 2) {
+      emit("TIME_INTERVAL");
+    } else {
+      emit("UNKNOWN");
+    }
+  }
+} else {
+  emit("NONE");
+}
                         """,
                     },
                 },
@@ -461,16 +482,16 @@ class Utils:
                     "type": "keyword",
                     "script": {
                         "source": f"""
-                            String[] split_path = doc['file.relative_path.keyword'].value.splitOnToken('/');
-                            String file_name = split_path[split_path.length - 1];
-                            String[] split_file_name = file_name.splitOnToken('--');
+String[] split_path = doc['file.relative_path.keyword'].value.splitOnToken('/');
+String file_name = split_path[split_path.length - 1];
+String[] split_file_name = file_name.splitOnToken('--');
 
-                            if(split_file_name.length == 1) {{
-                                emit('NONE');
-                            }} else {{
-                                String surface_content = split_file_name[1].replace('{OBJECT_TYPES[object_type]}', '');
-                                emit(surface_content);
-                            }}
+if(split_file_name.length == 1) {{
+  emit("NONE");
+}} else {{
+  String surface_content = split_file_name[1].replace('{OBJECT_TYPES[object_type]}', "");
+  emit(surface_content);
+}}
                         """
                     },
                 },
