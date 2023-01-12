@@ -24,10 +24,14 @@ class ChildObject:
         self.tag_name = fields["tag_name"][0]
         self.sumo_id = meta_data["_id"]
         self.name = source["data"]["name"]
-        self.iteration_id = source["fmu"]["iteration"]["id"]
         self.relative_path = source["file"]["relative_path"]
         self.meta_data = source
         self.object_type = source["class"]
+
+        if "iteration" in source["fmu"]:
+            self.iteration_id = source["fmu"]["iteration"]["id"]
+        else:
+            self.iteration_id = None
 
         if "realization" in source["fmu"]:
             self.realization_id = source["fmu"]["realization"]["id"]

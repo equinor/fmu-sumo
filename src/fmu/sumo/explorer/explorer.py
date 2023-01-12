@@ -173,6 +173,8 @@ class Explorer:
         realization_ids: List[int] = (),
         aggregations: List[str] = (),
         include_time_data: TimeData = None,
+        stages: List[str] = (),
+        terms: Dict[str, List[str]] = {},
     ):  # noqa
         """
         Search for child objects in a case.
@@ -183,14 +185,15 @@ class Explorer:
             `tag_names`: list of tag names (strings)
             `time_intervals`: list of time intervals (strings)
             `iteration_ids`: list of iteration ids (integers)
-            `realization_ids`: list of realizatio ids (intergers)
+            `realization_ids`: list of realization ids (integers)
             `aggregations`: list of aggregation operations (strings)
+            `stages`: list of stages (strings)
+            `terms`: map of str to list of str, for additional filtering
 
         Returns:
             `DocumentCollection` used for retrieving search results
         """
 
-        terms = {}
         fields_exists = []
 
         if iteration_ids:
@@ -212,9 +215,10 @@ class Explorer:
             terms["_sumo.parent_object.keyword"] = case_ids
 
         if aggregations:
-            terms["fmu.aggregation.operation"] = aggregations
-        else:
-            fields_exists.append("fmu.realization.id")
+            terms["fmu.aggregation.operation.keyword"] = aggregations
+
+        if stages:
+            terms["fmu.context.stage.keyword"] = stages
 
         query = self.utils.create_elastic_query(
             object_type=object_type,
