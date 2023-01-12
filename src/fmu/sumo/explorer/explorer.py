@@ -194,6 +194,8 @@ class Explorer:
             `DocumentCollection` used for retrieving search results
         """
 
+        terms = terms.copy()
+
         fields_exists = []
 
         if iteration_ids:

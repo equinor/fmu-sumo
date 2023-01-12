@@ -350,6 +350,8 @@ class Case:
             `DocumentCollection` used for retrieving search results
         """
 
+        terms = terms.copy()
+
         terms["_sumo.parent_object.keyword"] = [self.sumo_id]
         fields_exists = []
 
