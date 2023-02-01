@@ -33,7 +33,8 @@ class Case(Document):
 
     @property
     def field(self):
-        return self._get_property(["masterdata", "smda", "field", 0, "identifier"])
+        fields = self._get_property(["masterdata", "smda", "field"])
+        return fields[0]["identifier"]
 
     @property
     def surfaces(self):

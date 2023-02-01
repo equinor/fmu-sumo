@@ -10,13 +10,15 @@ class Document:
         return self._id
 
     def _get_property(self, path: list[str]):
-        curr = self._metadata
+        curr = self._metadata.copy()
 
         for key in path:
             if key in curr:
                 curr = curr[key]
             else:
                 return None
+            
+        return curr
 
     def __getitem__(self, key: str):
         return self._metadata[key]

@@ -6,14 +6,9 @@ from fmu.sumo.explorer.objects.case import Case
 
 class CaseCollection(DocumentCollection):
     """A class for representing a collection of cases in Sumo"""
-    
+
     def __init__(self, sumo: SumoClient, filter: list[dict] = None):
         super().__init__("case", sumo, filter)
-
-    @property
-    def ids(self) -> list[str]:
-        """List of unique case ids"""
-        return self._get_field_values("_id.keyword")
 
     @property
     def names(self) -> list[str]:
