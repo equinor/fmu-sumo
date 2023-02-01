@@ -1,11 +1,23 @@
 """Tests explorer"""
 import logging
-import warnings
 import json
 from pathlib import Path
 from uuid import UUID
 import pytest
-from context import Explorer, Case, DocumentCollection, ut
+from context import (
+    Explorer,
+    Utils,
+    Document,
+    DocumentCollection,
+    Case,
+    CaseCollection,
+    Surface,
+    SurfaceCollection,
+    Polygons,
+    PolygonsCollection,
+    Table,
+    TableCollection,
+)
 
 
 TEST_DATA = Path("data")
@@ -16,13 +28,13 @@ LOGGER = logging.getLogger()
 @pytest.fixture(name="the_logger")
 def fixture_the_logger():
     """Defining a logger"""
-    return ut.init_logging("tests", "debug")
+    return LOGGER  # ut.init_logging("tests", "debug")
 
 
 @pytest.fixture(name="case_name")
 def fixture_case_name():
     """Returns case name"""
-    return "21.x.0.dev_rowh2022_08-17"
+    return "drogon_design_small-2023-01-18"
 
 
 @pytest.fixture(name="explorer")
@@ -32,11 +44,11 @@ def fixture_explorer(token):
 
 
 @pytest.fixture(name="test_case")
-def fixture_test_case(test_explorer, case_name):
+def fixture_test_case(test_explorer: Explorer, case_name: str):
     """Basis for test of method get_case_by_name for Explorer,
     but also other attributes
     """
-    return test_explorer.get_case_by_name(case_name)
+    return test_explorer.cases.filter(name=case_name)[0]
 
 
 def write_json(result_file, results):
@@ -104,94 +116,50 @@ def assert_dict_equality(results, correct):
     assert results == correct, incorrect_mess
 
 
-def test_cast_toomany_warning():
-    """Tests custom made warning"""
-    with pytest.warns(ut.TooManyCasesWarning):
-        warnings.warn("Dummy", ut.TooManyCasesWarning)
-
-
-def test_toomany_warning_content():
-    """Tests case name in custom warning"""
-    test_message = "testing testing"
-
-    with warnings.catch_warnings(record=True) as w_list:
-        warnings.warn(test_message, ut.TooManyCasesWarning)
-        warn_message = str(w_list[0].message)
-        print(warn_message)
-        print(test_message)
-        assert_mess = (
-            f"wrong message in warning, is |{warn_message}| not |{test_message}|"
-        )
-
-        assert warn_message == test_message, assert_mess
-
-
-def test_cast_toolowsize_warning():
-    """Tests custom made warning"""
-    with pytest.warns(ut.TooLowSizeWarning):
-        warnings.warn("Dummy", ut.TooLowSizeWarning)
-
-
-def test_toolowsize_warning_content():
-    """Tests case name in custom warning"""
-    test_message = "testing testing"
-
-    with warnings.catch_warnings(record=True) as w_list:
-        warnings.warn(test_message, ut.TooManyCasesWarning)
-        warn_message = str(w_list[0].message)
-        print(warn_message)
-        print(test_message)
-        assert_mess = (
-            f"wrong message in warning, is |{warn_message}| not |{test_message}|"
-        )
-
-        assert warn_message == test_message, assert_mess
-
-
-def test_get_cases(explorer):
+def test_get_cases(explorer: Explorer):
     """Test the get_cases method."""
 
-    cases = explorer.get_cases()
-    assert isinstance(cases, DocumentCollection)
+    cases = explorer.cases
+    assert isinstance(cases, CaseCollection)
     assert isinstance(cases[0], Case)
 
 
-def test_get_cases_fields(explorer):
-    """Test get_cases method with the fields argument.
+def test_get_cases_fields(explorer: Explorer):
+    """Test CaseCollection.filter method with the field argument.
 
     Shall be case insensitive.
     """
 
-    cases = explorer.get_cases(fields=["dRoGoN"])
+    cases = explorer.cases.filter(field="DROGON")
     for case in cases:
-        assert case.field_name.lower() == "drogon"
+        assert case.field.lower() == "drogon"
 
 
-def test_get_cases_status(explorer):
-    """Test the get_cases method with the status argument."""
+def test_get_cases_status(explorer: Explorer):
+    """Test the CaseCollection.filter method with the status argument."""
 
-    cases = explorer.get_cases(status=["keep"])
+    cases = explorer.cases.filter(status="keep")
     for case in cases:
         assert case.status == "keep"
 
 
-def test_get_cases_user(explorer):
-    """Test the get_cases method with the users argument."""
+def test_get_cases_user(explorer: Explorer):
+    """Test the CaseCollection.filter method with the user argument."""
 
-    cases = explorer.get_cases(users=["peesv"])
+    cases = explorer.cases.filter(user="peesv")
     for case in cases:
         assert case.user == "peesv"
 
 
-def test_get_cases_combinations(explorer):
-    """Test the get_cases method with combined arguments."""
+def test_get_cases_combinations(explorer: Explorer):
+    """Test the CaseCollection.filter method with combined arguments."""
 
-    cases = explorer.get_cases(
-        fields=["Drogon", "Johan_Sverdrup"], users=["peesv", "dbs"], status=["keep"]
+    cases = explorer.cases.filter(
+        field=["DROGON", "JOHAN SVERDRUP"], user=["peesv", "dbs"], status=["keep"]
     )
     for case in cases:
         assert (
             case.user in ["peesv", "dbs"]
-            and case.field_name.lower() in ["drogon", "johan_sverdrup"]
+            and case.field in ["DROGON", "JOHAN SVERDRUP"]
             and case.status == "keep"
         )

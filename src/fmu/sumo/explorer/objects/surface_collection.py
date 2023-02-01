@@ -3,13 +3,13 @@ from fmu.sumo.explorer.objects.child_collection import ChildCollection
 from fmu.sumo.explorer.objects.surface import Surface
 import xtgeo
 from io import BytesIO
-from typing import Union
+from typing import Union, List, Dict
 
 
 class SurfaceCollection(ChildCollection):
     """Class for representing a collection of surface objects in Sumo"""
 
-    def __init__(self, sumo: SumoClient, case_id: str, filter: list[dict] = None):
+    def __init__(self, sumo: SumoClient, case_id: str, filter: List[Dict] = None):
         super().__init__("surface", sumo, case_id, filter)
         self._aggregations = {}
 
@@ -21,7 +21,7 @@ class SurfaceCollection(ChildCollection):
         if operation not in self._aggregations:
             must = self._base_filter
             objects = self._utils.get_objects(500, must, ["_id"])
-            object_ids = list(map(lambda obj: obj["_id"], objects))
+            object_ids = List(map(lambda obj: obj["_id"], objects))
 
             res = self._sumo.post(
                 "/aggregate",
@@ -36,11 +36,11 @@ class SurfaceCollection(ChildCollection):
 
     def filter(
         self,
-        name: Union[str, list[str]] = None,
-        tagname: Union[str, list[str]] = None,
-        iteration: Union[int, list[int]] = None,
-        realization: Union[int, list[int]] = None,
-        aggregation: Union[str, list[str]] = None,
+        name: Union[str, List[str]] = None,
+        tagname: Union[str, List[str]] = None,
+        iteration: Union[int, List[int]] = None,
+        realization: Union[int, List[int]] = None,
+        aggregation: Union[str, List[str]] = None,
     ) -> "SurfaceCollection":
         filter = super()._add_filter(name, tagname, iteration, realization, aggregation)
         return SurfaceCollection(self._sumo, self._case_id, filter)

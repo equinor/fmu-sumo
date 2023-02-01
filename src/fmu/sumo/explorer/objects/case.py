@@ -3,12 +3,13 @@ from fmu.sumo.explorer.objects.surface_collection import SurfaceCollection
 from fmu.sumo.explorer.objects.polygons_collection import PolygonsCollection
 from fmu.sumo.explorer.objects.table_collection import TableCollection
 from fmu.sumo.explorer.objects.document import Document
+from typing import Dict
 
 
 class Case(Document):
     """Class for representing a case in Sumo"""
 
-    def __init__(self, sumo: SumoClient, metadata: dict):
+    def __init__(self, sumo: SumoClient, metadata: Dict):
         super().__init__(metadata)
         self._sumo = sumo
         self._surfaces = SurfaceCollection(self._sumo, self.id)

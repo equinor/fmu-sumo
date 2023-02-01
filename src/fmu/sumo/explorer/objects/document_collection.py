@@ -1,5 +1,6 @@
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.utils import Utils
+from typing import List, Dict
 
 
 class DocumentCollection:
@@ -9,7 +10,7 @@ class DocumentCollection:
         self,
         type: str,
         sumo: SumoClient,
-        initial_filter: list[dict] = None,
+        initial_filter: List[Dict] = None,
     ):
         self._utils = Utils(sumo)
         self._type = type
@@ -34,7 +35,7 @@ class DocumentCollection:
 
         return self._len
 
-    def __getitem__(self, index: int) -> dict:
+    def __getitem__(self, index: int) -> Dict:
         """Get document
 
         Arguments:
@@ -57,14 +58,14 @@ class DocumentCollection:
 
         return self._items[index]
 
-    def _get_field_values(self, field: str) -> list:
-        """Get list of unique values for a given field in the document collection
+    def _get_field_values(self, field: str) -> List:
+        """Get List of unique values for a given field in the document collection
 
         Arguments:
             - field (str): a metadata field
 
         Returns:
-            A list of unique values for the given field
+            A List of unique values for the given field
         """
         if field not in self._field_values:
             self._field_values[field] = self._utils.get_buckets(
@@ -73,7 +74,7 @@ class DocumentCollection:
 
         return self._field_values[field]
 
-    def _next_batch(self) -> list[dict]:
+    def _next_batch(self) -> List[Dict]:
         """Get next batch of documents
 
         Returns:
@@ -96,12 +97,12 @@ class DocumentCollection:
 
         return hits
 
-    def _init_base_filter(self, type: str, initial_filter: dict = None) -> dict:
+    def _init_base_filter(self, type: str, initial_filter: Dict = None) -> Dict:
         """Initialize base filter for document collection
 
         Arguments:
             - type (str): object type
-            - filters (list[dict]): a list of filters
+            - filters (List[Dict]): a List of filters
 
         Returns:
             Document collection base filters
@@ -111,25 +112,25 @@ class DocumentCollection:
 
         return [{"term": {"class.keyword": type}}]
 
-    def _list_wrap(self, item) -> list:
-        """Wrap item to list
+    def _List_wrap(self, item) -> List:
+        """Wrap item to List
 
         Arguments:
             - item (any): item to wrap
 
         Returns:
-            Item wrapped in list
+            Item wrapped in List
         """
         if type(item) == list:
             return item
         else:
             return [item]
 
-    def _add_filter(self, user_filter: dict[str, list]):
+    def _add_filter(self, user_filter: Dict[str, List]):
         """Add filter to DocumentCollection base filter
 
         Argmuments:
-            - user_filter (dict[str, list]): new filters
+            - user_filter (Dict[str, List]): new filters
 
         Returns:
             Filter object containing base filters and new filters
@@ -137,13 +138,6 @@ class DocumentCollection:
         new_filter = self._base_filter.copy()
 
         for field in user_filter:
-            if user_filter[field] == "*":
-                new_filter.append({"exists": {"field": field}})
-            elif user_filter[field] == None:
-                pass
-            else:
-                new_filter.append(
-                    {"terms": {field: self._list_wrap(user_filter[field])}}
-                )
+            new_filter.append({"terms": {field: self._List_wrap(user_filter[field])}})
 
         return new_filter
