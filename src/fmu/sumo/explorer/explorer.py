@@ -18,7 +18,6 @@ class Explorer:
         self._sumo = SumoClient(env, token=token, interactive=interactive)
         self._cases = CaseCollection(self._sumo)
 
-
     @property
     def cases(self):
         """Cases in Sumo"""

@@ -11,7 +11,7 @@ class Table(Child):
 
     def to_dataframe(self) -> pd.DataFrame:
         """Get table object as a DataFrame
-        
+
         Returns:
             A DataFrame object
         """

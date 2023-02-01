@@ -8,7 +8,11 @@ class Utils:
         self._sumo = sumo
 
     def get_buckets(
-        self, field: str, must: list[dict] = None, must_not: list[dict] = None, sort: list = None
+        self,
+        field: str,
+        must: list[dict] = None,
+        must_not: list[dict] = None,
+        sort: list = None,
     ) -> list[dict]:
         """Get a list of buckets
 
@@ -23,7 +27,7 @@ class Utils:
         query = {
             "size": 0,
             "aggs": {f"{field}": {"terms": {"field": field, "size": 30}}},
-            "query": {"bool": {}}
+            "query": {"bool": {}},
         }
 
         if must is not None:
@@ -41,7 +45,11 @@ class Utils:
         return list(map(lambda bucket: bucket["key"], buckets))
 
     def get_objects(
-        self, size: int, must: list[dict] = None, must_not: list[dict] = None, select: list[str] = None
+        self,
+        size: int,
+        must: list[dict] = None,
+        must_not: list[dict] = None,
+        select: list[str] = None,
     ) -> list[dict]:
         """Get objects
 

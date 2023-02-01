@@ -11,7 +11,7 @@ class Surface(Child):
 
     def to_regular_surface(self) -> xtgeo.RegularSurface:
         """Get surface object as a RegularSurface
-        
+
         Returns:
             A RegularSurface object
         """

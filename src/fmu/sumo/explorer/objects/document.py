@@ -17,7 +17,7 @@ class Document:
                 curr = curr[key]
             else:
                 return None
-            
+
         return curr
 
     def __getitem__(self, key: str):
