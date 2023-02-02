@@ -1,5 +1,6 @@
 from sumo.wrapper import SumoClient
 from typing import List, Dict
+import json
 
 
 class Utils:
@@ -11,7 +12,7 @@ class Utils:
     def get_buckets(
         self,
         field: str,
-        must: List[Dict] = None,
+        query: Dict,
         sort: List = None,
     ) -> List[Dict]:
         """Get a List of buckets
@@ -27,10 +28,8 @@ class Utils:
         query = {
             "size": 0,
             "aggs": {f"{field}": {"terms": {"field": field, "size": 50}}},
+            "query": query,
         }
-
-        if must is not None:
-            query["query"] = {"bool": {"must": must}}
 
         if sort is not None:
             query["sort"] = sort
@@ -43,7 +42,7 @@ class Utils:
     def get_objects(
         self,
         size: int,
-        must: List[Dict] = None,
+        query: Dict,
         select: List[str] = None,
     ) -> List[Dict]:
         """Get objects
@@ -56,10 +55,7 @@ class Utils:
         Returns:
             A List of metadata
         """
-        query = {"size": size}
-
-        if must is not None:
-            query["query"] = {"bool": {"must": must}}
+        query = {"size": size, "query": query}
 
         if select is not None:
             query["_source"] = select
@@ -67,3 +63,42 @@ class Utils:
         res = self._sumo.post("/search", json=query)
 
         return res.json()["hits"]["hits"]
+
+    def extend_query_object(self, old: Dict, new: Dict) -> Dict:
+        """Extend query object
+
+        Arguments:
+            - old (Dict): old query object
+            - new (Dict): new query object
+
+        Returns:
+            Extender query object
+        """
+        stringified = json.dumps(old)
+        extended = json.loads(stringified)
+
+        for key in new:
+            if key in extended:
+                if type(new[key]) == dict:
+                    extended[key] = self.extend_query_object(extended[key], new[key])
+                elif type(new[key]) == list:
+                    for val in new[key]:
+                        if val not in extended[key]:
+                            extended[key].append(val)
+                else:
+                    extended[key] = new[key]
+            else:
+                extended[key] = new[key]
+
+        return extended
+
+    def build_terms(self, keys_vals: Dict):
+        terms = []
+
+        for key in keys_vals:
+            val = keys_vals[key]
+            if val is not None:
+                items = [val] if type(val) != list else val
+                terms.append({"terms": {key: items}})
+
+        return terms

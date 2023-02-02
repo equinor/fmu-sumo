@@ -10,7 +10,7 @@ class DocumentCollection:
         self,
         type: str,
         sumo: SumoClient,
-        initial_filter: List[Dict] = None,
+        query: Dict = None,
     ):
         self._utils = Utils(sumo)
         self._type = type
@@ -20,7 +20,7 @@ class DocumentCollection:
         self._len = None
         self._items = []
         self._field_values = {}
-        self._base_filter = self._init_base_filter(type, initial_filter)
+        self._query = self._init_query(type, query)
 
     def __len__(self) -> int:
         """Get size of document collection
@@ -29,7 +29,7 @@ class DocumentCollection:
             Document collection size
         """
         if self._len is None:
-            query = {"query": {"bool": {"must": self._base_filter}}, "size": 0}
+            query = {"query": self._query, "size": 0}
             res = self._sumo.post("/search", json=query)
             self._len = res.json()["hits"]["total"]["value"]
 
@@ -68,9 +68,7 @@ class DocumentCollection:
             A List of unique values for the given field
         """
         if field not in self._field_values:
-            self._field_values[field] = self._utils.get_buckets(
-                field, self._base_filter
-            )
+            self._field_values[field] = self._utils.get_buckets(field, self._query)
 
         return self._field_values[field]
 
@@ -81,7 +79,7 @@ class DocumentCollection:
             The next batch of documents
         """
         query = {
-            "query": {"bool": {"must": self._base_filter}},
+            "query": self._query,
             "sort": [{"_sumo.timestamp": {"order": "desc"}}],
             "size": 50,
         }
@@ -97,7 +95,7 @@ class DocumentCollection:
 
         return hits
 
-    def _init_base_filter(self, type: str, initial_filter: Dict = None) -> Dict:
+    def _init_query(self, type: str, query: Dict = None) -> Dict:
         """Initialize base filter for document collection
 
         Arguments:
@@ -107,26 +105,14 @@ class DocumentCollection:
         Returns:
             Document collection base filters
         """
-        if initial_filter is not None:
-            return initial_filter
+        class_filter = {"bool": {"must": [{"term": {"class.keyword": type}}]}}
 
-        return [{"term": {"class.keyword": type}}]
+        if query is not None:
+            return self._utils.extend_query_object(class_filter, query)
+        
+        return class_filter
 
-    def _List_wrap(self, item) -> List:
-        """Wrap item to List
-
-        Arguments:
-            - item (any): item to wrap
-
-        Returns:
-            Item wrapped in List
-        """
-        if type(item) == list:
-            return item
-        else:
-            return [item]
-
-    def _add_filter(self, user_filter: Dict[str, List]):
+    def _add_filter(self, query: Dict):
         """Add filter to DocumentCollection base filter
 
         Argmuments:
@@ -135,9 +121,5 @@ class DocumentCollection:
         Returns:
             Filter object containing base filters and new filters
         """
-        new_filter = self._base_filter.copy()
 
-        for field in user_filter:
-            new_filter.append({"terms": {field: self._List_wrap(user_filter[field])}})
-
-        return new_filter
+        return self._utils.extend_query_object(self._query.copy(), query)

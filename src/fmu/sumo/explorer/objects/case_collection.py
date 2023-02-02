@@ -7,8 +7,8 @@ from typing import Union, List, Dict
 class CaseCollection(DocumentCollection):
     """A class for representing a collection of cases in Sumo"""
 
-    def __init__(self, sumo: SumoClient, filter: List[Dict] = None):
-        super().__init__("case", sumo, filter)
+    def __init__(self, sumo: SumoClient, query: Dict = None):
+        super().__init__("case", sumo, query)
 
     @property
     def names(self) -> List[str]:
@@ -61,25 +61,16 @@ class CaseCollection(DocumentCollection):
         Returns:
             A filtered CaseCollection
         """
-        filter = {}
+        must = self._utils.build_terms(
+            {
+                "_id": id,
+                "fmu.case.name.keyword": name,
+                "_sumo.status.keyword": status,
+                "fmu.case.user.id.keyword": user,
+                "access.asset.name.keyword": asset,
+                "masterdata.smda.field.identifier.keyword": field,
+            }
+        )
 
-        if id is not None:
-            filter["_id"] = id
-
-        if name is not None:
-            filter["fmu.case.name.keyword"] = name
-
-        if status is not None:
-            filter["_sumo.status.keyword"] = status
-
-        if user is not None:
-            filter["fmu.case.user.id.keyword"] = user
-
-        if asset is not None:
-            filter["access.asset.name.keyword"] = asset
-
-        if field is not None:
-            filter["masterdata.smda.field.identifier.keyword"] = field
-
-        filter = super()._add_filter(filter)
-        return CaseCollection(self._sumo, filter)
+        query = super()._add_filter({"bool": {"must": must}})
+        return CaseCollection(self._sumo, query)

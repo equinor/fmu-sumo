@@ -6,19 +6,9 @@ from sumo.wrapper import SumoClient
 class ChildCollection(DocumentCollection):
     """Class for representing a collection of child objects in Sumo"""
 
-    def __init__(
-        self, type: str, sumo: SumoClient, case_id: str, filter: List[Dict] = None
-    ):
+    def __init__(self, type: str, sumo: SumoClient, case_id: str, query: Dict = None):
         self._case_id = case_id
-        super().__init__(type, sumo, filter)
-
-    def _init_base_filter(self, type: str, filters=None) -> List[Dict]:
-        base_filter = super()._init_base_filter(type, filters)
-
-        if filters is None:
-            base_filter.append({"term": {"_sumo.parent_object.keyword": self._case_id}})
-
-        return base_filter
+        super().__init__(type, sumo, query)
 
     @property
     def names(self) -> List[str]:
@@ -41,33 +31,37 @@ class ChildCollection(DocumentCollection):
         return self._get_field_values("fmu.realization.id")
 
     @property
-    def aggregations(self) -> List[str]:
+    def operations(self) -> List[str]:
         """List of unique object aggregation operations"""
         return self._get_field_values("fmu.aggregation.operation.keyword")
 
+    def _init_query(self, type: str, query: Dict = None) -> Dict:
+        new_query = super()._init_query(type, query)
+        case_filter = {
+            "bool": {"must": [{"term": {"_sumo.parent_object.keyword": self._case_id}}]}
+        }
+
+        return self._utils.extend_query_object(new_query, case_filter)
+
     def _add_filter(
         self,
-        name: Union[str, List[str]] = None,
-        tagname: Union[str, List[str]] = None,
-        iteration: Union[int, List[int]] = None,
-        realization: Union[int, List[int]] = None,
-        aggregation: Union[str, List[str]] = None,
+        name: Union[bool, str, List[str]] = None,
+        tagname: Union[bool, str, List[str]] = None,
+        iteration: Union[bool, int, List[int]] = None,
+        realization: Union[bool, int, List[int]] = None,
+        operation: Union[bool, str, List[str]] = None,
     ):
-        filter = {}
+        must = self._utils.build_terms(
+            {
+                "data.name.keyword": name,
+                "data.tagname.keyword": tagname,
+                "fmu.iteration.id": iteration,
+                "fmu.realization.id": realization,
+                "fmu.aggregation.operation.keyword": operation,
+            }
+        )
 
-        if name is not None:
-            filter["data.name.keyword"] = name
+        if len(must) > 0:
+            return super()._add_filter({"bool": {"must": must}})
 
-        if tagname is not None:
-            filter["data.tagname.keyword"] = tagname
-
-        if iteration is not None:
-            filter["fmu.iteration.id"] = iteration
-
-        if realization is not None:
-            filter["fmu.realization.id"] = realization
-
-        if aggregation is not None:
-            filter["fmu.aggregation.operation"] = aggregation
-
-        return super()._add_filter(filter)
+        return self._query

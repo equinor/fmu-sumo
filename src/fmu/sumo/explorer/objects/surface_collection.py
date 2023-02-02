@@ -9,16 +9,16 @@ from typing import Union, List, Dict
 class SurfaceCollection(ChildCollection):
     """Class for representing a collection of surface objects in Sumo"""
 
-    def __init__(self, sumo: SumoClient, case_id: str, filter: List[Dict] = None):
-        super().__init__("surface", sumo, case_id, filter)
-        self._aggregations = {}
+    def __init__(self, sumo: SumoClient, case_id: str, query: Dict = None):
+        super().__init__("surface", sumo, case_id, query)
+        self._aggregation_cache = {}
 
     def __getitem__(self, index) -> Surface:
         doc = super().__getitem__(index)
         return Surface(self._sumo, doc)
 
     def _aggregate(self, operation: str) -> xtgeo.RegularSurface:
-        if operation not in self._aggregations:
+        if operation not in self._aggregation_cache:
             must = self._base_filter
             objects = self._utils.get_objects(500, must, ["_id"])
             object_ids = List(map(lambda obj: obj["_id"], objects))
@@ -28,11 +28,11 @@ class SurfaceCollection(ChildCollection):
                 json={"operation": [operation], "object_ids": object_ids},
             )
 
-            self._aggregations[operation] = xtgeo.surface_from_file(
+            self._aggregation_cache[operation] = xtgeo.surface_from_file(
                 BytesIO(res.content)
             )
 
-        return self._aggregations[operation]
+        return self._aggregation_cache[operation]
 
     def filter(
         self,
@@ -40,10 +40,10 @@ class SurfaceCollection(ChildCollection):
         tagname: Union[str, List[str]] = None,
         iteration: Union[int, List[int]] = None,
         realization: Union[int, List[int]] = None,
-        aggregation: Union[str, List[str]] = None,
+        operation: Union[str, List[str]] = None,
     ) -> "SurfaceCollection":
-        filter = super()._add_filter(name, tagname, iteration, realization, aggregation)
-        return SurfaceCollection(self._sumo, self._case_id, filter)
+        query = super()._add_filter(name, tagname, iteration, realization, operation)
+        return SurfaceCollection(self._sumo, self._case_id, query)
 
     def mean(self):
         return self._aggregate("mean")
