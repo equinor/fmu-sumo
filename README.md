@@ -50,7 +50,7 @@ surfs.tagnames
 surfs.iterations
 
 # Apply filters
-surfs = surfs.filter(name="", tagname="", iteration=0)
+surfs = surfs.filter(name="surface_name", tagname="surface_tagname", iteration=0)
 
 # Get surface
 surf = surfs[0]
@@ -82,7 +82,7 @@ surfs.iterations
 surfs.operations
 
 # Apply filters
-surfs = surfs.filter(name="", tagname="", iteration=0, operation="mean")
+surfs = surfs.filter(name="surface_name", tagname="surface_tagname", iteration=0, operation="mean")
 
 # Get surface
 surf = surfs[0]
@@ -99,7 +99,7 @@ surfs.names
 surfs.tagnames
 
 # Apply filters
-surfs = surfs.filter(name="", tagname="")
+surfs = surfs.filter(name="surface_name", tagname="surface_tagname")
 
 # Get surfaces
 surf = surfs[0]
