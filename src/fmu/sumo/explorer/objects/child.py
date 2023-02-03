@@ -37,6 +37,10 @@ class Child(Document):
         return self._get_property(["fmu", "aggregation", "operation"])
 
     @property
+    def stage(self):
+        return self._get_property(["fmu", "context", "stage"])
+
+    @property
     def blob(self):
         if self._blob is None:
             res = self._sumo.get(f"/objects('{self.id}')/blob")

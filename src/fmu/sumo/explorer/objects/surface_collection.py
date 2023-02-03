@@ -41,8 +41,11 @@ class SurfaceCollection(ChildCollection):
         iteration: Union[int, List[int]] = None,
         realization: Union[int, List[int]] = None,
         operation: Union[str, List[str]] = None,
+        stage: Union[str, List[str]] = None,
     ) -> "SurfaceCollection":
-        query = super()._add_filter(name, tagname, iteration, realization, operation)
+        query = super()._add_filter(
+            name, tagname, iteration, realization, operation, stage
+        )
         return SurfaceCollection(self._sumo, self._case_id, query)
 
     def mean(self):

@@ -35,6 +35,11 @@ class ChildCollection(DocumentCollection):
         """List of unique object aggregation operations"""
         return self._get_field_values("fmu.aggregation.operation.keyword")
 
+    @property
+    def stages(self) -> List[str]:
+        """List of unique stages"""
+        return self._get_field_values("fmu.context.stage.keyword")
+
     def _init_query(self, type: str, query: Dict = None) -> Dict:
         new_query = super()._init_query(type, query)
         case_filter = {
@@ -50,6 +55,7 @@ class ChildCollection(DocumentCollection):
         iteration: Union[int, List[int]] = None,
         realization: Union[int, List[int]] = None,
         operation: Union[str, List[str]] = None,
+        stage: Union[str, List[str]] = None,
     ):
         must = self._utils.build_terms(
             {
@@ -58,6 +64,7 @@ class ChildCollection(DocumentCollection):
                 "fmu.iteration.id": iteration,
                 "fmu.realization.id": realization,
                 "fmu.aggregation.operation.keyword": operation,
+                "fmu.context.stage.keyword": stage,
             }
         )
 

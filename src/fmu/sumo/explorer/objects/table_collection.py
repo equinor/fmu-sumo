@@ -21,6 +21,9 @@ class TableCollection(ChildCollection):
         iteration: Union[int, List[int]] = None,
         realization: Union[int, List[int]] = None,
         operation: Union[str, List[str]] = None,
+        stage: Union[str, List[str]] = None,
     ) -> "TableCollection":
-        query = super()._add_filter(name, tagname, iteration, realization, operation)
+        query = super()._add_filter(
+            name, tagname, iteration, realization, operation, stage
+        )
         return TableCollection(self._sumo, self._case_id, query)

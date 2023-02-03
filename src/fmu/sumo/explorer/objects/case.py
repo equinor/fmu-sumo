@@ -3,6 +3,9 @@ from fmu.sumo.explorer.objects.document import Document
 from fmu.sumo.explorer.contexts.realization import RealizationContext
 from fmu.sumo.explorer.contexts.aggregation import AggregationContext
 from fmu.sumo.explorer.contexts.observation import ObservationContext
+from fmu.sumo.explorer.objects.surface_collection import SurfaceCollection
+from fmu.sumo.explorer.objects.polygons_collection import PolygonsCollection
+from fmu.sumo.explorer.objects.table_collection import TableCollection
 from typing import Dict
 
 
@@ -45,3 +48,15 @@ class Case(Document):
     @property
     def observation(self):
         return ObservationContext(self._sumo, self._id)
+
+    @property
+    def surfaces(self):
+        return SurfaceCollection(self._sumo, self._id)
+
+    @property
+    def polygons(self):
+        return PolygonsCollection(self._sumo, self._id)
+
+    @property
+    def tables(self):
+        return TableCollection(self._sumo, self._id)
