@@ -16,4 +16,7 @@ class Polygons(Child):
         Returns:
             A DataFrame object
         """
-        return pd.read_csv(self.blob)
+        if self.format == "csv":
+            return pd.read_csv(self.blob)
+        else:
+            raise Exception(f"Unknown format: {self.format}")

@@ -56,7 +56,7 @@ class ChildCollection(DocumentCollection):
         realization: Union[int, List[int]] = None,
         operation: Union[str, List[str]] = None,
         stage: Union[str, List[str]] = None,
-    ):
+    ) -> Dict:
         must = self._utils.build_terms(
             {
                 "data.name.keyword": name,

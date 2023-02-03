@@ -17,46 +17,46 @@ class Case(Document):
         self._sumo = sumo
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._get_property(["fmu", "case", "name"])
 
     @property
-    def status(self):
+    def status(self) -> str:
         return self._get_property(["_sumo", "status"])
 
     @property
-    def user(self):
+    def user(self) -> str:
         return self._get_property(["fmu", "case", "user", "id"])
 
     @property
-    def asset(self):
+    def asset(self) -> str:
         return self._get_property(["access", "asset", "name"])
 
     @property
-    def field(self):
+    def field(self) -> str:
         fields = self._get_property(["masterdata", "smda", "field"])
         return fields[0]["identifier"]
 
     @property
-    def realization(self):
+    def realization(self) -> RealizationContext:
         return RealizationContext(self._sumo, self._id)
 
     @property
-    def aggregation(self):
+    def aggregation(self) -> AggregationContext:
         return AggregationContext(self._sumo, self._id)
 
     @property
-    def observation(self):
+    def observation(self) -> ObservationContext:
         return ObservationContext(self._sumo, self._id)
 
     @property
-    def surfaces(self):
+    def surfaces(self) -> SurfaceCollection:
         return SurfaceCollection(self._sumo, self._id)
 
     @property
-    def polygons(self):
+    def polygons(self) -> PolygonsCollection:
         return PolygonsCollection(self._sumo, self._id)
 
     @property
-    def tables(self):
+    def tables(self) -> TableCollection:
         return TableCollection(self._sumo, self._id)

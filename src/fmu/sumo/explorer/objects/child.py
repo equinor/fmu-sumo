@@ -13,35 +13,39 @@ class Child(Document):
         self._blob = None
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._get_property(["data", "name"])
 
     @property
-    def tagname(self):
+    def tagname(self) -> str:
         return self._get_property(["data", "tagname"])
 
     @property
-    def context(self):
+    def context(self) -> str:
         return self._get_property(["fmu", "context", "stage"])
 
     @property
-    def iteration(self):
+    def iteration(self) -> int:
         return self._get_property(["fmu", "iteration", "id"])
 
     @property
-    def realization(self):
+    def realization(self) -> int:
         return self._get_property(["fmu", "realization", "id"])
 
     @property
-    def operation(self):
+    def operation(self) -> str:
         return self._get_property(["fmu", "aggregation", "operation"])
 
     @property
-    def stage(self):
+    def stage(self) -> str:
         return self._get_property(["fmu", "context", "stage"])
+    
+    @property
+    def format(self) -> str:
+        return self._get_property(["data", "format"])
 
     @property
-    def blob(self):
+    def blob(self) -> BytesIO:
         if self._blob is None:
             res = self._sumo.get(f"/objects('{self.id}')/blob")
             self._blob = BytesIO(res)

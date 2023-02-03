@@ -2,8 +2,6 @@ from fmu.sumo.explorer.objects.child import Child
 from sumo.wrapper import SumoClient
 import pandas as pd
 from typing import Dict
-import pyarrow as pa
-import pyarrow.parquet as pq
 
 
 class Table(Child):
@@ -11,7 +9,6 @@ class Table(Child):
 
     def __init__(self, sumo: SumoClient, metadata: Dict) -> None:
         super().__init__(sumo, metadata)
-        self._format = self._get_property(["data", "format"])
 
     def to_dataframe(self) -> pd.DataFrame:
         """Get table object as a DataFrame
@@ -19,11 +16,9 @@ class Table(Child):
         Returns:
             A DataFrame object
         """
-        if self._format == "arrow":
-            reader = pa.BufferReader(self.blob)
-            table = pq.read_table(reader)
-            return table.to_pandas()
-        elif self._format == "csv":
+        if self.format == "arrow":
+            return pd.read_parquet(self.blob)
+        elif self.format == "csv":
             return pd.read_csv(self.blob)
         else:
-            raise Exception(f"Unknown format: {self._format}")
+            raise Exception(f"Unknown format: {self.format}")

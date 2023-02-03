@@ -80,7 +80,7 @@ class DocumentCollection:
         """
         query = {
             "query": self._query,
-            "sort": [{"_sumo.timestamp": {"order": "desc"}}],
+            "sort": [{"_doc": {"order": "desc"}}],
             "size": 50,
         }
 
@@ -112,7 +112,7 @@ class DocumentCollection:
         
         return class_filter
 
-    def _add_filter(self, query: Dict):
+    def _add_filter(self, query: Dict) -> Dict:
         """Add filter to DocumentCollection base filter
 
         Argmuments:
@@ -122,4 +122,4 @@ class DocumentCollection:
             Filter object containing base filters and new filters
         """
 
-        return self._utils.extend_query_object(self._query.copy(), query)
+        return self._utils.extend_query_object(self._query, query)

@@ -16,4 +16,7 @@ class Surface(Child):
         Returns:
             A RegularSurface object
         """
-        return surface_from_file(self.blob)
+        if self.format == "irap_binary":
+            return surface_from_file(self.blob)
+        else:
+            raise Exception(f"Unknown format: {self.format}")
