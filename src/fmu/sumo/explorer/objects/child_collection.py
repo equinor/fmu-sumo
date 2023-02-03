@@ -45,11 +45,11 @@ class ChildCollection(DocumentCollection):
 
     def _add_filter(
         self,
-        name: Union[bool, str, List[str]] = None,
-        tagname: Union[bool, str, List[str]] = None,
-        iteration: Union[bool, int, List[int]] = None,
-        realization: Union[bool, int, List[int]] = None,
-        operation: Union[bool, str, List[str]] = None,
+        name: Union[str, List[str]] = None,
+        tagname: Union[str, List[str]] = None,
+        iteration: Union[int, List[int]] = None,
+        realization: Union[int, List[int]] = None,
+        operation: Union[str, List[str]] = None,
     ):
         must = self._utils.build_terms(
             {
