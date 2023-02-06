@@ -97,3 +97,6 @@ _venv
 
 # setuptools_scm version
 src/fmu/sumo/version.py
+
+# local expermentation
+testing.ipynb

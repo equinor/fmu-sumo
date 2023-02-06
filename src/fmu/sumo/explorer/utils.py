@@ -27,7 +27,7 @@ class Utils:
         """
         query = {
             "size": 0,
-            "aggs": {f"{field}": {"terms": {"field": field, "size": 50}}},
+            "aggs": {f"{field}": {"terms": {"field": field, "size": 2000}}},
             "query": query,
         }
 
@@ -37,7 +37,23 @@ class Utils:
         res = self._sumo.post("/search", json=query)
         buckets = res.json()["aggregations"][field]["buckets"]
 
-        return list(map(lambda bucket: bucket["key"], buckets))
+        return buckets
+    
+    def get_doc_count(self, query: Dict) -> int:
+        query = {
+            "size": 0,
+            "aggs": {"class": {"terms": {"field": "class.keyword", "size": 100}}},
+            "query": query
+        }
+
+        res = self._sumo.post("/search", json=query)
+        buckets = res.json()["aggregations"]["class"]["buckets"]
+        count = 0 
+
+        for bucket in buckets:
+            count += bucket["doc_count"]
+
+        return count
 
     def get_objects(
         self,

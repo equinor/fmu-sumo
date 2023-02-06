@@ -6,7 +6,8 @@ from fmu.sumo.explorer.contexts.observation import ObservationContext
 from fmu.sumo.explorer.objects.surface_collection import SurfaceCollection
 from fmu.sumo.explorer.objects.polygons_collection import PolygonsCollection
 from fmu.sumo.explorer.objects.table_collection import TableCollection
-from typing import Dict
+from fmu.sumo.explorer.utils import Utils
+from typing import Dict, List
 
 
 class Case(Document):
@@ -15,6 +16,8 @@ class Case(Document):
     def __init__(self, sumo: SumoClient, metadata: Dict):
         super().__init__(metadata)
         self._sumo = sumo
+        self._utils = Utils(sumo)
+        self._iterations = None
 
     @property
     def name(self) -> str:
@@ -36,6 +39,42 @@ class Case(Document):
     def field(self) -> str:
         fields = self._get_property(["masterdata", "smda", "field"])
         return fields[0]["identifier"]
+
+    @property
+    def iterations(self) -> List[Dict]:
+        if self._iterations is None:
+            query = {
+                "query": {"term": {"_sumo.parent_object.keyword": self.id}},
+                "aggs": {
+                    "id": {
+                        "terms": {"field": "fmu.iteration.id", "size": 50},
+                        "aggs": {
+                            "name": {
+                                "terms": {"field": "fmu.iteration.name.keyword", "size": 1}
+                            },
+                            "realizations": {
+                                "terms": {"field": "fmu.realization.id", "size": 1000}
+                            }
+                        },
+                    },
+                },
+                "size": 0,
+            }
+
+            res = self._sumo.post("/search", json=query)
+            buckets = res.json()["aggregations"]["id"]["buckets"]
+            iterations = []
+
+            for bucket in buckets:
+                iterations.append({
+                    "id": bucket["key"],
+                    "name": bucket["name"]["buckets"][0]["key"],
+                    "realizations": len(bucket["realizations"]["buckets"])
+                })
+
+            self._iterations = iterations
+
+        return self._iterations
 
     @property
     def realization(self) -> RealizationContext:

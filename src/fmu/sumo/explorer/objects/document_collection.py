@@ -29,9 +29,7 @@ class DocumentCollection:
             Document collection size
         """
         if self._len is None:
-            query = {"query": self._query, "size": 0}
-            res = self._sumo.post("/search", json=query)
-            self._len = res.json()["hits"]["total"]["value"]
+            self._len = self._utils.get_doc_count(self._query)
 
         return self._len
 
@@ -68,7 +66,8 @@ class DocumentCollection:
             A List of unique values for the given field
         """
         if field not in self._field_values:
-            self._field_values[field] = self._utils.get_buckets(field, self._query)
+            buckets = self._utils.get_buckets(field, self._query)
+            self._field_values[field] = list(map(lambda bucket: bucket["key"], buckets))
 
         return self._field_values[field]
 
@@ -81,7 +80,7 @@ class DocumentCollection:
         query = {
             "query": self._query,
             "sort": [{"_doc": {"order": "desc"}}],
-            "size": 50,
+            "size": 500,
         }
 
         if self._after is not None:
