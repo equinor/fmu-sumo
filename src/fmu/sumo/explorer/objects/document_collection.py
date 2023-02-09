@@ -29,7 +29,7 @@ class DocumentCollection:
             Document collection size
         """
         if self._len is None:
-            self._len = self._utils.get_doc_count(self._query)
+            self._next_batch()
 
         return self._len
 
@@ -47,16 +47,18 @@ class DocumentCollection:
 
         if len(self._items) <= index:
             while len(self._items) <= index:
-                next_batch = self._next_batch()
+                prev_len = len(self._items)
+                self._next_batch()
+                curr_len = len(self._items)
 
-                if len(next_batch) > 0:
-                    self._items.extend(next_batch)
-                else:
+                if prev_len == curr_len:
                     raise IndexError
 
         return self._items[index]
 
-    def _get_field_values(self, field: str) -> List:
+    def _get_field_values(
+        self, field: str, query: Dict = None, key_as_string: bool = False
+    ) -> List:
         """Get List of unique values for a given field in the document collection
 
         Arguments:
@@ -66,8 +68,10 @@ class DocumentCollection:
             A List of unique values for the given field
         """
         if field not in self._field_values:
-            buckets = self._utils.get_buckets(field, self._query)
-            self._field_values[field] = list(map(lambda bucket: bucket["key"], buckets))
+            bucket_query = self._utils.extend_query_object(self._query, query)
+            key = "key_as_string" if key_as_string is True else "key"
+            buckets = self._utils.get_buckets(field, bucket_query)
+            self._field_values[field] = list(map(lambda bucket: bucket[key], buckets))
 
         return self._field_values[field]
 
@@ -81,18 +85,39 @@ class DocumentCollection:
             "query": self._query,
             "sort": [{"_doc": {"order": "desc"}}],
             "size": 500,
+            "_source": [
+                "_id",
+                "data.name",
+                "data.tagname",
+                "data.time",
+                "data.format",
+                "fmu.case.name",
+                "fmu.case.user.id",
+                "fmu.realization.id",
+                "fmu.iteration.id",
+                "fmu.context.stage",
+                "fmu.aggregation.operation",
+                "_sumo.status",
+                "access.asset",
+                "masterdata.smda.field"
+            ],
         }
+
+        if self._len is None:
+            query["track_total_hits"] = True
 
         if self._after is not None:
             query["search_after"] = self._after
 
-        res = self._sumo.post("/search", json=query)
-        hits = res.json()["hits"]["hits"]
+        res = self._sumo.post("/search", json=query).json()
+        hits = res["hits"]
+
+        if self._len is None:
+            self._len = hits["total"]["value"]
 
         if len(hits) > 0:
-            self._after = hits[-1]["sort"]
-
-        return hits
+            self._after = hits["hits"][-1]["sort"]
+            self._items.extend(hits["hits"])
 
     def _init_query(self, type: str, query: Dict = None) -> Dict:
         """Initialize base filter for document collection
@@ -108,7 +133,7 @@ class DocumentCollection:
 
         if query is not None:
             return self._utils.extend_query_object(class_filter, query)
-        
+
         return class_filter
 
     def _add_filter(self, query: Dict) -> Dict:

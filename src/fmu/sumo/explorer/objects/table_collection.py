@@ -16,12 +16,12 @@ class TableCollection(ChildCollection):
 
     def filter(
         self,
-        name: Union[str, List[str]] = None,
-        tagname: Union[str, List[str]] = None,
-        iteration: Union[int, List[int]] = None,
-        realization: Union[int, List[int]] = None,
-        operation: Union[str, List[str]] = None,
-        stage: Union[str, List[str]] = None,
+        name: Union[str, List[str], bool] = None,
+        tagname: Union[str, List[str], bool] = None,
+        iteration: Union[int, List[int], bool] = None,
+        realization: Union[int, List[int], bool] = None,
+        operation: Union[str, List[str], bool] = None,
+        stage: Union[str, List[str], bool] = None,
     ) -> "TableCollection":
         query = super()._add_filter(
             name, tagname, iteration, realization, operation, stage

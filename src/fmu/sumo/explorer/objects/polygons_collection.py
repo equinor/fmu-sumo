@@ -16,10 +16,10 @@ class PolygonsCollection(ChildCollection):
 
     def filter(
         self,
-        name: Union[str, List[str]] = None,
-        tagname: Union[str, List[str]] = None,
-        iteration: Union[int, List[int]] = None,
-        realization: Union[int, List[int]] = None,
+        name: Union[str, List[str], bool] = None,
+        tagname: Union[str, List[str], bool] = None,
+        iteration: Union[int, List[int], bool] = None,
+        realization: Union[int, List[int], bool] = None
     ) -> "PolygonsCollection":
         query = super()._add_filter(name, tagname, iteration, realization)
         return PolygonsCollection(self._sumo, self._case_id, query)

@@ -19,7 +19,7 @@ class Utils:
 
         Arguments:
             - field (str): a field in the metadata
-            - must (List[Dict] or None): filter options
+            - query (List[Dict] or None): filter options
             - sort (List or None): sorting options
 
         Returns:
@@ -38,22 +38,6 @@ class Utils:
         buckets = res.json()["aggregations"][field]["buckets"]
 
         return buckets
-    
-    def get_doc_count(self, query: Dict) -> int:
-        query = {
-            "size": 0,
-            "aggs": {"class": {"terms": {"field": "class.keyword", "size": 100}}},
-            "query": query
-        }
-
-        res = self._sumo.post("/search", json=query)
-        buckets = res.json()["aggregations"]["class"]["buckets"]
-        count = 0 
-
-        for bucket in buckets:
-            count += bucket["doc_count"]
-
-        return count
 
     def get_objects(
         self,
@@ -65,7 +49,7 @@ class Utils:
 
         Arguments:
             - size (int): number of objects to return
-            - must (List[Dict] or None): filter options
+            - query (List[Dict] or None): filter options
             - select (List[str] or None): List of metadata fields to return
 
         Returns:
@@ -90,23 +74,28 @@ class Utils:
         Returns:
             Extender query object
         """
-        stringified = json.dumps(old)
-        extended = json.loads(stringified)
 
-        for key in new:
-            if key in extended:
-                if type(new[key]) == dict:
-                    extended[key] = self.extend_query_object(extended[key], new[key])
-                elif type(new[key]) == list:
-                    for val in new[key]:
-                        if val not in extended[key]:
-                            extended[key].append(val)
+        if new is not None:
+            stringified = json.dumps(old)
+            extended = json.loads(stringified)
+
+            for key in new:
+                if key in extended:
+                    if type(new[key]) == dict:
+                        extended[key] = self.extend_query_object(
+                            extended[key], new[key]
+                        )
+                    elif type(new[key]) == list:
+                        for val in new[key]:
+                            if val not in extended[key]:
+                                extended[key].append(val)
+                    else:
+                        extended[key] = new[key]
                 else:
                     extended[key] = new[key]
-            else:
-                extended[key] = new[key]
-
-        return extended
+            return extended
+        else:
+            return old
 
     def build_terms(self, keys_vals: Dict):
         terms = []

@@ -1,6 +1,13 @@
 from fmu.sumo.explorer.objects.document_collection import DocumentCollection
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Tuple
 from sumo.wrapper import SumoClient
+
+TIMESTAMP_QUERY = {
+    "bool": {
+        "must": [{"exists": {"field": "data.time.t0"}}],
+        "must_not": [{"exists": {"field": "data.time.t1"}}],
+    }
+}
 
 
 class ChildCollection(DocumentCollection):
@@ -50,25 +57,84 @@ class ChildCollection(DocumentCollection):
 
     def _add_filter(
         self,
-        name: Union[str, List[str]] = None,
-        tagname: Union[str, List[str]] = None,
-        iteration: Union[int, List[int]] = None,
-        realization: Union[int, List[int]] = None,
-        operation: Union[str, List[str]] = None,
-        stage: Union[str, List[str]] = None,
-    ) -> Dict:
-        must = self._utils.build_terms(
-            {
-                "data.name.keyword": name,
-                "data.tagname.keyword": tagname,
-                "fmu.iteration.id": iteration,
-                "fmu.realization.id": realization,
-                "fmu.aggregation.operation.keyword": operation,
-                "fmu.context.stage.keyword": stage,
-            }
-        )
+        name: Union[str, List[str], bool] = None,
+        tagname: Union[str, List[str], bool] = None,
+        iteration: Union[int, List[int], bool] = None,
+        realization: Union[int, List[int], bool] = None,
+        operation: Union[str, List[str], bool] = None,
+        stage: Union[str, List[str], bool] = None,
+        interval: Union[Tuple[str], bool] = None,
+        timestamp: Union[str, List[str], bool] = None,
+    ):
+        must = []
+        must_not = []
+
+        prop_map = {
+            "data.name.keyword": name,
+            "data.tagname.keyword": tagname,
+            "fmu.iteration.id": iteration,
+            "fmu.realization.id": realization,
+            "fmu.aggregation.operation.keyword": operation,
+            "fmu.context.stage.keyword": stage,
+        }
+
+        for prop in prop_map:
+            value = prop_map[prop]
+
+            if value is not None:
+                if type(value) == bool:
+                    if value:
+                        must.append({"exists": {"field": prop}})
+                    else:
+                        must_not.append({"exists": {"field": prop}})
+                else:
+                    term = "terms" if type(value) == list else "term"
+                    must.append({term: {prop: value}})
+
+        if interval is not None:
+            if type(interval) == list:
+                count = len(interval)
+                if count > 2 or count < 2:
+                    raise Exception(
+                        f"Interval tuple expected two elements, got {count}"
+                    )
+
+            if type(interval) == bool:
+                if interval:
+                    must.append({"exists": {"field": "data.time.t0"}})
+                    must.append({"exists": {"field": "data.time.t1"}})
+                else:
+                    must_not.append({"exists": {"field": "data.time.t1"}})
+            else:
+                must.append({"term": {"data.time.t0.value": interval[0]}})
+                must.append({"term": {"data.time.t1.value": interval[1]}})
+
+        if timestamp is not None:
+            if type(timestamp) == bool:
+                if timestamp:
+                    must.append({"exists": {"field": "data.time.t0"}})
+                    must_not.append({"exists": {"field": "data.time.t1"}})
+                else:
+                    must_not.append(
+                        {
+                            "bool": {
+                                "must": [{"exists": {"field": "data.time.t0"}}],
+                                "must_not": [
+                                    {"exists": {"field": "data.time.t1"}},
+                                ],
+                            }
+                        }
+                    )
+            else:
+                must.append({"term": {"data.time.t0.value": timestamp}})
+                must_not.append({"exists": {"field": "data.time.t1"}})
+
+        query = {"bool": {}}
 
         if len(must) > 0:
-            return super()._add_filter({"bool": {"must": must}})
+            query["bool"]["must"] = must
 
-        return self._query
+        if len(must_not) > 0:
+            query["bool"]["must_not"] = must_not
+
+        return super()._add_filter(query)
