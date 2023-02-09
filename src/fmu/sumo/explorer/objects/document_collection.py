@@ -115,7 +115,7 @@ class DocumentCollection:
         if self._len is None:
             self._len = hits["total"]["value"]
 
-        if len(hits) > 0:
+        if len(hits["hits"]) > 0:
             self._after = hits["hits"][-1]["sort"]
             self._items.extend(hits["hits"])
 
