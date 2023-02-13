@@ -1,6 +1,7 @@
 from fmu.sumo.explorer.objects.document_collection import DocumentCollection
 from typing import List, Dict, Union, Tuple
 from sumo.wrapper import SumoClient
+from fmu.sumo.explorer.timefilter import TimeFilter
 
 TIMESTAMP_QUERY = {
     "bool": {
@@ -63,8 +64,7 @@ class ChildCollection(DocumentCollection):
         realization: Union[int, List[int], bool] = None,
         operation: Union[str, List[str], bool] = None,
         stage: Union[str, List[str], bool] = None,
-        interval: Union[Tuple[str], bool] = None,
-        timestamp: Union[str, List[str], bool] = None,
+        time: TimeFilter = None,
     ):
         must = []
         must_not = []
@@ -91,44 +91,6 @@ class ChildCollection(DocumentCollection):
                     term = "terms" if type(value) == list else "term"
                     must.append({term: {prop: value}})
 
-        if interval is not None:
-            if type(interval) == list:
-                count = len(interval)
-                if count > 2 or count < 2:
-                    raise Exception(
-                        f"Interval tuple expected two elements, got {count}"
-                    )
-
-            if type(interval) == bool:
-                if interval:
-                    must.append({"exists": {"field": "data.time.t0"}})
-                    must.append({"exists": {"field": "data.time.t1"}})
-                else:
-                    must_not.append({"exists": {"field": "data.time.t1"}})
-            else:
-                must.append({"term": {"data.time.t0.value": interval[0]}})
-                must.append({"term": {"data.time.t1.value": interval[1]}})
-
-        if timestamp is not None:
-            if type(timestamp) == bool:
-                if timestamp:
-                    must.append({"exists": {"field": "data.time.t0"}})
-                    must_not.append({"exists": {"field": "data.time.t1"}})
-                else:
-                    must_not.append(
-                        {
-                            "bool": {
-                                "must": [{"exists": {"field": "data.time.t0"}}],
-                                "must_not": [
-                                    {"exists": {"field": "data.time.t1"}},
-                                ],
-                            }
-                        }
-                    )
-            else:
-                must.append({"term": {"data.time.t0.value": timestamp}})
-                must_not.append({"exists": {"field": "data.time.t1"}})
-
         query = {"bool": {}}
 
         if len(must) > 0:
@@ -136,5 +98,8 @@ class ChildCollection(DocumentCollection):
 
         if len(must_not) > 0:
             query["bool"]["must_not"] = must_not
+
+        if time:
+            query = self._utils.extend_query_object(query, time.get_query())
 
         return super()._add_filter(query)

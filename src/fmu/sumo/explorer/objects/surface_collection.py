@@ -1,6 +1,7 @@
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects.child_collection import ChildCollection
 from fmu.sumo.explorer.objects.surface import Surface
+from fmu.sumo.explorer.timefilter import TimeFilter
 import xtgeo
 from io import BytesIO
 from typing import Union, List, Dict, Tuple
@@ -12,6 +13,7 @@ TIMESTAMP_QUERY = {
     }
 }
 
+
 class SurfaceCollection(ChildCollection):
     """Class for representing a collection of surface objects in Sumo"""
 
@@ -22,7 +24,7 @@ class SurfaceCollection(ChildCollection):
     def __getitem__(self, index) -> Surface:
         doc = super().__getitem__(index)
         return Surface(self._sumo, doc)
-    
+
     @property
     def timestamps(self) -> List[str]:
         return self._get_field_values("data.time.t0.value", TIMESTAMP_QUERY, True)
@@ -79,18 +81,10 @@ class SurfaceCollection(ChildCollection):
         realization: Union[int, List[int], bool] = None,
         operation: Union[str, List[str], bool] = None,
         stage: Union[str, List[str], bool] = None,
-        interval: Union[Tuple[str], bool] = None,
-        timestamp: Union[str, List[str], bool] = None,
+        time: TimeFilter = None,
     ) -> "SurfaceCollection":
         query = super()._add_filter(
-            name,
-            tagname,
-            iteration,
-            realization,
-            operation,
-            stage,
-            interval,
-            timestamp,
+            name, tagname, iteration, realization, operation, stage, time
         )
 
         return SurfaceCollection(self._sumo, self._case_id, query)
