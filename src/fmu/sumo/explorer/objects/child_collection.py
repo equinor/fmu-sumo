@@ -1,14 +1,7 @@
 from fmu.sumo.explorer.objects.document_collection import DocumentCollection
-from typing import List, Dict, Union, Tuple
+from typing import List, Dict, Union
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.timefilter import TimeFilter
-
-TIMESTAMP_QUERY = {
-    "bool": {
-        "must": [{"exists": {"field": "data.time.t0"}}],
-        "must_not": [{"exists": {"field": "data.time.t1"}}],
-    }
-}
 
 
 class ChildCollection(DocumentCollection):

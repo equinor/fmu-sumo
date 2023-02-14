@@ -60,7 +60,7 @@ class SurfaceCollection(ChildCollection):
     def _aggregate(self, operation: str) -> xtgeo.RegularSurface:
         if operation not in self._aggregation_cache:
             objects = self._utils.get_objects(500, self._query, ["_id"])
-            object_ids = List(map(lambda obj: obj["_id"], objects))
+            object_ids = list(map(lambda obj: obj["_id"], objects))
 
             res = self._sumo.post(
                 "/aggregate",
