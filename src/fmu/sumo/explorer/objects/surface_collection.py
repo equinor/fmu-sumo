@@ -17,8 +17,8 @@ TIMESTAMP_QUERY = {
 class SurfaceCollection(ChildCollection):
     """Class for representing a collection of surface objects in Sumo"""
 
-    def __init__(self, sumo: SumoClient, case_id: str, query: Dict = None):
-        super().__init__("surface", sumo, case_id, query)
+    def __init__(self, sumo: SumoClient, case_uuid: str, query: Dict = None):
+        super().__init__("surface", sumo, case_uuid, query)
         self._aggregation_cache = {}
 
     def __getitem__(self, index) -> Surface:
@@ -79,15 +79,15 @@ class SurfaceCollection(ChildCollection):
         tagname: Union[str, List[str], bool] = None,
         iteration: Union[int, List[int], bool] = None,
         realization: Union[int, List[int], bool] = None,
-        operation: Union[str, List[str], bool] = None,
+        aggregation: Union[str, List[str], bool] = None,
         stage: Union[str, List[str], bool] = None,
         time: TimeFilter = None,
     ) -> "SurfaceCollection":
         query = super()._add_filter(
-            name, tagname, iteration, realization, operation, stage, time
+            name, tagname, iteration, realization, aggregation, stage, time
         )
 
-        return SurfaceCollection(self._sumo, self._case_id, query)
+        return SurfaceCollection(self._sumo, self._case_uuid, query)
 
     def mean(self):
         return self._aggregate("mean")

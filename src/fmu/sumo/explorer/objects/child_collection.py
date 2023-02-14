@@ -7,8 +7,8 @@ from fmu.sumo.explorer.timefilter import TimeFilter
 class ChildCollection(DocumentCollection):
     """Class for representing a collection of child objects in Sumo"""
 
-    def __init__(self, type: str, sumo: SumoClient, case_id: str, query: Dict = None):
-        self._case_id = case_id
+    def __init__(self, type: str, sumo: SumoClient, case_uuid: str, query: Dict = None):
+        self._case_uuid = case_uuid
         super().__init__(type, sumo, query)
 
     @property
@@ -32,7 +32,7 @@ class ChildCollection(DocumentCollection):
         return self._get_field_values("fmu.realization.id")
 
     @property
-    def operations(self) -> List[str]:
+    def aggregations(self) -> List[str]:
         """List of unique object aggregation operations"""
         return self._get_field_values("fmu.aggregation.operation.keyword")
 
@@ -44,7 +44,7 @@ class ChildCollection(DocumentCollection):
     def _init_query(self, type: str, query: Dict = None) -> Dict:
         new_query = super()._init_query(type, query)
         case_filter = {
-            "bool": {"must": [{"term": {"_sumo.parent_object.keyword": self._case_id}}]}
+            "bool": {"must": [{"term": {"_sumo.parent_object.keyword": self._case_uuid}}]}
         }
 
         return self._utils.extend_query_object(new_query, case_filter)
@@ -55,7 +55,7 @@ class ChildCollection(DocumentCollection):
         tagname: Union[str, List[str], bool] = None,
         iteration: Union[int, List[int], bool] = None,
         realization: Union[int, List[int], bool] = None,
-        operation: Union[str, List[str], bool] = None,
+        aggregation: Union[str, List[str], bool] = None,
         stage: Union[str, List[str], bool] = None,
         time: TimeFilter = None,
     ):
@@ -67,7 +67,7 @@ class ChildCollection(DocumentCollection):
             "data.tagname.keyword": tagname,
             "fmu.iteration.id": iteration,
             "fmu.realization.id": realization,
-            "fmu.aggregation.operation.keyword": operation,
+            "fmu.aggregation.operation.keyword": aggregation,
             "fmu.context.stage.keyword": stage,
         }
 

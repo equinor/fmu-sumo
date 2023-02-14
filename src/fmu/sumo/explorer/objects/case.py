@@ -1,8 +1,5 @@
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects.document import Document
-from fmu.sumo.explorer.contexts.realization import RealizationContext
-from fmu.sumo.explorer.contexts.aggregation import AggregationContext
-from fmu.sumo.explorer.contexts.observation import ObservationContext
 from fmu.sumo.explorer.objects.surface_collection import SurfaceCollection
 from fmu.sumo.explorer.objects.polygons_collection import PolygonsCollection
 from fmu.sumo.explorer.objects.table_collection import TableCollection
@@ -77,25 +74,13 @@ class Case(Document):
         return self._iterations
 
     @property
-    def realization(self) -> RealizationContext:
-        return RealizationContext(self._sumo, self._id)
-
-    @property
-    def aggregation(self) -> AggregationContext:
-        return AggregationContext(self._sumo, self._id)
-
-    @property
-    def observation(self) -> ObservationContext:
-        return ObservationContext(self._sumo, self._id)
-
-    @property
     def surfaces(self) -> SurfaceCollection:
-        return SurfaceCollection(self._sumo, self._id)
+        return SurfaceCollection(self._sumo, self._uuid)
 
     @property
     def polygons(self) -> PolygonsCollection:
-        return PolygonsCollection(self._sumo, self._id)
+        return PolygonsCollection(self._sumo, self._uuid)
 
     @property
     def tables(self) -> TableCollection:
-        return TableCollection(self._sumo, self._id)
+        return TableCollection(self._sumo, self._uuid)

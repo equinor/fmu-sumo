@@ -47,7 +47,7 @@ class Child(Document):
     @property
     def blob(self) -> BytesIO:
         if self._blob is None:
-            res = self._sumo.get(f"/objects('{self.id}')/blob")
+            res = self._sumo.get(f"/objects('{self.uuid}')/blob")
             self._blob = BytesIO(res)
 
         return self._blob

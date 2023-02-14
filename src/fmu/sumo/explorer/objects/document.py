@@ -5,12 +5,12 @@ class Document:
     """Class for representing a document in Sumo"""
 
     def __init__(self, metadata: Dict) -> None:
-        self._id = metadata["_id"]
+        self._uuid = metadata["_id"]
         self._metadata = metadata["_source"]
 
     @property
-    def id(self):
-        return self._id
+    def uuid(self):
+        return self._uuid
 
     def _get_property(self, path: List[str]):
         curr = self._metadata.copy()

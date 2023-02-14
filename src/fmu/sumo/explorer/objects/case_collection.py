@@ -41,7 +41,7 @@ class CaseCollection(DocumentCollection):
 
     def filter(
         self,
-        id: Union[str, List[str]] = None,
+        uuid: Union[str, List[str]] = None,
         name: Union[str, List[str]] = None,
         status: Union[str, List[str]] = None,
         user: Union[int, List[int]] = None,
@@ -51,7 +51,7 @@ class CaseCollection(DocumentCollection):
         """Filter cases
 
         Arguments:
-            - id (str or List[str]): case id
+            - uuid (str or List[str]): case uuid
             - name (str or List[str]): case name
             - status (str or List[str]): case status
             - user (str or List[str]): name of case owner
@@ -63,7 +63,7 @@ class CaseCollection(DocumentCollection):
         """
         must = self._utils.build_terms(
             {
-                "_id": id,
+                "_id": uuid,
                 "fmu.case.name.keyword": name,
                 "_sumo.status.keyword": status,
                 "fmu.case.user.id.keyword": user,
