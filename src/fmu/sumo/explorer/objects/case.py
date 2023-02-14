@@ -41,7 +41,7 @@ class Case(Document):
     def iterations(self) -> List[Dict]:
         if self._iterations is None:
             query = {
-                "query": {"term": {"_sumo.parent_object.keyword": self.id}},
+                "query": {"term": {"_sumo.parent_object.keyword": self.uuid}},
                 "aggs": {
                     "id": {
                         "terms": {"field": "fmu.iteration.id", "size": 50},
