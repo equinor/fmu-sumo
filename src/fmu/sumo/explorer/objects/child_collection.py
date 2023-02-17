@@ -23,8 +23,8 @@ class ChildCollection(DocumentCollection):
 
     @property
     def iterations(self) -> List[int]:
-        """List of unique object iteration ids"""
-        return self._get_field_values("fmu.iteration.id")
+        """List of unique object iteration names"""
+        return self._get_field_values("fmu.iteration.name.keyword")
 
     @property
     def realizations(self) -> List[int]:
@@ -53,7 +53,7 @@ class ChildCollection(DocumentCollection):
         self,
         name: Union[str, List[str], bool] = None,
         tagname: Union[str, List[str], bool] = None,
-        iteration: Union[int, List[int], bool] = None,
+        iteration: Union[str, List[str], bool] = None,
         realization: Union[int, List[int], bool] = None,
         aggregation: Union[str, List[str], bool] = None,
         stage: Union[str, List[str], bool] = None,
@@ -65,7 +65,7 @@ class ChildCollection(DocumentCollection):
         prop_map = {
             "data.name.keyword": name,
             "data.tagname.keyword": tagname,
-            "fmu.iteration.id": iteration,
+            "fmu.iteration.name.keyword": iteration,
             "fmu.realization.id": realization,
             "fmu.aggregation.operation.keyword": aggregation,
             "fmu.context.stage.keyword": stage,
