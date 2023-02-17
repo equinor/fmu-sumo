@@ -28,8 +28,10 @@ class Explorer:
 
         When iterating over large datasets, use the `keep_alive` argument
         to create a snapshot of the data to ensure consistency. The
-        argument specifies the lifespan of the snapshot and uses a format of
-        a number followed by a unit indicator. Supported indicators are:
+        argument specifies the lifespan of the snapshot and every
+        request to the Sumo API will extend the lifetime of the snapshot
+        with the specified `keep_alive` value. The argument uses a format
+        of a number followed by a unit indicator. Supported indicators are:
             - d (day)
             - h (hour)
             - m (minute)
