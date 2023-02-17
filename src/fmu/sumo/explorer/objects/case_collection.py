@@ -33,7 +33,9 @@ class CaseCollection(DocumentCollection):
     @property
     def fields(self) -> List[str]:
         """List of unique field names"""
-        return self._get_field_values("masterdata.smda.field.identifier.keyword")
+        return self._get_field_values(
+            "masterdata.smda.field.identifier.keyword"
+        )
 
     def __getitem__(self, index: int) -> Case:
         doc = super().__getitem__(index)

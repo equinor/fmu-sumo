@@ -11,10 +11,11 @@ OBSERVATION_FILTER = {
     }
 }
 
+
 class ObservationContext:
     def __init__(self, sumo: SumoClient, case_id: str) -> None:
         self._sumo = sumo
-        self._case_id = case_id 
+        self._case_id = case_id
 
     @property
     def surfaces(self) -> SurfaceCollection:

@@ -27,7 +27,9 @@ class SurfaceCollection(ChildCollection):
 
     @property
     def timestamps(self) -> List[str]:
-        return self._get_field_values("data.time.t0.value", TIMESTAMP_QUERY, True)
+        return self._get_field_values(
+            "data.time.t0.value", TIMESTAMP_QUERY, True
+        )
 
     @property
     def intervals(self) -> List[Tuple]:
@@ -39,7 +41,12 @@ class SurfaceCollection(ChildCollection):
                     "t0": {
                         "terms": {"field": "data.time.t0.value", "size": 50},
                         "aggs": {
-                            "t1": {"terms": {"field": "data.time.t1.value", "size": 50}}
+                            "t1": {
+                                "terms": {
+                                    "field": "data.time.t1.value",
+                                    "size": 50,
+                                }
+                            }
                         },
                     }
                 },
@@ -83,29 +90,51 @@ class SurfaceCollection(ChildCollection):
         stage: Union[str, List[str], bool] = None,
         time: TimeFilter = None,
     ) -> "SurfaceCollection":
+        """Filter surfaces
+
+        Arguments:
+            - name (Union[str, List[str], bool]): surface name
+            - tagname (Union[str, List[str], bool]): surface tagname
+            - iteration (Union[int, List[int], bool]): iteration id
+            - realization Union[int, List[int], bool]: realization id
+            - aggregation (Union[str, List[str], bool]): aggregation operation
+            - stage (Union[str, List[str], bool]): context/stage
+            - time (TimeFilter): time filter
+
+        Returns:
+            A filtered SurfaceCollection
+        """
+
         query = super()._add_filter(
             name, tagname, iteration, realization, aggregation, stage, time
         )
 
         return SurfaceCollection(self._sumo, self._case_uuid, query)
 
-    def mean(self):
+    def mean(self) -> xtgeo.RegularSurface:
+        """Perform a mean aggregation"""
         return self._aggregate("mean")
 
-    def min(self):
+    def min(self) -> xtgeo.RegularSurface:
+        """Perform a minimum aggregation"""
         return self._aggregate("min")
 
-    def max(self):
+    def max(self) -> xtgeo.RegularSurface:
+        """Perform a maximum aggregation"""
         return self._aggregate("max")
 
-    def std(self):
+    def std(self) -> xtgeo.RegularSurface:
+        """Perform a standard deviation aggregation"""
         return self._aggregate("std")
 
-    def p10(self):
+    def p10(self) -> xtgeo.RegularSurface:
+        """Perform a percentile aggregation"""
         return self._aggregate("p10")
 
-    def p50(self):
+    def p50(self) -> xtgeo.RegularSurface:
+        """Perform a percentile aggregation"""
         return self._aggregate("p50")
 
-    def p90(self):
+    def p90(self) -> xtgeo.RegularSurface:
+        """Perform a percentile aggregation"""
         return self._aggregate("p90")

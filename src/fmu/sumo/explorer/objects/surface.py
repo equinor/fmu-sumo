@@ -16,8 +16,8 @@ class Surface(Child):
         t1 = self._get_property(["data", "time", "t1", "value"])
 
         if t0 is not None and t1 is None:
-            return t0 
-        
+            return t0
+
         return None
 
     @property
@@ -27,7 +27,7 @@ class Surface(Child):
 
         if t0 is not None and t1 is not None:
             return (t0, t1)
-        
+
         return None
 
     def to_regular_surface(self) -> RegularSurface:

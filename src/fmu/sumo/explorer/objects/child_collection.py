@@ -7,7 +7,9 @@ from fmu.sumo.explorer.timefilter import TimeFilter
 class ChildCollection(DocumentCollection):
     """Class for representing a collection of child objects in Sumo"""
 
-    def __init__(self, type: str, sumo: SumoClient, case_uuid: str, query: Dict = None):
+    def __init__(
+        self, type: str, sumo: SumoClient, case_uuid: str, query: Dict = None
+    ):
         self._case_uuid = case_uuid
         super().__init__(type, sumo, query)
 
@@ -44,7 +46,11 @@ class ChildCollection(DocumentCollection):
     def _init_query(self, type: str, query: Dict = None) -> Dict:
         new_query = super()._init_query(type, query)
         case_filter = {
-            "bool": {"must": [{"term": {"_sumo.parent_object.keyword": self._case_uuid}}]}
+            "bool": {
+                "must": [
+                    {"term": {"_sumo.parent_object.keyword": self._case_uuid}}
+                ]
+            }
         }
 
         return self._utils.extend_query_object(new_query, case_filter)

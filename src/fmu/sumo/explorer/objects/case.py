@@ -18,27 +18,33 @@ class Case(Document):
 
     @property
     def name(self) -> str:
+        """Case name"""
         return self._get_property(["fmu", "case", "name"])
 
     @property
     def status(self) -> str:
+        """Case status"""
         return self._get_property(["_sumo", "status"])
 
     @property
     def user(self) -> str:
+        """Name of user who uploaded the case"""
         return self._get_property(["fmu", "case", "user", "id"])
 
     @property
     def asset(self) -> str:
+        """Case asset"""
         return self._get_property(["access", "asset", "name"])
 
     @property
     def field(self) -> str:
+        """Case field"""
         fields = self._get_property(["masterdata", "smda", "field"])
         return fields[0]["identifier"]
 
     @property
     def iterations(self) -> List[Dict]:
+        """List of case iterations"""
         if self._iterations is None:
             query = {
                 "query": {"term": {"_sumo.parent_object.keyword": self.uuid}},
@@ -47,11 +53,17 @@ class Case(Document):
                         "terms": {"field": "fmu.iteration.id", "size": 50},
                         "aggs": {
                             "name": {
-                                "terms": {"field": "fmu.iteration.name.keyword", "size": 1}
+                                "terms": {
+                                    "field": "fmu.iteration.name.keyword",
+                                    "size": 1,
+                                }
                             },
                             "realizations": {
-                                "terms": {"field": "fmu.realization.id", "size": 1000}
-                            }
+                                "terms": {
+                                    "field": "fmu.realization.id",
+                                    "size": 1000,
+                                }
+                            },
                         },
                     },
                 },
@@ -63,11 +75,13 @@ class Case(Document):
             iterations = []
 
             for bucket in buckets:
-                iterations.append({
-                    "id": bucket["key"],
-                    "name": bucket["name"]["buckets"][0]["key"],
-                    "realizations": len(bucket["realizations"]["buckets"])
-                })
+                iterations.append(
+                    {
+                        "id": bucket["key"],
+                        "name": bucket["name"]["buckets"][0]["key"],
+                        "realizations": len(bucket["realizations"]["buckets"]),
+                    }
+                )
 
             self._iterations = iterations
 
@@ -75,12 +89,15 @@ class Case(Document):
 
     @property
     def surfaces(self) -> SurfaceCollection:
+        """List of case surfaces"""
         return SurfaceCollection(self._sumo, self._uuid)
 
     @property
     def polygons(self) -> PolygonsCollection:
+        """List of case polygons"""
         return PolygonsCollection(self._sumo, self._uuid)
 
     @property
     def tables(self) -> TableCollection:
+        """List of case tables"""
         return TableCollection(self._sumo, self._uuid)

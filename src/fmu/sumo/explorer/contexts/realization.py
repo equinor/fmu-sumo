@@ -13,19 +13,20 @@ REALIZATION_FILTER = {
     }
 }
 
+
 class RealizationContext:
     def __init__(self, sumo: SumoClient, case_id: str) -> None:
         self._sumo = sumo
-        self._case_id = case_id 
+        self._case_id = case_id
 
     @property
     def surfaces(self) -> SurfaceCollection:
         return SurfaceCollection(self._sumo, self._case_id, REALIZATION_FILTER)
-    
+
     @property
     def polygons(self) -> PolygonsCollection:
         return PolygonsCollection(self._sumo, self._case_id, REALIZATION_FILTER)
-    
+
     @property
     def tables(self) -> TableCollection:
         return TableCollection(self._sumo, self._case_id, REALIZATION_FILTER)

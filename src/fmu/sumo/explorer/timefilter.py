@@ -37,8 +37,12 @@ class TimeFilter:
         must_not = []
         should = []
         minimum_should_match = None
-        t0_filter = self._get_range_filter("data.time.t0.value", self.start, self.end)
-        t1_filter = self._get_range_filter("data.time.t1.value", self.start, self.end)
+        t0_filter = self._get_range_filter(
+            "data.time.t0.value", self.start, self.end
+        )
+        t1_filter = self._get_range_filter(
+            "data.time.t1.value", self.start, self.end
+        )
 
         if self.type == TimeType.TIMESTAMP:
             must.append({"exists": {"field": "data.time.t0"}})
@@ -77,7 +81,11 @@ class TimeFilter:
                         {
                             "bool": {
                                 "must": [
-                                    {"term": {"data.time.t0.value": self.start}},
+                                    {
+                                        "term": {
+                                            "data.time.t0.value": self.start
+                                        }
+                                    },
                                     {"term": {"data.time.t1.value": self.end}},
                                 ]
                             }
@@ -89,7 +97,9 @@ class TimeFilter:
                         should.append(t1_filter)
                     else:
                         should.append(t0_filter)
-                        should.append({"bool": {"must": [t0_filter, t1_filter]}})
+                        should.append(
+                            {"bool": {"must": [t0_filter, t1_filter]}}
+                        )
         elif self.type == TimeType.NONE:
             must_not.append({"exists": {"field": "data.time"}})
         else:

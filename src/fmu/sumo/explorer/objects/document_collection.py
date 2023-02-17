@@ -59,7 +59,7 @@ class DocumentCollection:
     def _get_field_values(
         self, field: str, query: Dict = None, key_as_string: bool = False
     ) -> List:
-        """Get List of unique values for a given field in the document collection
+        """Get List of unique values for a given field
 
         Arguments:
             - field (str): a metadata field
@@ -71,7 +71,9 @@ class DocumentCollection:
             bucket_query = self._utils.extend_query_object(self._query, query)
             key = "key_as_string" if key_as_string is True else "key"
             buckets = self._utils.get_buckets(field, bucket_query)
-            self._field_values[field] = list(map(lambda bucket: bucket[key], buckets))
+            self._field_values[field] = list(
+                map(lambda bucket: bucket[key], buckets)
+            )
 
         return self._field_values[field]
 
@@ -99,7 +101,7 @@ class DocumentCollection:
                 "fmu.aggregation.operation",
                 "_sumo.status",
                 "access.asset",
-                "masterdata.smda.field"
+                "masterdata.smda.field",
             ],
         }
 

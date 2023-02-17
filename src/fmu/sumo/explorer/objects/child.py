@@ -39,7 +39,7 @@ class Child(Document):
     @property
     def stage(self) -> str:
         return self._get_property(["fmu", "context", "stage"])
-    
+
     @property
     def format(self) -> str:
         return self._get_property(["data", "format"])
