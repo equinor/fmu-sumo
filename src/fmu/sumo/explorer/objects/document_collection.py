@@ -94,7 +94,7 @@ class DocumentCollection:
                 "fmu.case.name",
                 "fmu.case.user.id",
                 "fmu.realization.id",
-                "fmu.iteration.id",
+                "fmu.iteration.name",
                 "fmu.context.stage",
                 "fmu.aggregation.operation",
                 "_sumo.status",

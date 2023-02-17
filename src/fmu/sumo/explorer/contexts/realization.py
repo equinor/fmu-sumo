@@ -7,7 +7,7 @@ from fmu.sumo.explorer.objects.table_collection import TableCollection
 REALIZATION_FILTER = {
     "bool": {
         "must": [
-            {"exists": {"field": "fmu.iteration.id"}},
+            {"exists": {"field": "fmu.iteration.name.keyword"}},
             {"exists": {"field": "fmu.realization.id"}},
         ]
     }

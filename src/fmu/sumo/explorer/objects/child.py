@@ -26,7 +26,7 @@ class Child(Document):
 
     @property
     def iteration(self) -> int:
-        return self._get_property(["fmu", "iteration", "id"])
+        return self._get_property(["fmu", "iteration", "name"])
 
     @property
     def realization(self) -> int:

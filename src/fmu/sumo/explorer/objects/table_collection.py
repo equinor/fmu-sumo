@@ -18,7 +18,7 @@ class TableCollection(ChildCollection):
         self,
         name: Union[str, List[str], bool] = None,
         tagname: Union[str, List[str], bool] = None,
-        iteration: Union[int, List[int], bool] = None,
+        iteration: Union[str, List[str], bool] = None,
         realization: Union[int, List[int], bool] = None,
         aggregation: Union[str, List[str], bool] = None,
         stage: Union[str, List[str], bool] = None,

@@ -5,7 +5,7 @@ from fmu.sumo.explorer.objects.surface_collection import SurfaceCollection
 OBSERVATION_FILTER = {
     "bool": {
         "must_not": [
-            {"exists": {"field": "fmu.iteration.id"}},
+            {"exists": {"field": "fmu.iteration.name.keyword"}},
             {"exists": {"field": "fmu.realization.id"}},
         ]
     }
