@@ -2,6 +2,7 @@ from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._child_collection import ChildCollection
 from fmu.sumo.explorer.objects.surface import Surface
 from fmu.sumo.explorer.timefilter import TimeFilter
+from fmu.sumo.explorer.pit import Pit
 import xtgeo
 from io import BytesIO
 from typing import Union, List, Dict, Tuple
@@ -17,14 +18,22 @@ TIMESTAMP_QUERY = {
 class SurfaceCollection(ChildCollection):
     """Class representing a collection of surface objects in Sumo"""
 
-    def __init__(self, sumo: SumoClient, case_uuid: str, query: Dict = None):
+    def __init__(
+        self,
+        sumo: SumoClient,
+        case_uuid: str,
+        query: Dict = None,
+        pit: Pit = None,
+    ):
         """
         Args:
             sumo (SumoClient): connection to Sumo
             case_uuid (str): parent case uuid
             query (dict): elastic query object
+            pit (Pit): point in time
         """
-        super().__init__("surface", sumo, case_uuid, query)
+        super().__init__("surface", sumo, case_uuid, query, pit)
+
         self._aggregation_cache = {}
 
     def __getitem__(self, index) -> Surface:
@@ -159,7 +168,7 @@ class SurfaceCollection(ChildCollection):
             time=time,
         )
 
-        return SurfaceCollection(self._sumo, self._case_uuid, query)
+        return SurfaceCollection(self._sumo, self._case_uuid, query, self._pit)
 
     def mean(self) -> xtgeo.RegularSurface:
         """Perform a mean aggregation"""

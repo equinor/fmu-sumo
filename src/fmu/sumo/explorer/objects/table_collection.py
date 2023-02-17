@@ -1,14 +1,28 @@
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._child_collection import ChildCollection
 from fmu.sumo.explorer.objects.table import Table
+from fmu.sumo.explorer.pit import Pit
 from typing import Union, List, Dict
 
 
 class TableCollection(ChildCollection):
     """Class for representing a collection of table objects in Sumo"""
 
-    def __init__(self, sumo: SumoClient, case_uuid: str, query: Dict = None):
-        super().__init__("table", sumo, case_uuid, query)
+    def __init__(
+        self,
+        sumo: SumoClient,
+        case_uuid: str,
+        query: Dict = None,
+        pit: Pit = None,
+    ):
+        """
+        Args:
+            sumo (SumoClient): connection to Sumo
+            case_uuid (str): parent case uuid
+            query (dict): elastic query object
+            pit (Pit): point in time
+        """
+        super().__init__("table", sumo, case_uuid, query, pit)
 
     def __getitem__(self, index) -> Table:
         doc = super().__getitem__(index)
@@ -52,4 +66,4 @@ class TableCollection(ChildCollection):
             stage=stage,
             column=column,
         )
-        return TableCollection(self._sumo, self._case_uuid, query)
+        return TableCollection(self._sumo, self._case_uuid, query, self._pit)

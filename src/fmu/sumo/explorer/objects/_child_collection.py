@@ -2,16 +2,22 @@ from fmu.sumo.explorer.objects._document_collection import DocumentCollection
 from typing import List, Dict, Union
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.timefilter import TimeFilter
+from fmu.sumo.explorer.pit import Pit
 
 
 class ChildCollection(DocumentCollection):
     """Class for representing a collection of child objects in Sumo"""
 
     def __init__(
-        self, type: str, sumo: SumoClient, case_uuid: str, query: Dict = None
+        self,
+        type: str,
+        sumo: SumoClient,
+        case_uuid: str,
+        query: Dict = None,
+        pit: Pit = None,
     ):
         self._case_uuid = case_uuid
-        super().__init__(type, sumo, query)
+        super().__init__(type, sumo, query, pit)
 
     @property
     def names(self) -> List[str]:

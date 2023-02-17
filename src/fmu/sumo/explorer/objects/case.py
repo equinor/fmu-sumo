@@ -4,14 +4,16 @@ from fmu.sumo.explorer.objects.surface_collection import SurfaceCollection
 from fmu.sumo.explorer.objects.polygons_collection import PolygonsCollection
 from fmu.sumo.explorer.objects.table_collection import TableCollection
 from fmu.sumo.explorer._utils import Utils
+from fmu.sumo.explorer.pit import Pit
 from typing import Dict, List
 
 
 class Case(Document):
     """Class for representing a case in Sumo"""
 
-    def __init__(self, sumo: SumoClient, metadata: Dict):
+    def __init__(self, sumo: SumoClient, metadata: Dict, pit: Pit = None):
         super().__init__(metadata)
+        self._pit = pit
         self._sumo = sumo
         self._utils = Utils(sumo)
         self._iterations = None
@@ -90,14 +92,14 @@ class Case(Document):
     @property
     def surfaces(self) -> SurfaceCollection:
         """List of case surfaces"""
-        return SurfaceCollection(self._sumo, self._uuid)
+        return SurfaceCollection(self._sumo, self._uuid, pit=self._pit)
 
     @property
     def polygons(self) -> PolygonsCollection:
         """List of case polygons"""
-        return PolygonsCollection(self._sumo, self._uuid)
+        return PolygonsCollection(self._sumo, self._uuid, pit=self._pit)
 
     @property
     def tables(self) -> TableCollection:
         """List of case tables"""
-        return TableCollection(self._sumo, self._uuid)
+        return TableCollection(self._sumo, self._uuid, pit=self._pit)

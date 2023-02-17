@@ -1,5 +1,6 @@
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects.case_collection import CaseCollection
+from fmu.sumo.explorer.pit import Pit
 
 
 class Explorer:
@@ -21,21 +22,40 @@ class Explorer:
         env: str = "prod",
         token: str = None,
         interactive: bool = True,
+        keep_alive: str = None,
     ):
         """Initialize the Explorer class
+
+        When iterating over large datasets, use the `keep_alive` argument
+        to create a snapshot of the data to ensure consistency. The
+        argument specifies the lifespan of the snapshot and uses a format of
+        a number followed by a unit indicator. Supported indicators are:
+            - d (day)
+            - h (hour)
+            - m (minute)
+            - s (second)
+            - ms (milisecond)
+            - micros (microsecond)
+            - nanos (nanosecond)
+
+        Examples: 1d, 2h, 15m, 30s
+
+        Every request to Sumo will extend the lifespan of the snapshot
+        by the time specified in `keep_alive`.
 
         Args:
             env (str): Sumo environment
             token (str): authenticate with existing token
             interactive (bool): authenticate using interactive flow (browser)
+            keep_alive (str): point in time lifespan
         """
         self._sumo = SumoClient(env, token=token, interactive=interactive)
-        self._cases = CaseCollection(self._sumo)
+        self._pit = Pit(self._sumo, keep_alive) if keep_alive else None
 
     @property
-    def cases(self) -> CaseCollection:
-        """A collection of accessible cases in Sumo"""
-        return self._cases
+    def cases(self):
+        """Cases in Sumo"""
+        return CaseCollection(sumo=self._sumo, pit=self._pit)
 
     def get_permissions(self, asset: str = None):
         """Get permissions
