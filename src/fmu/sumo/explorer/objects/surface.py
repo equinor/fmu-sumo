@@ -11,6 +11,14 @@ class Surface(Child):
         super().__init__(sumo, metadata)
 
     @property
+    def bbox(self) -> Dict:
+        return self._get_property(["data", "bbox"])
+
+    @property
+    def spec(self) -> Dict:
+        return self._get_property(["data", "spec"])
+
+    @property
     def timestamp(self) -> str:
         t0 = self._get_property(["data", "time", "t0", "value"])
         t1 = self._get_property(["data", "time", "t1", "value"])

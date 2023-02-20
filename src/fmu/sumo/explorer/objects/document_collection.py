@@ -93,6 +93,8 @@ class DocumentCollection:
                 "data.tagname",
                 "data.time",
                 "data.format",
+                "data.bbox",
+                "data.spec",
                 "fmu.case.name",
                 "fmu.case.user.id",
                 "fmu.realization.id",
