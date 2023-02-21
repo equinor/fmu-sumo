@@ -66,7 +66,7 @@ master_doc = "index"
 # General information about the project.
 project = "fmu.sumo"
 current_year = date.today().year
-copyright = "Equinor " + str(current_year) + f" (fmu-sumo release {release})"
+# copyright = "Equinor " + str(current_year) + f" (fmu-sumo release {release})"
 
 
 # Sort members by input order in classes
