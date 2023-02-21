@@ -19,7 +19,7 @@ def _format_requirement(req):
 def parse_requirements(fname):
     """Turn requirements.txt into a list"""
     reqs = parse(fname, session="test")
-    return [_format_requirement(ir) for ir in reqs]
+    return [ir for ir in reqs]
 
 
 CMDCLASS = {}
