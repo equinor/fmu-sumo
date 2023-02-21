@@ -24,27 +24,27 @@ class Explorer:
     ):
         """Initialize the Explorer class
 
-        Arguments:
-            - env (str): Sumo environment
-            - token (str): use existing access token or refresh token
-            - interactive (bool): authenticate using interactive flow (browser)
+        Args:
+            env (str): Sumo environment
+            token (str): authenticate with existing token
+            interactive (bool): authenticate using interactive flow (browser)
         """
         self._sumo = SumoClient(env, token=token, interactive=interactive)
         self._cases = CaseCollection(self._sumo)
 
     @property
-    def cases(self):
-        """Cases in Sumo"""
+    def cases(self) -> CaseCollection:
+        """A collection of accessible cases in Sumo"""
         return self._cases
 
     def get_permissions(self, asset: str = None):
         """Get permissions
 
-        Arguments:
-            - asset (str): asset in Sumo
+        Args:
+            asset (str): asset in Sumo
 
         Returns:
-          Dictionary of user permissions
+          dict: Dictionary of user permissions
         """
         res = self._sumo.get("/userpermissions")
 

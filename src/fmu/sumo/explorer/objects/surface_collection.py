@@ -1,5 +1,5 @@
 from sumo.wrapper import SumoClient
-from fmu.sumo.explorer.objects.child_collection import ChildCollection
+from fmu.sumo.explorer.objects._child_collection import ChildCollection
 from fmu.sumo.explorer.objects.surface import Surface
 from fmu.sumo.explorer.timefilter import TimeFilter
 import xtgeo
@@ -15,9 +15,15 @@ TIMESTAMP_QUERY = {
 
 
 class SurfaceCollection(ChildCollection):
-    """Class for representing a collection of surface objects in Sumo"""
+    """Class representing a collection of surface objects in Sumo"""
 
     def __init__(self, sumo: SumoClient, case_uuid: str, query: Dict = None):
+        """
+        Args:
+            sumo (SumoClient): connection to Sumo
+            case_uuid (str): parent case uuid
+            query (dict): elastic query object
+        """
         super().__init__("surface", sumo, case_uuid, query)
         self._aggregation_cache = {}
 
@@ -27,12 +33,14 @@ class SurfaceCollection(ChildCollection):
 
     @property
     def timestamps(self) -> List[str]:
+        """List of unique timestamps in SurfaceCollection"""
         return self._get_field_values(
             "data.time.t0.value", TIMESTAMP_QUERY, True
         )
 
     @property
     def intervals(self) -> List[Tuple]:
+        """List of unique intervals in SurfaceCollection"""
         res = self._sumo.post(
             "/search",
             json={
@@ -92,21 +100,63 @@ class SurfaceCollection(ChildCollection):
     ) -> "SurfaceCollection":
         """Filter surfaces
 
-        Arguments:
-            - name (Union[str, List[str], bool]): surface name
-            - tagname (Union[str, List[str], bool]): surface tagname
-            - iteration (Union[int, List[int], bool]): iteration id
-            - realization Union[int, List[int], bool]: realization id
-            - aggregation (Union[str, List[str], bool]): aggregation operation
-            - stage (Union[str, List[str], bool]): context/stage
-            - time (TimeFilter): time filter
+        Apply filters to the SurfaceCollection and get a new filtered instance.
+
+        Args:
+            name (Union[str, List[str], bool]): surface name
+            tagname (Union[str, List[str], bool]): surface tagname
+            iteration (Union[int, List[int], bool]): iteration id
+            realization Union[int, List[int], bool]: realization id
+            aggregation (Union[str, List[str], bool]): aggregation operation
+            stage (Union[str, List[str], bool]): context/stage
+            time (TimeFilter): time filter
 
         Returns:
-            A filtered SurfaceCollection
+            SurfaceCollection: A filtered SurfaceCollection
+
+        Examples:
+
+            Match one value::
+
+                surfs = case.surfaces.filter(
+                    iteration="iter-0"
+                    name="my_surface_name"
+                )
+
+            Match multiple values::
+
+                surfs = case.surfaces.filter(
+                    name=["one_name", "another_name"]
+                )
+
+            Get aggregated surfaces with specific operation::
+
+                surfs = case.surfaces.filter(
+                    aggregation="max"
+                )
+
+            Get all aggregated surfaces::
+
+                surfs = case.surfacse.filter(
+                    aggregation=True
+                )
+
+            Get all non-aggregated surfaces::
+
+                surfs = case.surfaces.filter(
+                    aggregation=False
+                )
+
         """
 
         query = super()._add_filter(
-            name, tagname, iteration, realization, aggregation, stage, time
+            name=name,
+            tagname=tagname,
+            iteration=iteration,
+            realization=realization,
+            aggregation=aggregation,
+            stage=stage,
+            time=time,
         )
 
         return SurfaceCollection(self._sumo, self._case_uuid, query)

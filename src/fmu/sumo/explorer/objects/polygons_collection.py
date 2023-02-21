@@ -1,5 +1,5 @@
 from sumo.wrapper import SumoClient
-from fmu.sumo.explorer.objects.child_collection import ChildCollection
+from fmu.sumo.explorer.objects._child_collection import ChildCollection
 from fmu.sumo.explorer.objects.polygons import Polygons
 from typing import Union, List, Dict
 
@@ -23,14 +23,19 @@ class PolygonsCollection(ChildCollection):
     ) -> "PolygonsCollection":
         """Filter polygons
 
-        Arguments:
-            - name (Union[str, List[str], bool]): polygon name
-            - tagname (Union[str, List[str], bool]): polygon tagname
-            - iteration (Union[int, List[int], bool]): iteration id
-            - realization Union[int, List[int], bool]: realization id
+        Args:
+            name (Union[str, List[str], bool]): polygon name
+            tagname (Union[str, List[str], bool]): polygon tagname
+            iteration (Union[int, List[int], bool]): iteration id
+            realization Union[int, List[int], bool]: realization id
 
         Returns:
-            A filtered PolygonsCollection
+            PolygonsCollection: A filtered PolygonsCollection
         """
-        query = super()._add_filter(name, tagname, iteration, realization)
+        query = super()._add_filter(
+            name=name,
+            tagname=tagname,
+            iteration=iteration,
+            realization=realization,
+        )
         return PolygonsCollection(self._sumo, self._case_uuid, query)

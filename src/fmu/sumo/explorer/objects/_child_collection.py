@@ -1,4 +1,4 @@
-from fmu.sumo.explorer.objects.document_collection import DocumentCollection
+from fmu.sumo.explorer.objects._document_collection import DocumentCollection
 from typing import List, Dict, Union
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.timefilter import TimeFilter
@@ -101,6 +101,6 @@ class ChildCollection(DocumentCollection):
             query["bool"]["must_not"] = must_not
 
         if time:
-            query = self._utils.extend_query_object(query, time.get_query())
+            query = self._utils.extend_query_object(query, time._get_query())
 
         return super()._add_filter(query)

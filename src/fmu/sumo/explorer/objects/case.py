@@ -1,9 +1,9 @@
 from sumo.wrapper import SumoClient
-from fmu.sumo.explorer.objects.document import Document
+from fmu.sumo.explorer.objects._document import Document
 from fmu.sumo.explorer.objects.surface_collection import SurfaceCollection
 from fmu.sumo.explorer.objects.polygons_collection import PolygonsCollection
 from fmu.sumo.explorer.objects.table_collection import TableCollection
-from fmu.sumo.explorer.utils import Utils
+from fmu.sumo.explorer._utils import Utils
 from typing import Dict, List
 
 

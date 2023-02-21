@@ -1,4 +1,4 @@
-from fmu.sumo.explorer.objects.document_collection import DocumentCollection
+from fmu.sumo.explorer.objects._document_collection import DocumentCollection
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects.case import Case
 from typing import Union, List, Dict
@@ -52,16 +52,16 @@ class CaseCollection(DocumentCollection):
     ) -> "CaseCollection":
         """Filter cases
 
-        Arguments:
-            - uuid (str or List[str]): case uuid
-            - name (str or List[str]): case name
-            - status (str or List[str]): case status
-            - user (str or List[str]): name of case owner
-            - asset (str or List[str]): asset
-            - field (str or List[str]): field
+        Args:
+            uuid (str or List[str]): case uuid
+            name (str or List[str]): case name
+            status (str or List[str]): case status
+            user (str or List[str]): name of case owner
+            asset (str or List[str]): asset
+            field (str or List[str]): field
 
         Returns:
-            A filtered CaseCollection
+            CaseCollection: A filtered CaseCollection
         """
         must = self._utils.build_terms(
             {

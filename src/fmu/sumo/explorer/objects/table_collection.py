@@ -1,5 +1,5 @@
 from sumo.wrapper import SumoClient
-from fmu.sumo.explorer.objects.child_collection import ChildCollection
+from fmu.sumo.explorer.objects._child_collection import ChildCollection
 from fmu.sumo.explorer.objects.table import Table
 from typing import Union, List, Dict
 
@@ -32,24 +32,24 @@ class TableCollection(ChildCollection):
         """Filter tables
 
         Arguments:
-            - name (Union[str, List[str], bool]): table name
-            - tagname (Union[str, List[str], bool]): table tagname
-            - iteration (Union[int, List[int], bool]): iteration id
-            - realization Union[int, List[int], bool]: realization id
-            - aggregation (Union[str, List[str], bool]): aggregation operation
-            - stage (Union[str, List[str], bool]): context/stage
+            name (Union[str, List[str], bool]): table name
+            tagname (Union[str, List[str], bool]): table tagname
+            iteration (Union[int, List[int], bool]): iteration id
+            realization Union[int, List[int], bool]: realization id
+            aggregation (Union[str, List[str], bool]): aggregation operation
+            stage (Union[str, List[str], bool]): context/stage
 
         Returns:
-            A filtered TableCollection
+            TableCollection: A filtered TableCollection
         """
 
         query = super()._add_filter(
-            name,
-            tagname,
-            iteration,
-            realization,
-            aggregation,
-            stage,
+            name=name,
+            tagname=tagname,
+            iteration=iteration,
+            realization=realization,
+            aggregation=aggregation,
+            stage=stage,
             column=column,
         )
         return TableCollection(self._sumo, self._case_uuid, query)
