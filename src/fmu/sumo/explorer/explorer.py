@@ -26,14 +26,14 @@ class Explorer:
 
         Arguments:
             - env (str): Sumo environment
-            - token (str): use existing access token or refresh token
+            - token (str): authenticate with existing token
             - interactive (bool): authenticate using interactive flow (browser)
         """
         self._sumo = SumoClient(env, token=token, interactive=interactive)
         self._cases = CaseCollection(self._sumo)
 
     @property
-    def cases(self):
+    def cases(self) -> CaseCollection:
         """Cases in Sumo"""
         return self._cases
 
@@ -44,7 +44,7 @@ class Explorer:
             - asset (str): asset in Sumo
 
         Returns:
-          Dictionary of user permissions
+          dict: Dictionary of user permissions
         """
         res = self._sumo.get("/userpermissions")
 

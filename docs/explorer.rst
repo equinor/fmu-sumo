@@ -7,14 +7,9 @@ The ``fmu.sumo.explorer`` is a python package for reading data from Sumo in the 
 Api Reference 
 =============
 
-- `API reference <apiref/fmu.sumo.uploader.html>`_
+- `API reference <apiref/fmu.sumo.explorer.html>`_
 
-Testing autodoc!
-----------------
+Usage and examples
+------------------
 
-The ``Explorer`` class
-*****************************
-.. autoclass:: fmu.sumo.explorer.Explorer
-    :members:
-    :undoc-members:
-    :show-inheritance:
+ToDo

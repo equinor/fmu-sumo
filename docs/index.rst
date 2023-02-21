@@ -21,4 +21,3 @@ two modules: The **Uploader** for *writing* data to Sumo during FMU runs, and th
     self
     uploader
     explorer
-    api
