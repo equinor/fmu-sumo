@@ -45,6 +45,7 @@ extensions = [
 togglebutton_hint = "Expand"
 
 autodoc_mock_imports = ["ert", "ert_shared", "sumo"]
+autodoc_default_flags = ["members", "show-inheritance", "inherited-members"]
 
 apidoc_module_dir = "../src/fmu"
 apidoc_output_dir = "apiref"
