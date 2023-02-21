@@ -3,7 +3,7 @@
 API documentation
 =================
 
-.. module:: fmu.sumo.explorer 
+.. module:: fmu.sumo.explorer
 
 Using the Explorer class 
 ------------------------
