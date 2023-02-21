@@ -26,21 +26,21 @@ class TimeFilter:
         A TimeFilter is used when filtering on object time data.
 
         Args:
-            - type (TimeType): time type (TIMESTAMP, INTERVAL, ALL, NONE)
-            - start (str): start of range
-            - end (str): end of range
-            - overlap (bool): include overlapping intervals
-            - exact (bool): include only exact matches
+            type (TimeType): time type (TIMESTAMP, INTERVAL, ALL, NONE)
+            start (str): start of range
+            end (str): end of range
+            overlap (bool): include overlapping intervals
+            exact (bool): include only exact matches
 
         Examples:
 
-            Get surfaces with timestamps:
+            Get surfaces with timestamps::
 
                 time = TimeFilter(type=TimeType.TIMESTAMP)
 
                 case.surfaces.filter(time=time)
 
-            Get surfaces whith timestamp in range:
+            Get surfaces whith timestamp in range::
 
                 time = TimeFilter(
                     type=TimeType.TIMESTAMP,
@@ -56,7 +56,7 @@ class TimeFilter:
 
                 case.surfaces.filter(time=time)
 
-            Get surfaces with intervals in range:
+            Get surfaces with intervals in range::
 
                 time = TimeFilter(
                     type=TimeType.INTERVAL,
@@ -66,7 +66,7 @@ class TimeFilter:
 
                 case.surfaces.filter(time=time)
 
-            Get surfaces where intervals overlap:
+            Get surfaces where intervals overlap::
 
                 time = TimeFIlter(
                     type=TimeType.INTERVAL,
@@ -77,7 +77,7 @@ class TimeFilter:
 
                 case.surfaces.filter(time=time)
 
-            Get surfaces with exact interval match:
+            Get surfaces with exact interval match::
 
                 time = TimeFilter(
                     type=TimeType.INTERVAL,

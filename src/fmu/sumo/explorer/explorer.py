@@ -24,10 +24,10 @@ class Explorer:
     ):
         """Initialize the Explorer class
 
-        Arguments:
-            - env (str): Sumo environment
-            - token (str): authenticate with existing token
-            - interactive (bool): authenticate using interactive flow (browser)
+        Args:
+            env (str): Sumo environment
+            token (str): authenticate with existing token
+            interactive (bool): authenticate using interactive flow (browser)
         """
         self._sumo = SumoClient(env, token=token, interactive=interactive)
         self._cases = CaseCollection(self._sumo)
@@ -40,8 +40,8 @@ class Explorer:
     def get_permissions(self, asset: str = None):
         """Get permissions
 
-        Arguments:
-            - asset (str): asset in Sumo
+        Args:
+            asset (str): asset in Sumo
 
         Returns:
           dict: Dictionary of user permissions

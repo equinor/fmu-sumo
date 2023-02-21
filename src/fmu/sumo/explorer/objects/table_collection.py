@@ -22,6 +22,7 @@ class TableCollection(ChildCollection):
         realization: Union[int, List[int], bool] = None,
         aggregation: Union[str, List[str], bool] = None,
         stage: Union[str, List[str], bool] = None,
+        column: Union[str, List[str], bool] = None,
     ) -> "TableCollection":
         """Filter tables
 
@@ -38,6 +39,12 @@ class TableCollection(ChildCollection):
         """
 
         query = super()._add_filter(
-            name, tagname, iteration, realization, aggregation, stage
+            name,
+            tagname,
+            iteration,
+            realization,
+            aggregation,
+            stage,
+            column=column,
         )
         return TableCollection(self._sumo, self._case_uuid, query)
