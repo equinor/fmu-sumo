@@ -21,3 +21,15 @@ two modules: The **Uploader** for *writing* data to Sumo during FMU runs, and th
     self
     uploader
     explorer
+
+.. automodule:: fmu.sumo.explorer
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
