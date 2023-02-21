@@ -7,12 +7,12 @@ from pip._internal.req import parse_requirements as parse
 
 
 def _format_requirement(req):
-    if req.is_editable:
-        # parse out egg=... fragment from VCS URL
-        parsed = urlparse(req.requirement)
-        egg_name = parsed.fragment.partition("egg=")[-1]
-        without_fragment = parsed._replace(fragment="").geturl()
-        return f"{egg_name} @ {without_fragment}"
+    # if req.is_editable:
+    #    # parse out egg=... fragment from VCS URL
+    #    parsed = urlparse(req.requirement)
+    #    egg_name = parsed.fragment.partition("egg=")[-1]
+    #    without_fragment = parsed._replace(fragment="").geturl()
+    #    return f"{egg_name} @ {without_fragment}"
     return req.requirement
 
 
@@ -60,7 +60,9 @@ setup(
             "fmu_sumo_jobs = fmu.sumo.hook_implementations.jobs",
             "sumo_upload = fmu.sumo.uploader.scripts.sumo_upload",
         ],
-        "console_scripts": ["sumo_upload=fmu.sumo.uploader.scripts.sumo_upload:main"],
+        "console_scripts": [
+            "sumo_upload=fmu.sumo.uploader.scripts.sumo_upload:main"
+        ],
     },
     cmdclass=CMDCLASS,
     install_requires=REQUIREMENTS,
