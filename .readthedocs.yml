@@ -7,8 +7,6 @@ python:
     version: "3.8"
     install:
         - requirements: requirements/requirements_docs.txt
-        - method: pip
-        path: .
     system_packages: true
 
 sphinx:
