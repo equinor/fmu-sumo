@@ -5,9 +5,14 @@ from typing import Dict
 
 
 class Polygons(Child):
-    """Class for representig a polygons object in Sumo"""
+    """Class representig a polygons object in Sumo"""
 
     def __init__(self, sumo: SumoClient, metadata: Dict) -> None:
+        """
+        Args:
+            sumo (SumoClient): connection to Sumo
+            metadata (dict): polygon metadata
+        """
         super().__init__(sumo, metadata)
 
     def to_dataframe(self) -> pd.DataFrame:

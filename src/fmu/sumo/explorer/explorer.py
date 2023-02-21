@@ -34,7 +34,7 @@ class Explorer:
 
     @property
     def cases(self) -> CaseCollection:
-        """Cases in Sumo"""
+        """A collection of accessible cases in Sumo"""
         return self._cases
 
     def get_permissions(self, asset: str = None):

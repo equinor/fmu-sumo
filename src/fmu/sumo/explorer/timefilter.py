@@ -2,7 +2,10 @@ from enum import Enum
 
 
 class TimeType(Enum):
-    """"""
+    """An Enum representing diffent time types in Sumo
+
+    Used when creating a TimeFilter object.
+    """
 
     TIMESTAMP = 0
     INTERVAL = 1
@@ -11,7 +14,10 @@ class TimeType(Enum):
 
 
 class TimeFilter:
-    """Class representing a time filter"""
+    """Class representing a time filter
+
+    A TimeFilter object can be used when doing time filtering on case objects.
+    """
 
     def __init__(
         self,
@@ -21,9 +27,7 @@ class TimeFilter:
         overlap: bool = False,
         exact: bool = False,
     ) -> None:
-        """Construct a time filter
-
-        A TimeFilter is used when filtering on object time data.
+        """Initialize TimeFilter
 
         Args:
             type (TimeType): time type (TIMESTAMP, INTERVAL, ALL, NONE)
@@ -50,7 +54,7 @@ class TimeFilter:
 
                 case.surfaces.filter(time=time)
 
-            Get surfaces with intervals:
+            Get surfaces with intervals::
 
                 time = TimeFilter(type=TimeType.INTERVAL)
 

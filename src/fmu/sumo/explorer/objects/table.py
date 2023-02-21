@@ -5,9 +5,14 @@ from typing import Dict
 
 
 class Table(Child):
-    """Class for representing a table object in Sumo"""
+    """Class representing a table object in Sumo"""
 
     def __init__(self, sumo: SumoClient, metadata: Dict) -> None:
+        """
+        Args:
+            sumo (SumoClient): connection to sumo
+            metadata (dict): table metadata
+        """
         super().__init__(sumo, metadata)
 
     def to_dataframe(self) -> pd.DataFrame:

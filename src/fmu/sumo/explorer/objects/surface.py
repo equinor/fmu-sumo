@@ -5,21 +5,29 @@ from typing import Dict
 
 
 class Surface(Child):
-    """Class for representing a surfac object in Sumo"""
+    """Class representing a surface object in Sumo"""
 
     def __init__(self, sumo: SumoClient, metadata: Dict) -> None:
+        """
+        Args:
+            sumo (SumoClient): connection to Sumo
+            metadata (dict): surface metadata
+        """
         super().__init__(sumo, metadata)
 
     @property
     def bbox(self) -> Dict:
+        """Surface bbox data"""
         return self._get_property(["data", "bbox"])
 
     @property
     def spec(self) -> Dict:
+        """Surface spec data"""
         return self._get_property(["data", "spec"])
 
     @property
     def timestamp(self) -> str:
+        """Surface timestmap data"""
         t0 = self._get_property(["data", "time", "t0", "value"])
         t1 = self._get_property(["data", "time", "t1", "value"])
 
@@ -30,6 +38,7 @@ class Surface(Child):
 
     @property
     def interval(self) -> str:
+        """Surface interval data"""
         t0 = self._get_property(["data", "time", "t0", "value"])
         t1 = self._get_property(["data", "time", "t1", "value"])
 
@@ -42,7 +51,7 @@ class Surface(Child):
         """Get surface object as a RegularSurface
 
         Returns:
-            A RegularSurface object
+            RegularSurface: A RegularSurface object
         """
         if self.format == "irap_binary":
             return surface_from_file(self.blob)
