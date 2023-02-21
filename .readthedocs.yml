@@ -8,6 +8,8 @@ python:
     install:
         - requirements: requirements/requirements.txt
         - requirements: requirements/requirements_docs.txt
+        - method: setuptools
+          path: .
     system_packages: true
 
 sphinx:

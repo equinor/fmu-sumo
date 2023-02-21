@@ -11,9 +11,9 @@ import sys
 
 # Below is a hack to make Sphinx import other modules
 
-# from pathlib import Path
+from pathlib import Path
 
-# import sphinx
+import sphinx
 
 # directly inject into sys.path the path where all modules are installed
 # sys.path.insert(0, str(Path(sphinx.__file__).parent.parent))  # for helvete
@@ -22,9 +22,7 @@ import sys
 
 from datetime import date
 
-sys.path.insert(0, os.path.abspath("src"))
-
-print(sys.path)
+sys.path.insert(0, str(Path(sphinx.__file__).parent.parent))
 
 import fmu.sumo
 from fmu.sumo import explorer, uploader
