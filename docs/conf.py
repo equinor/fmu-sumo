@@ -11,23 +11,26 @@ import sys
 
 # Below is a hack to make Sphinx import other modules
 
-from pathlib import Path
-import sphinx
+# from pathlib import Path
+
+# import sphinx
 
 # directly inject into sys.path the path where all modules are installed
-sys.path.insert(0, str(Path(sphinx.__file__).parent.parent))  # for helvete
+# sys.path.insert(0, str(Path(sphinx.__file__).parent.parent))  # for helvete
 
-print(sys.path)
+# print(sys.path)
 
 from datetime import date
 
-import fmu.sumo
-from fmu.sumo import explorer, uploader
+sys.path.insert(0, os.path.abspath("../src/"))
+
+# import fmu.sumo
+# from fmu.sumo import explorer, uploader
 
 # -- General configuration ---------------------------------------------
 
 # The full version, including alpha/beta/rc tags.
-release = fmu.sumo.__version__
+# release = fmu.sumo.__version__
 
 extensions = [
     "sphinxcontrib.apidoc",
