@@ -22,10 +22,7 @@ import sys
 
 from datetime import date
 
-sys.path.insert(0, os.path.abspath("../src/"))
-
-
-print(sys.path)
+sys.path.insert(0, os.path.abspath(".."))
 
 import fmu.sumo
 from fmu.sumo import explorer, uploader
