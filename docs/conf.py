@@ -24,8 +24,8 @@ from datetime import date
 
 sys.path.insert(0, os.path.abspath("../src"))
 
-import fmu.sumo
-from fmu.sumo import explorer, uploader
+# import fmu.sumo
+# from fmu.sumo import explorer, uploader
 
 # -- General configuration ---------------------------------------------
 
