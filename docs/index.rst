@@ -22,7 +22,7 @@ two modules: The **Uploader** for *writing* data to Sumo during FMU runs, and th
     uploader
     explorer
 
-.. automodule:: fmu.sumo
+.. automodule:: fmu.sumo.explorer.explorer
    :members:
    :undoc-members:
    :show-inheritance:
