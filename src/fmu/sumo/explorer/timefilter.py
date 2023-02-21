@@ -2,6 +2,8 @@ from enum import Enum
 
 
 class TimeType(Enum):
+    """"""
+
     TIMESTAMP = 0
     INTERVAL = 1
     ALL = 2
@@ -9,9 +11,83 @@ class TimeType(Enum):
 
 
 class TimeFilter:
+    """Class representing a time filter"""
+
     def __init__(
-        self, type: TimeType, start=None, end=None, overlap=False, exact=False
+        self,
+        type: TimeType,
+        start: str = None,
+        end: str = None,
+        overlap: bool = False,
+        exact: bool = False,
     ) -> None:
+        """Construct a time filter
+
+        A TimeFilter is used when filtering on object time data.
+
+        Args:
+            - type (TimeType): time type (TIMESTAMP, INTERVAL, ALL, NONE)
+            - start (str): start of range
+            - end (str): end of range
+            - overlap (bool): include overlapping intervals
+            - exact (bool): include only exact matches
+
+        Examples:
+
+            Get surfaces with timestamps:
+
+                time = TimeFilter(type=TimeType.TIMESTAMP)
+
+                case.surfaces.filter(time=time)
+
+            Get surfaces whith timestamp in range:
+
+                time = TimeFilter(
+                    type=TimeType.TIMESTAMP,
+                    start="2018-01-01",
+                    end="2022-01-01"
+                )
+
+                case.surfaces.filter(time=time)
+
+            Get surfaces with intervals:
+
+                time = TimeFilter(type=TimeType.INTERVAL)
+
+                case.surfaces.filter(time=time)
+
+            Get surfaces with intervals in range:
+
+                time = TimeFilter(
+                    type=TimeType.INTERVAL,
+                    start="2018-01-01",
+                    end="2022-01-01"
+                )
+
+                case.surfaces.filter(time=time)
+
+            Get surfaces where intervals overlap:
+
+                time = TimeFIlter(
+                    type=TimeType.INTERVAL,
+                    start="2018-01-01",
+                    end="2022-01-01",
+                    overlap=True
+                )
+
+                case.surfaces.filter(time=time)
+
+            Get surfaces with exact interval match:
+
+                time = TimeFilter(
+                    type=TimeType.INTERVAL,
+                    start="2018-01-01",
+                    end="2022-01-01",
+                    exact=True
+                )
+
+                case.surfaces.filter(time=time)
+        """
         self.type = type
         self.start = start
         self.end = end
@@ -32,7 +108,7 @@ class TimeFilter:
 
         return filter
 
-    def get_query(self):
+    def _get_query(self):
         must = []
         must_not = []
         should = []
