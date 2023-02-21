@@ -24,13 +24,13 @@ from datetime import date
 
 sys.path.insert(0, str(Path(sphinx.__file__).parent.parent))
 
-import fmu.sumo
-from fmu.sumo import explorer, uploader
+# import fmu.sumo
+# from fmu.sumo import explorer, uploader
 
 # -- General configuration ---------------------------------------------
 
 # The full version, including alpha/beta/rc tags.
-release = fmu.sumo.__version__
+# release = fmu.sumo.__version__
 
 extensions = [
     "sphinxcontrib.apidoc",
@@ -66,7 +66,7 @@ master_doc = "index"
 # General information about the project.
 project = "fmu.sumo"
 current_year = date.today().year
-copyright = "Equinor " + str(current_year) + f" (fmu-sumo release {release})"
+# copyright = "Equinor " + str(current_year) + f" (fmu-sumo release {release})"
 
 
 # Sort members by input order in classes
