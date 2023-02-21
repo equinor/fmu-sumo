@@ -6,7 +6,6 @@ build:
 python:
     version: "3.8"
     install:
-        - requirements: requirements/requirements.txt
         - requirements: requirements/requirements_docs.txt
         - method: setuptools
           path: .
