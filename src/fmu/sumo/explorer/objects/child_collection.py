@@ -63,6 +63,7 @@ class ChildCollection(DocumentCollection):
         realization: Union[int, List[int], bool] = None,
         aggregation: Union[str, List[str], bool] = None,
         stage: Union[str, List[str], bool] = None,
+        column: Union[str, List[str], bool] = None,
         time: TimeFilter = None,
     ):
         must = []
@@ -75,6 +76,7 @@ class ChildCollection(DocumentCollection):
             "fmu.realization.id": realization,
             "fmu.aggregation.operation.keyword": aggregation,
             "fmu.context.stage.keyword": stage,
+            "data.spec.columns.keyword": column,
         }
 
         for prop in prop_map:

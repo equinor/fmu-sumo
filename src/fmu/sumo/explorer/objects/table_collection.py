@@ -14,6 +14,11 @@ class TableCollection(ChildCollection):
         doc = super().__getitem__(index)
         return Table(self._sumo, doc)
 
+    @property
+    def columns(self) -> List[str]:
+        """List of unique column names"""
+        return self._get_field_values("data.spec.columns.keyword")
+
     def filter(
         self,
         name: Union[str, List[str], bool] = None,
@@ -22,6 +27,7 @@ class TableCollection(ChildCollection):
         realization: Union[int, List[int], bool] = None,
         aggregation: Union[str, List[str], bool] = None,
         stage: Union[str, List[str], bool] = None,
+        column: Union[str, List[str], bool] = None,
     ) -> "TableCollection":
         """Filter tables
 
@@ -38,6 +44,12 @@ class TableCollection(ChildCollection):
         """
 
         query = super()._add_filter(
-            name, tagname, iteration, realization, aggregation, stage
+            name,
+            tagname,
+            iteration,
+            realization,
+            aggregation,
+            stage,
+            column=column,
         )
         return TableCollection(self._sumo, self._case_uuid, query)
