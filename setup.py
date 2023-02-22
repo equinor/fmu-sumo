@@ -4,6 +4,7 @@
 from setuptools import setup, find_packages
 from urllib.parse import urlparse
 from pip._internal.req import parse_requirements as parse
+import os
 
 
 def _format_requirement(req):
@@ -37,6 +38,11 @@ TEST_REQUIREMENTS = parse_requirements("requirements/requirements_test.txt")
 DOCS_REQUIREMENTS = parse_requirements("requirements/requirements_docs.txt")
 SETUP_REQUIREMENTS = parse_requirements("requirements/requirements_setup.txt")
 EXTRAS_REQUIRE = {"tests": TEST_REQUIREMENTS, "docs": DOCS_REQUIREMENTS}
+
+is_docs = os.getenv("READTHEDOCS", "False")
+
+if is_docs == "True":
+    REQUIREMENTS = DOCS_REQUIREMENTS
 
 setup(
     name="fmu-sumo",
