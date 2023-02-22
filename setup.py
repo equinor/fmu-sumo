@@ -33,17 +33,15 @@ except ImportError:
     # sphinx not installed - do not provide build_sphinx cmd
     pass
 
-REQUIREMENTS = parse_requirements("requirements/requirements.txt")
+is_docs = os.getenv("READTHEDOCS") == "True"
+
+REQUIREMENTS = (
+    [] if is_docs else parse_requirements("requirements/requirements.txt")
+)
 TEST_REQUIREMENTS = parse_requirements("requirements/requirements_test.txt")
 DOCS_REQUIREMENTS = parse_requirements("requirements/requirements_docs.txt")
 SETUP_REQUIREMENTS = parse_requirements("requirements/requirements_setup.txt")
 EXTRAS_REQUIRE = {"tests": TEST_REQUIREMENTS, "docs": DOCS_REQUIREMENTS}
-
-is_docs = os.getenv("READTHEDOCS", "false").lower()
-
-if is_docs == "true":
-    # REQUIREMENTS = DOCS_REQUIREMENTS
-    pass
 
 setup(
     name="fmu-sumo",
