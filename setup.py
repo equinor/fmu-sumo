@@ -42,7 +42,8 @@ EXTRAS_REQUIRE = {"tests": TEST_REQUIREMENTS, "docs": DOCS_REQUIREMENTS}
 is_docs = os.getenv("READTHEDOCS", "false").lower()
 
 if is_docs == "true":
-    REQUIREMENTS = DOCS_REQUIREMENTS
+    # REQUIREMENTS = DOCS_REQUIREMENTS
+    pass
 
 setup(
     name="fmu-sumo",
