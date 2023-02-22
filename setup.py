@@ -39,9 +39,9 @@ DOCS_REQUIREMENTS = parse_requirements("requirements/requirements_docs.txt")
 SETUP_REQUIREMENTS = parse_requirements("requirements/requirements_setup.txt")
 EXTRAS_REQUIRE = {"tests": TEST_REQUIREMENTS, "docs": DOCS_REQUIREMENTS}
 
-is_docs = os.getenv("READTHEDOCS", "False")
+is_docs = os.getenv("READTHEDOCS", "false").lower()
 
-if is_docs == "True":
+if is_docs == "true":
     REQUIREMENTS = DOCS_REQUIREMENTS
 
 setup(
