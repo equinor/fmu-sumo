@@ -45,7 +45,15 @@ extensions = [
 
 togglebutton_hint = "Expand"
 
-autodoc_mock_imports = ["ert", "ert_shared", "sumo", "xtgeo", "pandas", "yaml"]
+autodoc_mock_imports = [
+    "ert",
+    "ert_shared",
+    "sumo",
+    "xtgeo",
+    "pandas",
+    "yaml",
+    "azure",
+]
 autodoc_default_flags = ["members", "show-inheritance", "inherited-members"]
 
 os.environ[
