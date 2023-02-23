@@ -23,14 +23,14 @@ class PolygonsCollection(ChildCollection):
     ) -> "PolygonsCollection":
         """Filter polygons
 
-        Arguments:
-            - name (Union[str, List[str], bool]): polygon name
-            - tagname (Union[str, List[str], bool]): polygon tagname
-            - iteration (Union[int, List[int], bool]): iteration id
-            - realization Union[int, List[int], bool]: realization id
+        Args:
+            name (Union[str, List[str], bool]): polygon name
+            tagname (Union[str, List[str], bool]): polygon tagname
+            iteration (Union[int, List[int], bool]): iteration id
+            realization Union[int, List[int], bool]: realization id
 
         Returns:
-            A filtered PolygonsCollection
+            PolygonsCollection: A filtered PolygonsCollection
         """
         query = super()._add_filter(name, tagname, iteration, realization)
         return PolygonsCollection(self._sumo, self._case_uuid, query)

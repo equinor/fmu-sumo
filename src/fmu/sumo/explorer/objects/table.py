@@ -19,7 +19,7 @@ class Table(Child):
         """Get table object as a DataFrame
 
         Returns:
-            A DataFrame object
+            DataFrame: A DataFrame object
         """
         if self.format == "arrow":
             return pd.read_parquet(self.blob)

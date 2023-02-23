@@ -27,15 +27,15 @@ class TableCollection(ChildCollection):
         """Filter tables
 
         Arguments:
-            - name (Union[str, List[str], bool]): table name
-            - tagname (Union[str, List[str], bool]): table tagname
-            - iteration (Union[int, List[int], bool]): iteration id
-            - realization Union[int, List[int], bool]: realization id
-            - aggregation (Union[str, List[str], bool]): aggregation operation
-            - stage (Union[str, List[str], bool]): context/stage
+            name (Union[str, List[str], bool]): table name
+            tagname (Union[str, List[str], bool]): table tagname
+            iteration (Union[int, List[int], bool]): iteration id
+            realization Union[int, List[int], bool]: realization id
+            aggregation (Union[str, List[str], bool]): aggregation operation
+            stage (Union[str, List[str], bool]): context/stage
 
         Returns:
-            A filtered TableCollection
+            TableCollection: A filtered TableCollection
         """
 
         query = super()._add_filter(

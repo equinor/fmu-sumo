@@ -19,7 +19,7 @@ class Polygons(Child):
         """Get polygons object as a DataFrame
 
         Returns:
-            A DataFrame object
+            DataFrame: A DataFrame object
         """
         if self.format == "csv":
             return pd.read_csv(self.blob)
