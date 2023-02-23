@@ -14,6 +14,11 @@ class TableCollection(ChildCollection):
         doc = super().__getitem__(index)
         return Table(self._sumo, doc)
 
+    @property
+    def columns(self) -> List[str]:
+        """List of unique column names"""
+        return self._get_field_values("data.spec.columns.keyword")
+
     def filter(
         self,
         name: Union[str, List[str], bool] = None,

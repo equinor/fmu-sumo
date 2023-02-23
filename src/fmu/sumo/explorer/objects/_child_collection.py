@@ -63,6 +63,7 @@ class ChildCollection(DocumentCollection):
         realization: Union[int, List[int], bool] = None,
         aggregation: Union[str, List[str], bool] = None,
         stage: Union[str, List[str], bool] = None,
+        column: Union[str, List[str], bool] = None,
         time: TimeFilter = None,
         column: Union[str, List[str], bool] = None,
     ):
