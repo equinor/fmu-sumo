@@ -2,6 +2,9 @@ version: 2
 
 build:
     image: latest
+    jobs:
+        post-build:
+            - SPHINX_APIDOC_OPTIONS=["members", "show-inheritance", "inherited-members"]
 
 python:
     version: "3.8"
