@@ -1,5 +1,5 @@
 from sumo.wrapper import SumoClient
-from fmu.sumo.explorer.objects.child_collection import ChildCollection
+from fmu.sumo.explorer.objects._child_collection import ChildCollection
 from fmu.sumo.explorer.objects.polygons import Polygons
 from typing import Union, List, Dict
 

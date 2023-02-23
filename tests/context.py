@@ -17,8 +17,8 @@ add_path()
 
 from fmu.sumo.explorer import Explorer
 from fmu.sumo.explorer._utils import Utils
-from fmu.sumo.explorer.objects.document import Document
-from fmu.sumo.explorer.objects.document_collection import DocumentCollection
+from fmu.sumo.explorer.objects._document import Document
+from fmu.sumo.explorer.objects._document_collection import DocumentCollection
 from fmu.sumo.explorer.objects.case import Case
 from fmu.sumo.explorer.objects.case_collection import CaseCollection
 from fmu.sumo.explorer.objects.surface import Surface

@@ -1,4 +1,4 @@
-from fmu.sumo.explorer.objects.document import Document
+from fmu.sumo.explorer.objects._document import Document
 from sumo.wrapper import SumoClient
 from io import BytesIO
 from typing import Dict

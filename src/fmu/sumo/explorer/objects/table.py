@@ -1,4 +1,4 @@
-from fmu.sumo.explorer.objects.child import Child
+from fmu.sumo.explorer.objects._child import Child
 from sumo.wrapper import SumoClient
 import pandas as pd
 from typing import Dict

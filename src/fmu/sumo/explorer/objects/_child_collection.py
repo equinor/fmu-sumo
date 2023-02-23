@@ -1,4 +1,4 @@
-from fmu.sumo.explorer.objects.document_collection import DocumentCollection
+from fmu.sumo.explorer.objects._document_collection import DocumentCollection
 from typing import List, Dict, Union
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.timefilter import TimeFilter

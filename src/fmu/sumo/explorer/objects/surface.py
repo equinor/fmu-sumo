@@ -1,4 +1,4 @@
-from fmu.sumo.explorer.objects.child import Child
+from fmu.sumo.explorer.objects._child import Child
 from sumo.wrapper import SumoClient
 from xtgeo import RegularSurface, surface_from_file
 from typing import Dict
