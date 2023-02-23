@@ -54,11 +54,7 @@ autodoc_mock_imports = [
     "yaml",
     "azure",
 ]
-autodoc_default_flags = ["members", "show-inheritance", "inherited-members"]
 
-os.environ[
-    "SPHINX_APIDOC_OPTIONS"
-] = "members,show-inheritance,inherited-members"
 
 apidoc_module_dir = "../src/fmu"
 apidoc_output_dir = "apiref"
@@ -85,7 +81,7 @@ current_year = date.today().year
 
 # Sort members by input order in classes
 autodoc_member_order = "bysource"
-autodoc_default_flags = ["members", "show_inheritance"]
+autodoc_default_flags = ["members", "show-inheritance", "inherited-members"]
 
 exclude_patterns = ["_build"]
 
