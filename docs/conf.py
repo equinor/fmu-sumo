@@ -55,6 +55,7 @@ autodoc_mock_imports = [
     "azure",
 ]
 
+os.environ["SPHINX_APIDOC_OPTIONS"] = ""
 
 apidoc_module_dir = "../src/fmu"
 apidoc_output_dir = "apiref"
