@@ -1,5 +1,5 @@
 from sumo.wrapper import SumoClient
-from fmu.sumo.explorer.utils import Utils
+from fmu.sumo.explorer._utils import Utils
 from typing import List, Dict
 
 
