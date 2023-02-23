@@ -4,6 +4,7 @@
 # pylint: skip-file
 import os
 import sys
+import json
 
 # cwd = os.getcwd()
 # project_root = os.path.dirname(cwd) + "/src/fmu"
@@ -47,11 +48,13 @@ togglebutton_hint = "Expand"
 autodoc_mock_imports = ["ert", "ert_shared", "sumo", "xtgeo", "pandas"]
 autodoc_default_flags = ["members", "show-inheritance", "inherited-members"]
 
-os.environ["SPHINX_APIDOC_OPTIONS"] = [
-    "members",
-    "show-inheritance",
-    "inherited-members",
-]
+os.environ["SPHINX_APIDOC_OPTIONS"] = json.dumps(
+    [
+        "members",
+        "show-inheritance",
+        "inherited-members",
+    ]
+)
 
 apidoc_module_dir = "../src/fmu"
 apidoc_output_dir = "apiref"
