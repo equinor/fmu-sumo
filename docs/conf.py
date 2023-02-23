@@ -48,6 +48,10 @@ togglebutton_hint = "Expand"
 autodoc_mock_imports = ["ert", "ert_shared", "sumo", "xtgeo", "pandas"]
 autodoc_default_flags = ["members", "show-inheritance", "inherited-members"]
 
+os.environ[
+    "SPHINX_APIDOC_OPTIONS"
+] = "members, show-inheritance, inherited-members"
+
 apidoc_module_dir = "../src/fmu"
 apidoc_output_dir = "apiref"
 apidoc_excluded_paths = ["version.py", "hook_implementations"]
