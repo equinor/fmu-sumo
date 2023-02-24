@@ -3,6 +3,25 @@ from typing import List, Dict, Union
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.timefilter import TimeFilter
 
+_CHILD_FIELDS = [
+    "_id",
+    "data.name",
+    "data.tagname",
+    "data.time",
+    "data.format",
+    "data.bbox",
+    "data.spec",
+    "fmu.case.name",
+    "fmu.case.user.id",
+    "fmu.realization.id",
+    "fmu.iteration.name",
+    "fmu.context.stage",
+    "fmu.aggregation.operation",
+    "_sumo.status",
+    "access.asset",
+    "masterdata.smda.field",
+]
+
 
 class ChildCollection(DocumentCollection):
     """Class for representing a collection of child objects in Sumo"""
@@ -11,7 +30,7 @@ class ChildCollection(DocumentCollection):
         self, type: str, sumo: SumoClient, case_uuid: str, query: Dict = None
     ):
         self._case_uuid = case_uuid
-        super().__init__(type, sumo, query)
+        super().__init__(type, sumo, query, _CHILD_FIELDS)
 
     @property
     def names(self) -> List[str]:

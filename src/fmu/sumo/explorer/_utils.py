@@ -47,13 +47,13 @@ class Utils:
     ) -> List[Dict]:
         """Get objects
 
-        Arguments:
-            - size (int): number of objects to return
-            - query (List[Dict] or None): filter options
-            - select (List[str] or None): List of metadata fields to return
+        Args:
+            size (int): number of objects to return
+            query (List[Dict] or None): filter options
+            select (List[str] or None): list of metadata fields to return
 
         Returns:
-            A List of metadata
+            List[Dict]: A List of metadata
         """
         query = {"size": size, "query": query}
 
@@ -64,15 +64,38 @@ class Utils:
 
         return res.json()["hits"]["hits"]
 
+    def get_object(self, uuid: str, select: List[str] = None) -> Dict:
+        """Get metadata object by uuid
+
+        Args:
+            uuid (str): uuid of metadata object
+            select (List[str]): list of metadata fields to return
+
+        Returns:
+            Dict: a metadata object
+        """
+
+        query = {
+            "query": {"term": {"_id": uuid}},
+            "size": 1,
+        }
+
+        if select is not None:
+            query["_source"] = select
+
+        res = self._sumo.post("/search", json=query)
+
+        return res.json()["hits"]["hits"][0]
+
     def extend_query_object(self, old: Dict, new: Dict) -> Dict:
         """Extend query object
 
-        Arguments:
-            - old (Dict): old query object
-            - new (Dict): new query object
+        Args:
+            old (Dict): old query object
+            new (Dict): new query object
 
         Returns:
-            Extender query object
+            Dict: Extended query object
         """
 
         if new is not None:
@@ -97,7 +120,33 @@ class Utils:
         else:
             return old
 
-    def build_terms(self, keys_vals: Dict):
+    def build_terms(self, keys_vals: Dict) -> List[Dict]:
+        """Build a list of term objects
+
+        `key_vals` expects a dictionary with the following structure:
+
+        ```
+        {
+            "my.property.1": "value",
+            "my.property.2": ["list", "of", "values"]
+        }
+        ```
+
+        Returns a list of term expressions:
+
+        ```
+        [
+            {"term": {"my.property.1": "value"}},
+            {"terms": {"my.property.2": ["list", "of", "values"]}}
+        ]
+        ```
+
+        Args:
+            key_vals: Dict
+
+        Returns:
+            List[Dict]: list of term expressions
+        """
         terms = []
 
         for key in keys_vals:

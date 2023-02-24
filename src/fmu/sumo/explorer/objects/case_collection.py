@@ -3,12 +3,21 @@ from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects.case import Case
 from typing import Union, List, Dict
 
+_CASE_FIELDS = [
+    "_id",
+    "fmu.case.name",
+    "fmu.case.user.id",
+    "_sumo.status",
+    "access.asset",
+    "masterdata.smda.field",
+]
+
 
 class CaseCollection(DocumentCollection):
     """A class for representing a collection of cases in Sumo"""
 
     def __init__(self, sumo: SumoClient, query: Dict = None):
-        super().__init__("case", sumo, query)
+        super().__init__("case", sumo, query, _CASE_FIELDS)
 
     @property
     def names(self) -> List[str]:

@@ -1,5 +1,14 @@
 from sumo.wrapper import SumoClient
-from fmu.sumo.explorer.objects.case_collection import CaseCollection
+from fmu.sumo.explorer.objects.case_collection import (
+    CaseCollection,
+    CASE_FIELDS,
+)
+from fmu.sumo.explorer.objects._child_collection import CHILD_FIELDS
+from fmu.sumo.explorer.objects.surface import Surface
+from fmu.sumo.explorer.objects.polygons import Polygons
+from fmu.sumo.explorer.objects.table import Table
+from fmu.sumo.explorer.objects.case import Case
+from fmu.sumo.explorer._utils import Utils
 
 
 class Explorer:
@@ -31,6 +40,7 @@ class Explorer:
         """
         self._sumo = SumoClient(env, token=token, interactive=interactive)
         self._cases = CaseCollection(self._sumo)
+        self._utils = Utils(self._sumo)
 
     @property
     def cases(self) -> CaseCollection:
@@ -55,3 +65,51 @@ class Explorer:
                 return res[asset]
 
         return res
+
+    def get_case_by_uuid(self, uuid: str) -> Case:
+        """Get case object by uuid
+
+        Args:
+            uuid (str): case uuid
+
+        Returns:
+            Case: case object
+        """
+        metadata = self._utils.get_object(uuid, CASE_FIELDS)
+        return Case(self._sumo, metadata)
+
+    def get_surface_by_uuid(self, uuid: str) -> Surface:
+        """Get surface object by uuid
+
+        Args:
+            uuid (str): surface uuid
+
+        Returns:
+            Surface: surface object
+        """
+        metadata = self._utils.get_object(uuid, CHILD_FIELDS)
+        return Surface(self._sumo, metadata)
+
+    def get_polygons_by_uuid(self, uuid: str) -> Polygons:
+        """Get polygons object by uuid
+
+        Args:
+            uuid (str): polygons uuid
+
+        Returns:
+            Polygons: polygons object
+        """
+        metadata = self._utils.get_object(uuid, CHILD_FIELDS)
+        return Polygons(self._sumo, metadata)
+
+    def get_table_by_uuid(self, uuid: str) -> Table:
+        """Get table object by uuid
+
+        Args:
+            uuid (str): table uuid
+
+        Returns:
+            Table: table object
+        """
+        metadata = self._utils.get_object(uuid, CHILD_FIELDS)
+        return Table(self._sumo, metadata)

@@ -43,8 +43,8 @@ class Child(Document):
         return self._get_property(["fmu", "realization", "id"])
 
     @property
-    def operation(self) -> str:
-        """Object operation"""
+    def aggregation(self) -> str:
+        """Object aggregation operation"""
         return self._get_property(["fmu", "aggregation", "operation"])
 
     @property
