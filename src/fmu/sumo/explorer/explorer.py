@@ -1,9 +1,9 @@
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects.case_collection import (
     CaseCollection,
-    CASE_FIELDS,
+    _CASE_FIELDS,
 )
-from fmu.sumo.explorer.objects._child_collection import CHILD_FIELDS
+from fmu.sumo.explorer.objects._child_collection import _CHILD_FIELDS
 from fmu.sumo.explorer.objects.surface import Surface
 from fmu.sumo.explorer.objects.polygons import Polygons
 from fmu.sumo.explorer.objects.table import Table
@@ -75,7 +75,7 @@ class Explorer:
         Returns:
             Case: case object
         """
-        metadata = self._utils.get_object(uuid, CASE_FIELDS)
+        metadata = self._utils.get_object(uuid, _CASE_FIELDS)
         return Case(self._sumo, metadata)
 
     def get_surface_by_uuid(self, uuid: str) -> Surface:
@@ -87,7 +87,7 @@ class Explorer:
         Returns:
             Surface: surface object
         """
-        metadata = self._utils.get_object(uuid, CHILD_FIELDS)
+        metadata = self._utils.get_object(uuid, _CHILD_FIELDS)
         return Surface(self._sumo, metadata)
 
     def get_polygons_by_uuid(self, uuid: str) -> Polygons:
@@ -99,7 +99,7 @@ class Explorer:
         Returns:
             Polygons: polygons object
         """
-        metadata = self._utils.get_object(uuid, CHILD_FIELDS)
+        metadata = self._utils.get_object(uuid, _CHILD_FIELDS)
         return Polygons(self._sumo, metadata)
 
     def get_table_by_uuid(self, uuid: str) -> Table:
@@ -111,5 +111,5 @@ class Explorer:
         Returns:
             Table: table object
         """
-        metadata = self._utils.get_object(uuid, CHILD_FIELDS)
+        metadata = self._utils.get_object(uuid, _CHILD_FIELDS)
         return Table(self._sumo, metadata)
