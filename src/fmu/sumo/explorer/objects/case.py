@@ -87,6 +87,33 @@ class Case(Document):
 
         return self._iterations
 
+    def get_realizations(self, iteration: str = None) -> List[int]:
+        """Get a list of realization ids
+
+        Calling this method without the iteration argument will
+        return a list of unique realization ids across iterations.
+        It is not guaranteed that all realizations in this list exists
+        in all case iterations.
+
+        Args:
+            iteration (str): iteration name
+
+        Returns:
+            List[int]: realization ids
+        """
+        must = [{"term": {"_sumo.parent_object.keyword": self.uuid}}]
+
+        if iteration:
+            must.append({"term": {"fmu.iteration.name.keyword": iteration}})
+
+        buckets = self._utils.get_buckets(
+            "fmu.realization.id",
+            query={"bool": {"must": must}},
+            sort=["fmu.realization.id"],
+        )
+
+        return list(map(lambda b: b["key"], buckets))
+
     @property
     def surfaces(self) -> SurfaceCollection:
         """List of case surfaces"""
