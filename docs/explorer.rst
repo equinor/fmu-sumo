@@ -18,6 +18,7 @@ We establish a connection to Sumo by initializing an Explorer object.
 This object will handle authentication and can be used to retrieve cases and case data.
 
 .. code-block::
+
     from fmu.sumo.explorer import Explorer 
 
     sumo = Explorer()
@@ -29,6 +30,7 @@ If you have not used the `Explorer` before and no access token is found in your 
 It is also possible to provide the `Explorer` with an exisiting token to use for authentication, in this case you will not be prompted to login.
 
 .. code-block:: 
+
     from fmu.suom.explorer import Explorer 
 
     USER_TOKEN="123456789"
@@ -41,6 +43,7 @@ Finding a case
 The `Explorer` has a property called `cases` which represents all cases you have access to in Sumo:
 
 .. code-block::
+
     from fmu.sumo.explorer import Explorer 
 
     sumo = Explorer() 
@@ -51,6 +54,7 @@ The `cases` property is a `CaseCollection` object and acts as a list of cases.
 We can use the `filter` method to apply filters to the case collection which will return a new filtered `CaseCollection` instance:
 
 .. code-block::
+
     from fmu.sumo.explorer import Explorer 
 
     sumo = Explorer() 
@@ -63,6 +67,7 @@ In this example we're getting all the cases belonging to user `peesv`.
 The resulting `CaseCollection` is iterable:
 
 .. code-block::
+
     from fmu.sumo.explorer import Explorer 
 
     sumo = Explorer() 
@@ -86,6 +91,7 @@ We can use the filter method to filter on the following properties:
 Example: finding all official cases uploaded by `peesv` in Drogon: 
 
 .. code-block::
+
     from fmu.sumo.explorer import Explorer 
 
     sumo = Explorer() 
@@ -103,6 +109,7 @@ The `CaseCollection` has properties which lets us find available filter values.
 Example: finding assets 
 
 .. code-block:: 
+
     from fmu.sumo.explorer import Explorer 
 
     sumo = Explorer() 
@@ -119,6 +126,7 @@ The `CaseCollection.assets` propert gives us a unique list of values for the ass
 We can now use this information to apply an asset filter:
 
 .. code-block:: 
+
     from fmu.sumo.explorer import Explorer 
 
     sumo = Explorer() 
@@ -145,6 +153,7 @@ We can retrieve list of unique values for the following properties:
 You can also use a case `uuid` to get a `Case` object:
 
 .. code-block:: 
+
     from fmu.sumo.explorer import Explorer 
 
     sumo = Explorer() 
@@ -162,6 +171,7 @@ The `Case` object has properties for accessig different data types:
 Example: get case surfaces 
 
 .. code-block::
+
     from fmu.sumo.explorer import Explorer 
 
     sumo = Explorer() 
@@ -173,6 +183,7 @@ Example: get case surfaces
 The `SurfaceCollection` object has a filter method and properties for getting filter values, similar to `CaseCollection`:
 
 .. code-block::
+
     from fmu.sumo.explorer import Explorer 
 
     sumo = Explorer() 
@@ -209,6 +220,7 @@ All paramters suport a single value, a list of values or a `boolean` value.
 Example: get aggregated surfaces 
 
 .. code-block::
+
     from fmu.sumo.explorer import Explorer 
 
     sumo = Explorer() 
@@ -241,6 +253,7 @@ We can get list of filter values for the following properties:
 Once we have a `Surface` object we can get surface metadata using properties:
 
 .. code-block::
+
     from fmu.sumo.explorer import Explorer 
 
     sumo = Explorer() 
@@ -257,6 +270,7 @@ We can get the surface binary data as a `BytesIO` object using the `blob` proper
 The `to_regular_surface` method returns the surface as a `xtgeo.RegularSurface` object.
 
 .. code-block::
+
     from fmu.sumo.explorer import Explorer 
 
     sumo = Explorer() 
@@ -277,6 +291,7 @@ The `to_regular_surface` method returns the surface as a `xtgeo.RegularSurface` 
 If we know the `uuid` of the surface we want to work with we can get it directly from the `Explorer` object: 
 
 .. code-block::
+
     from fmu.sumo.explorer import Explorer 
 
     sumo = Explorer() 
