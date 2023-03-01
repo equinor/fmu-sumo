@@ -27,7 +27,7 @@ This object will handle authentication and can be used to retrieve cases and cas
 Authentication
 ^^^^^^^^^^^^^^^
 If you have not used the `Explorer` before and no access token is found in your system, a login form will open in your web browser.
-It is also possible to provide the `Explorer` with an exisiting token to use for authentication, in this case you will not be prompted to login.
+It is also possible to provide the `Explorer` with an existing token to use for authentication, in this case you will not be prompted to login.
 
 .. code-block:: 
 
@@ -81,12 +81,12 @@ The resulting `CaseCollection` is iterable:
         print(case.status)
 
 We can use the filter method to filter on the following properties:
-- uuid
-- name
-- status
-- user
-- asset
-- field
+* uuid
+* name
+* status
+* user
+* asset
+* field
 
 Example: finding all official cases uploaded by `peesv` in Drogon: 
 
@@ -122,7 +122,7 @@ Example: finding assets
 
     assets = cases.assets
 
-The `CaseCollection.assets` propert gives us a list of unique values for the asset property in our list of cases. 
+The `CaseCollection.assets` property gives us a list of unique values for the asset property in our list of cases. 
 We can now use this information to apply an asset filter:
 
 .. code-block:: 
@@ -144,11 +144,11 @@ We can now use this information to apply an asset filter:
     )
 
 We can retrieve list of unique values for the following properties:
-- names 
-- statuses
-- users 
-- assets 
-- fields
+* names 
+* statuses
+* users 
+* assets 
+* fields
 
 You can also use a case `uuid` to get a `Case` object:
 
@@ -163,10 +163,10 @@ You can also use a case `uuid` to get a `Case` object:
 
 Browsing data in a case
 ^^^^^^^^^^^^^^^^^^^^^^^
-The `Case` object has properties for accessig different data types:
-- surfaces
-- polygons
-- tables 
+The `Case` object has properties for accessing different data types:
+* surfaces
+* polygons
+* tables 
 
 Example: get case surfaces 
 
@@ -206,16 +206,16 @@ The `SurfaceCollection` object has a filter method and properties for getting fi
 
 
 The `SurfaceCollection.filter` method takes the following parameters:
-- uuid
-- name 
-- tagname 
-- iteration 
-- realization 
-- aggregation
-- stage 
-- time 
+* uuid
+* name 
+* tagname 
+* iteration 
+* realization 
+* aggregation
+* stage 
+* time 
 
-All paramters suport a single value, a list of values or a `boolean` value.
+All parameters support a single value, a list of values or a `boolean` value.
 
 Example: get aggregated surfaces 
 
@@ -240,14 +240,14 @@ Example: get aggregated surfaces
     names = surfaces.names
 
 We can get list of filter values for the following properties:
-- names
-- tagnames 
-- iterations 
-- realizations
-- aggregations 
-- stages 
-- timestamps
-- intervals
+* names
+* tagnames 
+* iterations 
+* realizations
+* aggregations 
+* stages 
+* timestamps
+* intervals
 
 
 Once we have a `Surface` object we can get surface metadata using properties:
