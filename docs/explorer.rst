@@ -81,6 +81,7 @@ The resulting `CaseCollection` is iterable:
         print(case.status)
 
 We can use the filter method to filter on the following properties:
+
 * uuid
 * name
 * status
@@ -144,6 +145,7 @@ We can now use this information to apply an asset filter:
     )
 
 We can retrieve list of unique values for the following properties:
+
 * names 
 * statuses
 * users 
@@ -164,6 +166,7 @@ You can also use a case `uuid` to get a `Case` object:
 Browsing data in a case
 ^^^^^^^^^^^^^^^^^^^^^^^
 The `Case` object has properties for accessing different data types:
+
 * surfaces
 * polygons
 * tables 
@@ -206,6 +209,7 @@ The `SurfaceCollection` object has a filter method and properties for getting fi
 
 
 The `SurfaceCollection.filter` method takes the following parameters:
+
 * uuid
 * name 
 * tagname 
@@ -240,6 +244,7 @@ Example: get aggregated surfaces
     names = surfaces.names
 
 We can get list of filter values for the following properties:
+
 * names
 * tagnames 
 * iterations 
