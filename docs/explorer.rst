@@ -31,7 +31,7 @@ It is also possible to provide the `Explorer` with an exisiting token to use for
 
 .. code-block:: 
 
-    from fmu.suom.explorer import Explorer 
+    from fmu.sumo.explorer import Explorer 
 
     USER_TOKEN="123456789"
     sumo = Explorer(token=USER_TOKEN)
@@ -122,7 +122,7 @@ Example: finding assets
 
     assets = cases.assets
 
-The `CaseCollection.assets` propert gives us a unique list of values for the asset property in our list of cases. 
+The `CaseCollection.assets` propert gives us a list of unique values for the asset property in our list of cases. 
 We can now use this information to apply an asset filter:
 
 .. code-block:: 
