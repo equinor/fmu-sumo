@@ -326,6 +326,8 @@ Example: get surfaces with timestamp in a specific range
 
 Example: get surfaces with exact interval 
 
+.. code-block::
+
     from fmu.sumo.explorer import Explorer, TimeFilter, TimeType
 
     sumo = Explorer() 
