@@ -324,7 +324,25 @@ Example: get surfaces with timestamp in a specific range
     surfaces = case.surfaces.filter(time=time)
 
 
-Time filters can also be used to get all surfaces with specific time data.
+Example: get surfaces with exact interval 
+
+    from fmu.sumo.explorer import Explorer, TimeFilter, TimeType
+
+    sumo = Explorer() 
+
+    case = sumo.get_case_by_uuid("1234567")
+
+    time = TimeFilter(
+        type=TimeType.INTERVAL,
+        start="2018-01-01",
+        end="2022-01-01",
+        exact=True
+    )
+
+    surfaces = case.surfaces.filter(time=time)
+
+
+Time filters can also be used to get all surfaces that has a specific type of time data.
 
 .. code-block::
 
@@ -334,11 +352,25 @@ Time filters can also be used to get all surfaces with specific time data.
 
     case = sumo.get_case_by_uuid("1234567")
 
+    # get surfaces with timestamps
     time = TimeFilter(type=TimeType.TIMESTAMP)
 
     surfaces = case.surfaces.filter(time=time)
 
-When no range is specified in the time filter it will return all surfaces that has a timestamp.
+    # get surfaces with intervals
+    time = TimeFilter(type=TimeType.INTERVAL)
+
+    surfaces = case.surfaces.filter(time=time)
+
+    # get surfaces with any time data
+    time = TimeFilter(type=TimeType.ALL)
+
+    surfaces = case.surfaces.filter(time=time)
+
+    # get surfaces without time data
+    time = TimeFilter(type=TimeType.NONE)
+
+    surfaces = case.surfaces.filter(time=time)
 
 
 
