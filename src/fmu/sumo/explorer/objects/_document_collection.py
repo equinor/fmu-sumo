@@ -12,6 +12,7 @@ class DocumentCollection:
         type: str,
         sumo: SumoClient,
         query: Dict = None,
+        select: List[str] = None,
         pit: Pit = None,
     ):
         self._utils = Utils(sumo)
@@ -25,6 +26,8 @@ class DocumentCollection:
         self._len = None
         self._items = []
         self._field_values = {}
+        self._query = self._init_query(type, query)
+        self._select = select
 
     def __len__(self) -> int:
         """Get size of document collection
@@ -91,25 +94,10 @@ class DocumentCollection:
             "query": self._query,
             "sort": [{"_doc": {"order": "desc"}}],
             "size": 500,
-            "_source": [
-                "_id",
-                "data.name",
-                "data.tagname",
-                "data.time",
-                "data.format",
-                "data.bbox",
-                "data.spec",
-                "fmu.case.name",
-                "fmu.case.user.id",
-                "fmu.realization.id",
-                "fmu.iteration.name",
-                "fmu.context.stage",
-                "fmu.aggregation.operation",
-                "_sumo.status",
-                "access.asset",
-                "masterdata.smda.field",
-            ],
         }
+
+        if self._select:
+            query["_source"] = self._select
 
         if self._len is None:
             query["track_total_hits"] = True

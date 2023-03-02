@@ -4,6 +4,25 @@ from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.timefilter import TimeFilter
 from fmu.sumo.explorer.pit import Pit
 
+_CHILD_FIELDS = [
+    "_id",
+    "data.name",
+    "data.tagname",
+    "data.time",
+    "data.format",
+    "data.bbox",
+    "data.spec",
+    "fmu.case.name",
+    "fmu.case.user.id",
+    "fmu.realization.id",
+    "fmu.iteration.name",
+    "fmu.context.stage",
+    "fmu.aggregation.operation",
+    "_sumo.status",
+    "access.asset",
+    "masterdata.smda.field",
+]
+
 
 class ChildCollection(DocumentCollection):
     """Class for representing a collection of child objects in Sumo"""
@@ -17,7 +36,7 @@ class ChildCollection(DocumentCollection):
         pit: Pit = None,
     ):
         self._case_uuid = case_uuid
-        super().__init__(type, sumo, query, pit)
+        super().__init__(type, sumo, query, _CHILD_FIELDS, pit)
 
     @property
     def names(self) -> List[str]:
@@ -71,6 +90,7 @@ class ChildCollection(DocumentCollection):
         stage: Union[str, List[str], bool] = None,
         column: Union[str, List[str], bool] = None,
         time: TimeFilter = None,
+        uuid: Union[str, List[str], bool] = None,
     ):
         must = []
         must_not = []
@@ -83,6 +103,7 @@ class ChildCollection(DocumentCollection):
             "fmu.aggregation.operation.keyword": aggregation,
             "fmu.context.stage.keyword": stage,
             "data.spec.columns.keyword": column,
+            "_id": uuid,
         }
 
         for prop in prop_map:

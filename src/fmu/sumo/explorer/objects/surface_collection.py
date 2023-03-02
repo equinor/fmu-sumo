@@ -106,6 +106,7 @@ class SurfaceCollection(ChildCollection):
         aggregation: Union[str, List[str], bool] = None,
         stage: Union[str, List[str], bool] = None,
         time: TimeFilter = None,
+        uuid: Union[str, List[str], bool] = None,
     ) -> "SurfaceCollection":
         """Filter surfaces
 
@@ -119,6 +120,7 @@ class SurfaceCollection(ChildCollection):
             aggregation (Union[str, List[str], bool]): aggregation operation
             stage (Union[str, List[str], bool]): context/stage
             time (TimeFilter): time filter
+            uuid (Union[str, List[str], bool]): surface object uuid
 
         Returns:
             SurfaceCollection: A filtered SurfaceCollection
@@ -166,6 +168,7 @@ class SurfaceCollection(ChildCollection):
             aggregation=aggregation,
             stage=stage,
             time=time,
+            uuid=uuid,
         )
 
         return SurfaceCollection(self._sumo, self._case_uuid, query, self._pit)

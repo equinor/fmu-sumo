@@ -19,6 +19,8 @@ from context import (
     TableCollection,
 )
 
+from sumo.wrapper import SumoClient
+
 
 TEST_DATA = Path("data")
 logging.basicConfig(level="DEBUG")
@@ -32,23 +34,41 @@ def fixture_the_logger():
 
 
 @pytest.fixture(name="case_name")
-def fixture_case_name():
+def fixture_case_name() -> str:
     """Returns case name"""
     return "drogon_design_small-2023-01-18"
 
 
+@pytest.fixture(name="case_uuid")
+def fixture_case_uuid() -> str:
+    """Returns case uuid"""
+    return "2c2f47cf-c7ab-4112-87f9-b4797ec51cb6"
+
+
 @pytest.fixture(name="explorer")
-def fixture_explorer(token):
+def fixture_explorer(token: str) -> Explorer:
     """Returns explorer"""
     return Explorer("dev", token=token)
 
 
 @pytest.fixture(name="test_case")
-def fixture_test_case(test_explorer: Explorer, case_name: str):
+def fixture_test_case(explorer: Explorer, case_name: str) -> Case:
     """Basis for test of method get_case_by_name for Explorer,
     but also other attributes
     """
-    return test_explorer.cases.filter(name=case_name)[0]
+    return explorer.cases.filter(name=case_name)[0]
+
+
+@pytest.fixture(name="sumo_client")
+def fixture_sumo_client():
+    """Returns SumoClient for dev env"""
+    return SumoClient("dev")
+
+
+@pytest.fixture(name="utils")
+def fixture_utils(sumo_client: SumoClient):
+    """Returns utils object"""
+    return Utils(sumo_client)
 
 
 def write_json(result_file, results):
@@ -111,7 +131,8 @@ def assert_dict_equality(results, correct):
     correct (dict): the one to compare to
     """
     incorrect_mess = (
-        f"the dictionary produced ({results}) is not equal to \n" + f" ({correct})"
+        f"the dictionary produced ({results}) is not equal to \n"
+        + f" ({correct})"
     )
     assert results == correct, incorrect_mess
 
@@ -155,7 +176,9 @@ def test_get_cases_combinations(explorer: Explorer):
     """Test the CaseCollection.filter method with combined arguments."""
 
     cases = explorer.cases.filter(
-        field=["DROGON", "JOHAN SVERDRUP"], user=["peesv", "dbs"], status=["keep"]
+        field=["DROGON", "JOHAN SVERDRUP"],
+        user=["peesv", "dbs"],
+        status=["keep"],
     )
     for case in cases:
         assert (
@@ -163,3 +186,106 @@ def test_get_cases_combinations(explorer: Explorer):
             and case.field in ["DROGON", "JOHAN SVERDRUP"]
             and case.status == "keep"
         )
+
+
+def test_case_surfaces_type(test_case: Case):
+    """Test that Case.surfaces property is of rype SurfaceCollection"""
+    assert type(test_case.surfaces) == SurfaceCollection
+
+
+def test_case_surfaces_size(test_case: Case):
+    """Test that Case.surfaces has the correct size"""
+    assert len(test_case.surfaces) == 219
+
+
+def test_case_surfaces_filter(test_case: Case):
+    """Test that Case.surfaces has the correct size"""
+    # filter on iteration stage
+    agg_surfs = test_case.surfaces.filter(stage="iteration")
+    assert len(agg_surfs) == 7
+
+    agg_surfs = test_case.surfaces.filter(aggregation=True)
+    assert len(agg_surfs)
+
+    # filter on realization stage
+    real_surfs = test_case.surfaces.filter(stage="realization")
+    assert len(real_surfs) == 212
+
+    real_surfs = test_case.surfaces.filter(realization=True)
+    assert len(real_surfs) == 212
+
+    # filter on iteration
+    real_surfs = real_surfs.filter(iteration="iter-0")
+    assert len(real_surfs) == 212
+
+    for surf in real_surfs:
+        assert surf.iteration == "iter-0"
+
+    # filter on name
+    real_surfs = real_surfs.filter(name="Valysar Fm.")
+    assert len(real_surfs) == 56
+
+    for surf in real_surfs:
+        assert surf.iteration == "iter-0"
+        assert surf.name == "Valysar Fm."
+
+    # filter on tagname
+    real_surfs = real_surfs.filter(tagname="FACIES_Fraction_Channel")
+    assert len(real_surfs) == 4
+
+    for surf in real_surfs:
+        assert surf.iteration == "iter-0"
+        assert surf.name == "Valysar Fm."
+        assert surf.tagname == "FACIES_Fraction_Channel"
+
+    # filter on realization
+    real_surfs = real_surfs.filter(realization=0)
+    assert len(real_surfs) == 1
+
+    assert real_surfs[0].iteration == "iter-0"
+    assert real_surfs[0].name == "Valysar Fm."
+    assert real_surfs[0].tagname == "FACIES_Fraction_Channel"
+    assert real_surfs[0].realization == 0
+
+
+def test_case_surfaces_pagination(test_case: Case):
+    """Test the pagination logic of SurfaceCollection (DocumentCollection)"""
+    surfs = test_case.surfaces
+    count = 0
+
+    for surf in surfs:
+        count += 1
+
+    assert count == len(surfs)
+
+
+def test_get_case_by_uuid(explorer: Explorer, case_uuid: str, case_name: str):
+    """Test that explorer.get_case_by_uuid returns the specified case"""
+    case = explorer.get_case_by_uuid(case_uuid)
+
+    assert type(case) == Case
+    assert case.uuid == case_uuid
+    assert case.name == case_name
+
+
+def test_utils_extend_query_object(utils: Utils):
+    old = {"bool": {"must": [{"term": {"class.keyword": "surface"}}]}}
+    new = {
+        "bool": {"must": [{"term": {"fmu.aggregation.operation": "mean"}}]},
+        "terms": {"fmu.iteration.name.keyword": ["iter-0", "iter-1"]},
+    }
+    extended = utils.extend_query_object(old, new)
+
+    assert len(extended["bool"]["must"]) == 2
+    assert type(extended["terms"]) == dict
+
+    new = {
+        "bool": {
+            "must_not": [{"term": {"key": "value"}}],
+            "must": [{"term": {"key": "value"}}],
+        }
+    }
+
+    extended = utils.extend_query_object(extended, new)
+
+    assert len(extended["bool"]["must"]) == 3

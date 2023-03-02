@@ -34,6 +34,7 @@ class PolygonsCollection(ChildCollection):
         tagname: Union[str, List[str], bool] = None,
         iteration: Union[str, List[str], bool] = None,
         realization: Union[int, List[int], bool] = None,
+        uuid: Union[str, List[str], bool] = None,
     ) -> "PolygonsCollection":
         """Filter polygons
 
@@ -42,6 +43,7 @@ class PolygonsCollection(ChildCollection):
             tagname (Union[str, List[str], bool]): polygon tagname
             iteration (Union[int, List[int], bool]): iteration id
             realization Union[int, List[int], bool]: realization id
+            uuid (Union[str, List[str], bool]): polygons object uuid
 
         Returns:
             PolygonsCollection: A filtered PolygonsCollection
@@ -51,6 +53,7 @@ class PolygonsCollection(ChildCollection):
             tagname=tagname,
             iteration=iteration,
             realization=realization,
+            uuid=uuid,
         )
 
         return PolygonsCollection(

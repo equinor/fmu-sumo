@@ -4,6 +4,15 @@ from fmu.sumo.explorer.objects.case import Case
 from typing import Union, List, Dict
 from fmu.sumo.explorer.pit import Pit
 
+_CASE_FIELDS = [
+    "_id",
+    "fmu.case.name",
+    "fmu.case.user.id",
+    "_sumo.status",
+    "access.asset",
+    "masterdata.smda.field",
+]
+
 
 class CaseCollection(DocumentCollection):
     """A class for representing a collection of cases in Sumo"""
@@ -15,7 +24,7 @@ class CaseCollection(DocumentCollection):
             query (dict): elastic query object
             pit (Pit): point in time
         """
-        super().__init__("case", sumo, query, pit)
+        super().__init__("case", sumo, query, _CASE_FIELDS, pit)
 
     @property
     def names(self) -> List[str]:
