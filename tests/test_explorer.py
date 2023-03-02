@@ -40,7 +40,7 @@ def fixture_case_name() -> str:
 
 
 @pytest.fixture(name="case_uuid")
-def fixure_case_uuid() -> str:
+def fixture_case_uuid() -> str:
     """Returns case uuid"""
     return "2c2f47cf-c7ab-4112-87f9-b4797ec51cb6"
 
