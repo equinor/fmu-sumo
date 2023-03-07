@@ -9,10 +9,11 @@
 import os
 import datetime
 import time
+import sys
+import subprocess
 import logging
 import hashlib
 import base64
-
 import yaml
 
 from sumo.wrapper._request_error import (
@@ -66,6 +67,30 @@ def _datetime_now():
     return datetime.datetime.now().isoformat()
 
 
+def _get_segyimport_cmdstr(blob_url, object_id, file_path):
+    """Return the command string for running OpenVDS SEGYImport"""
+    first_split = blob_url.split('/')
+    second_split = first_split[4].split('?')
+    url = 'azureSAS://' + first_split[2] + '/' + first_split[3] + '/'
+    url_conn = 'Suffix=?' + second_split[1]
+    persistent_id = object_id
+
+    pythonPath = os.path.dirname(sys.executable)
+
+    # Will this work for all python installations??
+    path_to_SEGYImport = os.path.join(pythonPath, '..', 'bin', 'SEGYImport') 
+
+    cmdstr = ' '.join([path_to_SEGYImport, 
+        '--compression-method', 'RLE',
+        '--brick-size', '64', 
+        '--sample-unit', 'm', 
+        '--url', url,
+        '--url-connection', url_conn, 
+        '--persistentID', persistent_id,
+        file_path])
+    return cmdstr
+
+
 class FileOnDisk:
     def __init__(self, path: str, metadata_path=None, verbosity="INFO"):
         """
@@ -93,12 +118,17 @@ class FileOnDisk:
 
         self.metadata["_sumo"] = {}
 
-        self.byte_string = file_to_byte_string(path)
-        self.metadata["_sumo"]["blob_size"] = len(self.byte_string)
-        digester = hashlib.md5(self.byte_string)
-        self.metadata["_sumo"]["blob_md5"] = base64.b64encode(
-            digester.digest()
-        ).decode("utf-8")
+        if self.metadata["data"]["format"] == "segy":  # Use 'openvds' later??
+            self.metadata["_sumo"]["blob_size"] = 0
+            # TODO How to handle absolute|relative_path and checksum_md5
+            self.byte_string = None
+        else:
+            self.byte_string = file_to_byte_string(path)
+            self.metadata["_sumo"]["blob_size"] = len(self.byte_string)
+            digester = hashlib.md5(self.byte_string)
+            self.metadata["_sumo"]["blob_md5"] = base64.b64encode(
+                digester.digest()
+            ).decode("utf-8")
 
     def __repr__(self):
         if not self.metadata:
@@ -215,13 +245,29 @@ class FileOnDisk:
         for i in backoff:
             logger.debug("backoff in inner loop is %s", str(i))
             try:
-                response = self._upload_byte_string(
-                    sumo_connection=sumo_connection,
-                    object_id=self.sumo_object_id,
-                    blob_url=blob_url,
-                )
-                upload_response["status_code"] = response.status_code
-                upload_response["text"] = response.text
+                if self.metadata["data"]["format"] == "segy":  # 'openvds'?
+                    cmdstr = _get_segyimport_cmdstr(blob_url, self.sumo_object_id, self.path)
+                    # logger.info(cmdstr)
+                    cmdresult = subprocess.run(cmdstr, 
+                            capture_output=True, text=True)
+                    if cmdresult.returncode == 0:
+                        # logger.info(cmdresult.returncode) 
+                        upload_response["status_code"] = 200
+                        upload_response["text"] = "SEGY uploaded as OpenVDS"
+                    else:
+                        # logger.info(cmdresult.returncode)
+                        # logger.info(cmdresult.stderr)
+                        upload_response["status_code"] = 418
+                        upload_response["text"] = "FAILED SEGY upload as OpenVDS"
+
+                else:                
+                    response = self._upload_byte_string(
+                        sumo_connection=sumo_connection,
+                        object_id=self.sumo_object_id,
+                        blob_url=blob_url,
+                    )
+                    upload_response["status_code"] = response.status_code
+                    upload_response["text"] = response.text
 
                 _t1_blob = time.perf_counter()
 

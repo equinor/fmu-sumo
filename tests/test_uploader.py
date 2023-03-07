@@ -4,6 +4,7 @@ import pytest
 import time
 from pathlib import Path
 import logging
+import subprocess
 
 from fmu.sumo import uploader
 
@@ -11,7 +12,7 @@ from fmu.sumo import uploader
 TEST_DIR = Path(__file__).parent / "../"
 os.chdir(TEST_DIR)
 
-ENV = "dev"
+ENV = "preview"
 
 logger = logging.getLogger(__name__)
 logger.setLevel(level="DEBUG")
@@ -198,6 +199,60 @@ def test_wrong_metadata(token):
     )
     total = search_results.get("hits").get("total").get("value")
     assert total == 2
+
+
+# def test_seismic_segy_file(token):
+#     """Upload one seimic segy file to Sumo. Assert that it is there."""
+#     sumo_connection = uploader.SumoConnection(env=ENV, token=token)
+#     e = uploader.CaseOnDisk(
+#         case_metadata_path="tests/data/test_case_080/case.yml",
+#         sumo_connection=sumo_connection,
+#     )
+#     e.register()
+#     e.add_files("tests/data/test_case_080/seismic.segy")
+#     e.upload()
+
+#     time.sleep(4)
+
+#     query = f"{e.fmu_case_uuid}"
+#     search_results = sumo_connection.api.get(
+#         "/search", query=query, size=100, **{"from": 0}
+#     )
+#     total = search_results.get("hits").get("total").get("value")
+#     assert total == 2
+
+
+def test_openvds_available(token):
+    pythonPath = os.path.dirname(sys.executable)
+    logger.info(pythonPath)
+    pathToSEGYImport = os.path.join(pythonPath, '..', 'bin', 'SEGYImport.exe')
+    logger.info(pathToSEGYImport)
+    checkSEGYImportVersion = subprocess.run([pathToSEGYImport, '--version'], 
+                                            capture_output=True, text=True)
+    assert checkSEGYImportVersion.returncode == 0
+    assert "SEGYImport" in checkSEGYImportVersion.stdout
+
+
+def test_seismic_openvds_file(token):
+    """Upload seimic in OpenVDS format to Sumo. Assert that it is there."""
+    sumo_connection = uploader.SumoConnection(env=ENV, token=token)
+    e = uploader.CaseOnDisk(
+        case_metadata_path="tests/data/test_case_080/case_openvds.yml",
+        sumo_connection=sumo_connection,
+    )
+    e.register()
+    e.add_files("tests/data/test_case_080/seismic.openvds")
+    e.upload()
+
+    time.sleep(4)
+
+    query = f"{e.fmu_case_uuid}"
+    search_results = sumo_connection.api.get(
+        "/search", query=query, size=100, **{"from": 0}
+    )
+    total = search_results.get("hits").get("total").get("value")
+    assert total == 2
+    # TODO get a read token and run SEGYExport or ...
 
 
 def test_teardown(token):
