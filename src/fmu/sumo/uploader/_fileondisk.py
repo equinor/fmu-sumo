@@ -71,15 +71,17 @@ def _get_segyimport_cmdstr(blob_url, object_id, file_path):
     """Return the command string for running OpenVDS SEGYImport"""
     first_split = blob_url.split('/')
     second_split = first_split[4].split('?')
-    url = 'azureSAS://' + first_split[2] + '/' + first_split[3] + '/'
-    url_conn = 'Suffix=?' + second_split[1]
-    persistent_id = object_id
+    url = '"azureSAS://' + first_split[2] + '/' + first_split[3] + '/"'
+    url_conn = '"Suffix=?' + second_split[1] + '"'
+    persistent_id = '"' + object_id + '"'
 
     pythonPath = os.path.dirname(sys.executable)
 
-    # Will this work for all python installations??
+    # Will this work for all python installations on all platforms?
     path_to_SEGYImport = os.path.join(pythonPath, '..', 'bin', 'SEGYImport') 
 
+    logger.info("SEGYImport path")
+    logger.info(path_to_SEGYImport)
     cmdstr = ' '.join([path_to_SEGYImport, 
         '--compression-method', 'RLE',
         '--brick-size', '64', 
@@ -245,21 +247,22 @@ class FileOnDisk:
         for i in backoff:
             logger.debug("backoff in inner loop is %s", str(i))
             try:
-                if self.metadata["data"]["format"] == "segy":  # 'openvds'?
-                    cmdstr = _get_segyimport_cmdstr(blob_url, self.sumo_object_id, self.path)
-                    # logger.info(cmdstr)
-                    cmdresult = subprocess.run(cmdstr, 
-                            capture_output=True, text=True)
-                    if cmdresult.returncode == 0:
-                        # logger.info(cmdresult.returncode) 
-                        upload_response["status_code"] = 200
-                        upload_response["text"] = "SEGY uploaded as OpenVDS"
+                if self.metadata["data"]["format"] == "segy":
+                    # Use 'openvds' over 'segy'? Update metadata accordingly before upload?
+                    if sys.platform.startswith('darwin'):  
+                        # OpenVDS does not support Apple/Mac aka darwin, but do support linux and win
+                        upload_response["status_code"] = 418  # Which http error code to return? 
+                        upload_response["text"] = "Can not perform SEGY upload since OpenVDS does not support Apple/Mac" 
                     else:
-                        # logger.info(cmdresult.returncode)
-                        # logger.info(cmdresult.stderr)
-                        upload_response["status_code"] = 418
-                        upload_response["text"] = "FAILED SEGY upload as OpenVDS"
-
+                        cmd_str = _get_segyimport_cmdstr(blob_url, self.sumo_object_id, self.path)
+                        cmd_result = subprocess.run(cmd_str, 
+                                capture_output=True, text=True, shell=True)
+                        if cmd_result.returncode == 0:
+                            upload_response["status_code"] = 200
+                            upload_response["text"] = "SEGY uploaded as OpenVDS."
+                        else:
+                            upload_response["status_code"] = 418  # Which http error code to return? 
+                            upload_response["text"] = "FAILED SEGY upload as OpenVDS. " + cmd_result.stderr
                 else:                
                     response = self._upload_byte_string(
                         sumo_connection=sumo_connection,
