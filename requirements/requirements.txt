@@ -7,4 +7,4 @@ xtgeo
 azure-core
 pyarrow; python_version > "3.6.1"
 # ert
-OpenVDS
+OpenVDS; sys_platform != 'darwin'
