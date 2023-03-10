@@ -1,6 +1,6 @@
-from fmu.sumo.explorer.objects._document_collection import DocumentCollection
 from typing import List, Dict, Union
 from sumo.wrapper import SumoClient
+from fmu.sumo.explorer.objects._document_collection import DocumentCollection
 from fmu.sumo.explorer.timefilter import TimeFilter
 from fmu.sumo.explorer.pit import Pit
 
@@ -16,6 +16,7 @@ _CHILD_FIELDS = [
     "fmu.case.user.id",
     "fmu.realization.id",
     "fmu.iteration.name",
+    "fmu.iteration.parameters",
     "fmu.context.stage",
     "fmu.aggregation.operation",
     "_sumo.status",
@@ -29,14 +30,14 @@ class ChildCollection(DocumentCollection):
 
     def __init__(
         self,
-        type: str,
+        doc_type: str,
         sumo: SumoClient,
         case_uuid: str,
         query: Dict = None,
         pit: Pit = None,
     ):
         self._case_uuid = case_uuid
-        super().__init__(type, sumo, query, _CHILD_FIELDS, pit)
+        super().__init__(doc_type, sumo, query, _CHILD_FIELDS, pit)
 
     @property
     def names(self) -> List[str]:
@@ -68,8 +69,8 @@ class ChildCollection(DocumentCollection):
         """List of unique stages"""
         return self._get_field_values("fmu.context.stage.keyword")
 
-    def _init_query(self, type: str, query: Dict = None) -> Dict:
-        new_query = super()._init_query(type, query)
+    def _init_query(self, doc_type: str, query: Dict = None) -> Dict:
+        new_query = super()._init_query(doc_type, query)
         case_filter = {
             "bool": {
                 "must": [
@@ -106,17 +107,15 @@ class ChildCollection(DocumentCollection):
             "_id": uuid,
         }
 
-        for prop in prop_map:
-            value = prop_map[prop]
-
+        for prop, value in prop_map.items():
             if value is not None:
-                if type(value) == bool:
+                if isinstance(value, bool):
                     if value:
                         must.append({"exists": {"field": prop}})
                     else:
                         must_not.append({"exists": {"field": prop}})
                 else:
-                    term = "terms" if type(value) == list else "term"
+                    term = "terms" if isinstance(value, list) else "term"
                     must.append({term: {prop: value}})
 
         query = {"bool": {}}

@@ -9,16 +9,16 @@ class DocumentCollection:
 
     def __init__(
         self,
-        type: str,
+        doc_type: str,
         sumo: SumoClient,
         query: Dict = None,
         select: List[str] = None,
         pit: Pit = None,
     ):
         self._utils = Utils(sumo)
-        self._type = type
+        self._type = doc_type
         self._sumo = sumo
-        self._query = self._init_query(type, query)
+        self._query = self._init_query(doc_type, query)
         self._pit = pit
 
         self._after = None
@@ -26,7 +26,7 @@ class DocumentCollection:
         self._len = None
         self._items = []
         self._field_values = {}
-        self._query = self._init_query(type, query)
+        self._query = self._init_query(doc_type, query)
         self._select = select
 
     def __len__(self) -> int:

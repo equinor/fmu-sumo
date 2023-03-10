@@ -1,3 +1,4 @@
+"""Contains class for one document"""
 from typing import List, Dict
 
 
@@ -10,7 +11,21 @@ class Document:
 
     @property
     def uuid(self):
+        """Return uuid
+
+        Returns:
+            str: the uuid of the case
+        """
         return self._uuid
+
+    @property
+    def metadata(self):
+        """Return metadata for document
+
+        Returns:
+            dict: the metadata
+        """
+        return self._metadata
 
     def _get_property(self, path: List[str]):
         curr = self._metadata.copy()
