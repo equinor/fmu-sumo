@@ -69,10 +69,14 @@ def _datetime_now():
 
 def _get_segyimport_cmdstr(blob_url, object_id, file_path):
     """Return the command string for running OpenVDS SEGYImport"""
-    first_split = blob_url.split('/')
-    second_split = first_split[4].split('?')
-    url = '"azureSAS://' + first_split[2] + '/' + first_split[3] + '/"'
-    url_conn = '"Suffix=?' + second_split[1] + '"'
+    url = '"azureSAS:' + blob_url["baseuri"][6:] + '"'  
+    url_conn = '"Suffix=?' + blob_url["auth"] + '"'
+
+    # Old blob_url format:
+    # first_split = blob_url.split('/')
+    # second_split = first_split[4].split('?')
+    # url = '"azureSAS://' + first_split[2] + '/' + first_split[3] + '/"'
+    # url_conn = '"Suffix=?' + second_split[1] + '"'
     persistent_id = '"' + object_id + '"'
 
     pythonPath = os.path.dirname(sys.executable)
@@ -80,8 +84,6 @@ def _get_segyimport_cmdstr(blob_url, object_id, file_path):
     # Will this work for all python installations on all platforms?
     path_to_SEGYImport = os.path.join(pythonPath, '..', 'bin', 'SEGYImport') 
 
-    logger.info("SEGYImport path")
-    logger.info(path_to_SEGYImport)
     cmdstr = ' '.join([path_to_SEGYImport, 
         '--compression-method', 'RLE',
         '--brick-size', '64', 
