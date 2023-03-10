@@ -33,10 +33,10 @@ class Table(Child):
         try:
             table = pq.read_table(self.blob)
         except pa.lib.ArrowInvalid:
-        try:
-            table = pf.read_table(self.blob)
-        except pa.lib.ArrowInvalid:
-            table = pa.Table.from_pandas(pd.read_csv(self.blob))
+            try:
+                table = pf.read_table(self.blob)
+            except pa.lib.ArrowInvalid:
+                table = pa.Table.from_pandas(pd.read_csv(self.blob))
         except TypeError:
             print("This does not work")
         return table
