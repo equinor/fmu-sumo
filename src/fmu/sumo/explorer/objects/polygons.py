@@ -1,7 +1,8 @@
-from fmu.sumo.explorer.objects._child import Child
-from sumo.wrapper import SumoClient
-import pandas as pd
+"""Module containing class for polygons object"""
 from typing import Dict
+import pandas as pd
+from sumo.wrapper import SumoClient
+from fmu.sumo.explorer.objects._child import Child
 
 
 class Polygons(Child):
@@ -13,7 +14,7 @@ class Polygons(Child):
             sumo (SumoClient): connection to Sumo
             metadata (dict): polygon metadata
         """
-        super().__init__(sumo, metadata)
+        Child.__init__(self, sumo, metadata)
 
     def to_dataframe(self) -> pd.DataFrame:
         """Get polygons object as a DataFrame
@@ -21,7 +22,7 @@ class Polygons(Child):
         Returns:
             DataFrame: A DataFrame object
         """
-        if self.format == "csv":
+        try:
             return pd.read_csv(self.blob)
-        else:
-            raise Exception(f"Unknown format: {self.format}")
+        except TypeError as type_err:
+            raise TypeError(f"Unknown format: {self.format}") from type_err

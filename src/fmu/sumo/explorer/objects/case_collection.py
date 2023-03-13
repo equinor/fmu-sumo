@@ -1,7 +1,8 @@
-from fmu.sumo.explorer.objects._document_collection import DocumentCollection
-from sumo.wrapper import SumoClient
-from fmu.sumo.explorer.objects.case import Case
+"""Module containing class for collection of cases"""
 from typing import Union, List, Dict
+from sumo.wrapper import SumoClient
+from fmu.sumo.explorer.objects._document_collection import DocumentCollection
+from fmu.sumo.explorer.objects.case import Case
 from fmu.sumo.explorer.pit import Pit
 
 _CASE_FIELDS = [

@@ -1,7 +1,8 @@
-from fmu.sumo.explorer.objects._document import Document
-from sumo.wrapper import SumoClient
-from io import BytesIO
+"""module containing class for child object"""
 from typing import Dict
+from io import BytesIO
+from sumo.wrapper import SumoClient
+from fmu.sumo.explorer.objects._document import Document
 
 
 class Child(Document):

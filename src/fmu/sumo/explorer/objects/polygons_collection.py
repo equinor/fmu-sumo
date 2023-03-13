@@ -1,8 +1,9 @@
+"""Module containing class for colection of polygons """
+from typing import Union, List, Dict
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._child_collection import ChildCollection
 from fmu.sumo.explorer.objects.polygons import Polygons
 from fmu.sumo.explorer.pit import Pit
-from typing import Union, List, Dict
 
 
 class PolygonsCollection(ChildCollection):

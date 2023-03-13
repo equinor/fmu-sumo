@@ -1,8 +1,9 @@
+"""Module containing class for collection of tables"""
+from typing import Union, List, Dict
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._child_collection import ChildCollection
 from fmu.sumo.explorer.objects.table import Table
 from fmu.sumo.explorer.pit import Pit
-from typing import Union, List, Dict
 
 
 class TableCollection(ChildCollection):

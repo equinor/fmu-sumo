@@ -1,6 +1,7 @@
+"""Module containing class for collection of documents"""
+from typing import List, Dict
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer._utils import Utils
-from typing import List, Dict
 from fmu.sumo.explorer.pit import Pit
 
 
@@ -118,7 +119,7 @@ class DocumentCollection:
             self._after = hits["hits"][-1]["sort"]
             self._items.extend(hits["hits"])
 
-    def _init_query(self, type: str, query: Dict = None) -> Dict:
+    def _init_query(self, doc_type: str, query: Dict = None) -> Dict:
         """Initialize base filter for document collection
 
         Arguments:
@@ -128,7 +129,9 @@ class DocumentCollection:
         Returns:
             Document collection base filters
         """
-        class_filter = {"bool": {"must": [{"term": {"class.keyword": type}}]}}
+        class_filter = {
+            "bool": {"must": [{"term": {"class.keyword": doc_type}}]}
+        }
 
         if query is not None:
             return self._utils.extend_query_object(class_filter, query)

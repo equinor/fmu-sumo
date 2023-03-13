@@ -1,6 +1,6 @@
-from sumo.wrapper import SumoClient
 from typing import List, Dict
 import json
+from sumo.wrapper import SumoClient
 
 
 class Utils:
@@ -104,11 +104,11 @@ class Utils:
 
             for key in new:
                 if key in extended:
-                    if type(new[key]) == dict:
+                    if isinstance(new[key], dict):
                         extended[key] = self.extend_query_object(
                             extended[key], new[key]
                         )
-                    elif type(new[key]) == list:
+                    elif isinstance(new[key], list):
                         for val in new[key]:
                             if val not in extended[key]:
                                 extended[key].append(val)
@@ -152,7 +152,7 @@ class Utils:
         for key in keys_vals:
             val = keys_vals[key]
             if val is not None:
-                items = [val] if type(val) != list else val
+                items = [val] if not isinstance(val, list) else val
                 terms.append({"terms": {key: items}})
 
         return terms

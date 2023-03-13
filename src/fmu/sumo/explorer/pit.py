@@ -1,5 +1,5 @@
-from sumo.wrapper import SumoClient
 from typing import Dict
+from sumo.wrapper import SumoClient
 
 
 class Pit:

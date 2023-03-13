@@ -1,7 +1,8 @@
-from fmu.sumo.explorer.objects._child import Child
+"""Module containg class for surface"""
+from typing import Dict
 from sumo.wrapper import SumoClient
 from xtgeo import RegularSurface, surface_from_file
-from typing import Dict
+from fmu.sumo.explorer.objects._child import Child
 
 
 class Surface(Child):
@@ -13,7 +14,7 @@ class Surface(Child):
             sumo (SumoClient): connection to Sumo
             metadata (dict): surface metadata
         """
-        super().__init__(sumo, metadata)
+        Child.__init__(self, sumo, metadata)
 
     @property
     def bbox(self) -> Dict:
@@ -53,7 +54,7 @@ class Surface(Child):
         Returns:
             RegularSurface: A RegularSurface object
         """
-        if self.format == "irap_binary":
+        try:
             return surface_from_file(self.blob)
-        else:
-            raise Exception(f"Unknown format: {self.format}")
+        except TypeError as type_err:
+            raise TypeError(f"Unknown format: {self.format}") from type_err

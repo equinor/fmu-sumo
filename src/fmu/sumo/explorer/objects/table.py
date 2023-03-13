@@ -1,4 +1,4 @@
-"""Classes for easy access to tabular data"""
+"""module containing class for table"""
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq

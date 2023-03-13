@@ -1,11 +1,12 @@
+"""Module containing class for collection of surfaces"""
+from typing import Union, List, Dict, Tuple
+from io import BytesIO
+import xtgeo
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._child_collection import ChildCollection
 from fmu.sumo.explorer.objects.surface import Surface
 from fmu.sumo.explorer.timefilter import TimeFilter
 from fmu.sumo.explorer.pit import Pit
-import xtgeo
-from io import BytesIO
-from typing import Union, List, Dict, Tuple
 
 TIMESTAMP_QUERY = {
     "bool": {

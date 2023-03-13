@@ -1,3 +1,4 @@
+"""Module containing class for collection of children"""
 from typing import List, Dict, Union
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._document_collection import DocumentCollection
