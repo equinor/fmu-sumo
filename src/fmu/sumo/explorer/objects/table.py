@@ -3,11 +3,22 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pyarrow.feather as pf
+from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._child import Child
 
 
 class Table(Child):
     """Class representing a table object in Sumo"""
+
+    def __init__(self, sumo: SumoClient, metadata: dict) -> None:
+        """
+        Args:
+            sumo (SumoClient): connection to Sumo
+            metadata: (dict): child object metadata
+        """
+        super().__init__(sumo, metadata)
+        self._dataframe = pd.DataFrame()
+        self._arrowtable = pa.Table.from_pandas(self._dataframe)
 
     @property
     def dataframe(self) -> pd.DataFrame:
@@ -16,12 +27,17 @@ class Table(Child):
         Returns:
             DataFrame: A DataFrame object
         """
-        frame = None
-        try:
-            frame = pd.read_parquet(self.blob)
-        except UnicodeDecodeError:
-            frame = pd.read_csv(self.blob)
-        return frame
+        if self._dataframe.empty:
+            try:
+                self._dataframe = pd.read_parquet(self.blob)
+            except UnicodeDecodeError:
+                self._dataframe = pd.read_csv(self.blob)
+
+        return self._dataframe
+
+    @dataframe.setter
+    def dataframe(self, frame: pd.DataFrame):
+        self._dataframe = frame
 
     @property
     def arrowtable(self) -> pa.Table:
@@ -30,16 +46,20 @@ class Table(Child):
         Returns:
             pa.Table: _description_
         """
-        try:
-            table = pq.read_table(self.blob)
-        except pa.lib.ArrowInvalid:
+        if len(self._arrowtable) == 0:
             try:
-                table = pf.read_table(self.blob)
+                self._arrowtable = pq.read_table(self.blob)
             except pa.lib.ArrowInvalid:
-                table = pa.Table.from_pandas(pd.read_csv(self.blob))
-        except TypeError:
-            print("This does not work")
-        return table
+                try:
+                    self._arrowtable = pf.read_table(self.blob)
+                except pa.lib.ArrowInvalid:
+                    self._arrowtable = pa.Table.from_pandas(
+                        pd.read_csv(self.blob)
+                    )
+            except TypeError as type_err:
+                raise OSError("Cannot read this") from type_err
+
+        return self._arrowtable
 
 
 class AggregatedTable:
