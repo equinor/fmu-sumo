@@ -65,6 +65,12 @@ class AggregatedTable:
         self._collection = case.tables.filter(
             name, tag, iteration, aggregation=aggregation
         )
+        self._case = case
+        self._name = name
+        self._tag = tag
+        self._iteration = iteration
+        self._aggregation = aggregation
+        self._parameters = {}
 
     @property
     def columns(self):
@@ -74,6 +80,27 @@ class AggregatedTable:
             list: the column names available
         """
         return self._collection.columns
+
+    @property
+    def parameters(self):
+        """Return parameter set for iteration
+
+        Returns:
+            dict: parameters connected to iteration
+        """
+        if len(self._parameters) == 0:
+            self._parameters = self._case.tables.filter(
+                self._name,
+                self._tag,
+                self._iteration,
+                aggregation=self._aggregation,
+                column=self.columns[0],
+                size=1,
+            )[0]["fmu"]["iteration"]["parameters"]
+        return self._parameters
+
+    def __len__(self):
+        return len(self._collection)
 
     def __getitem__(self, col_name) -> pd.DataFrame:
         item = None

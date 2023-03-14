@@ -15,6 +15,7 @@ class TableCollection(ChildCollection):
         case_uuid: str,
         query: Dict = None,
         pit: Pit = None,
+        size=500,
     ):
         """
         Args:
@@ -23,7 +24,7 @@ class TableCollection(ChildCollection):
             query (dict): elastic query object
             pit (Pit): point in time
         """
-        super().__init__("table", sumo, case_uuid, query, pit)
+        super().__init__("table", sumo, case_uuid, query, pit, size)
 
     def __getitem__(self, index) -> Table:
         doc = super().__getitem__(index)
@@ -44,6 +45,7 @@ class TableCollection(ChildCollection):
         stage: Union[str, List[str], bool] = None,
         column: Union[str, List[str], bool] = None,
         uuid: Union[str, List[str], bool] = None,
+        size=500,
     ) -> "TableCollection":
         """Filter tables
 
@@ -70,4 +72,6 @@ class TableCollection(ChildCollection):
             column=column,
             uuid=uuid,
         )
-        return TableCollection(self._sumo, self._case_uuid, query, self._pit)
+        return TableCollection(
+            self._sumo, self._case_uuid, query, self._pit, size=size
+        )

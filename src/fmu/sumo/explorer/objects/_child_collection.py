@@ -36,9 +36,10 @@ class ChildCollection(DocumentCollection):
         case_uuid: str,
         query: Dict = None,
         pit: Pit = None,
+        size=500,
     ):
         self._case_uuid = case_uuid
-        super().__init__(doc_type, sumo, query, _CHILD_FIELDS, pit)
+        super().__init__(doc_type, sumo, query, _CHILD_FIELDS, pit, size=size)
 
     @property
     def names(self) -> List[str]:
