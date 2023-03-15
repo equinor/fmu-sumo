@@ -67,16 +67,10 @@ def _datetime_now():
     return datetime.datetime.now().isoformat()
 
 
-def _get_segyimport_cmdstr(blob_url, object_id, file_path):
+def _get_segyimport_cmdstr(blob_url, object_id, file_path, sample_unit):
     """Return the command string for running OpenVDS SEGYImport"""
     url = '"azureSAS:' + blob_url["baseuri"][6:] + '"'  
     url_conn = '"Suffix=?' + blob_url["auth"] + '"'
-
-    # Old blob_url format:
-    # first_split = blob_url.split('/')
-    # second_split = first_split[4].split('?')
-    # url = '"azureSAS://' + first_split[2] + '/' + first_split[3] + '/"'
-    # url_conn = '"Suffix=?' + second_split[1] + '"'
     persistent_id = '"' + object_id + '"'
 
     pythonPath = os.path.dirname(sys.executable)
@@ -87,7 +81,7 @@ def _get_segyimport_cmdstr(blob_url, object_id, file_path):
     cmdstr = ' '.join([path_to_SEGYImport, 
         '--compression-method', 'RLE',
         '--brick-size', '64', 
-        '--sample-unit', 'm', 
+        '--sample-unit', sample_unit, 
         '--url', url,
         '--url-connection', url_conn, 
         '--persistentID', persistent_id,
@@ -199,6 +193,11 @@ class FileOnDisk:
                 result["blob_file_path"] = self.path
                 result["blob_file_size"] = self.size
 
+                # Uploader converts segy-files to OpenVDS:
+                if self.metadata["data"]["format"] == "segy":
+                    self.metadata["data"]["format"] = "openvds"
+                    self.metadata["file"]["checksum_md5"] = ""
+
                 response = self._upload_metadata(
                     sumo_connection=sumo_connection, sumo_parent_id=sumo_parent_id
                 )
@@ -249,14 +248,17 @@ class FileOnDisk:
         for i in backoff:
             logger.debug("backoff in inner loop is %s", str(i))
             try:
-                if self.metadata["data"]["format"] == "segy":
-                    # Use 'openvds' over 'segy'? Update metadata accordingly before upload?
+                if self.metadata["data"]["format"] in ["openvds", "segy"]:
                     if sys.platform.startswith('darwin'):  
                         # OpenVDS does not support Apple/Mac aka darwin, but do support linux and win
                         upload_response["status_code"] = 418  # Which http error code to return? 
                         upload_response["text"] = "Can not perform SEGY upload since OpenVDS does not support Apple/Mac" 
                     else:
-                        cmd_str = _get_segyimport_cmdstr(blob_url, self.sumo_object_id, self.path)
+                        if self.metadata["data"]["vertical_domain"] == 'depth':
+                            sample_unit = 'm'   
+                        else:
+                            sample_unit = 'ms'  # aka time domain
+                        cmd_str = _get_segyimport_cmdstr(blob_url, self.sumo_object_id, self.path, sample_unit)
                         cmd_result = subprocess.run(cmd_str, 
                                 capture_output=True, text=True, shell=True)
                         if cmd_result.returncode == 0:
