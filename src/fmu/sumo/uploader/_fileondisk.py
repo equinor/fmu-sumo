@@ -74,8 +74,6 @@ def _get_segyimport_cmdstr(blob_url, object_id, file_path, sample_unit):
     persistent_id = '"' + object_id + '"'
 
     pythonPath = os.path.dirname(sys.executable)
-
-    # Will this work for all python installations on all platforms?
     path_to_SEGYImport = os.path.join(pythonPath, '..', 'bin', 'SEGYImport') 
 
     cmdstr = ' '.join([path_to_SEGYImport, 
@@ -116,9 +114,8 @@ class FileOnDisk:
 
         self.metadata["_sumo"] = {}
 
-        if self.metadata["data"]["format"] == "segy":  # Use 'openvds' later??
+        if self.metadata["data"]["format"] in ["openvds", "segy"]:
             self.metadata["_sumo"]["blob_size"] = 0
-            # TODO How to handle absolute|relative_path and checksum_md5
             self.byte_string = None
         else:
             self.byte_string = file_to_byte_string(path)
@@ -194,7 +191,7 @@ class FileOnDisk:
                 result["blob_file_size"] = self.size
 
                 # Uploader converts segy-files to OpenVDS:
-                if self.metadata["data"]["format"] == "segy":
+                if self.metadata["data"]["format"] in ["openvds", "segy"]:
                     self.metadata["data"]["format"] = "openvds"
                     self.metadata["file"]["checksum_md5"] = ""
 
@@ -250,9 +247,10 @@ class FileOnDisk:
             try:
                 if self.metadata["data"]["format"] in ["openvds", "segy"]:
                     if sys.platform.startswith('darwin'):  
-                        # OpenVDS does not support Apple/Mac aka darwin, but do support linux and win
-                        upload_response["status_code"] = 418  # Which http error code to return? 
-                        upload_response["text"] = "Can not perform SEGY upload since OpenVDS does not support Apple/Mac" 
+                        # OpenVDS does not support Mac/darwin directly
+                        # Outer code expects and interprets http error codes
+                        upload_response["status_code"] = 418  
+                        upload_response["text"] = "Can not perform SEGY upload since OpenVDS does not support Mac" 
                     else:
                         if self.metadata["data"]["vertical_domain"] == 'depth':
                             sample_unit = 'm'   
@@ -265,7 +263,8 @@ class FileOnDisk:
                             upload_response["status_code"] = 200
                             upload_response["text"] = "SEGY uploaded as OpenVDS."
                         else:
-                            upload_response["status_code"] = 418  # Which http error code to return? 
+                            # Outer code expects and interprets http error codes
+                            upload_response["status_code"] = 418  
                             upload_response["text"] = "FAILED SEGY upload as OpenVDS. " + cmd_result.stderr
                 else:                
                     response = self._upload_byte_string(

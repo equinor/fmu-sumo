@@ -237,7 +237,7 @@ def test_seismic_openvds_file(token):
         "/search", query=query, size=100, **{"from": 0}
     )
     total = search_results.get("hits").get("total").get("value")
-    assert total >= 1
+    assert total == 1
 
     assert search_results.get("hits").get("hits")[0].get("_source").get("data").get("format") == "openvds"
     assert search_results.get("hits").get("hits")[0].get("_source").get("file").get("checksum_md5") == ""
