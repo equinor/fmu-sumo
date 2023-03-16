@@ -13,7 +13,6 @@ fmu:
     description:
       - yet other detailed description
       - optional
-    restart_from: 00000000-0000-0000-0000-000000000000   # fmu.iteration.uuid for another iteration/case
   model:
     name: ff
     revision: 21.0.0.dev

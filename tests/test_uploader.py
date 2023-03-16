@@ -207,14 +207,14 @@ def test_wrong_metadata(token):
 
 @pytest.mark.skipif(sys.platform.startswith('darwin'), reason="do not run OpenVDS SEGYImport on mac os")
 def test_openvds_available(token):
-    pythonPath = os.path.dirname(sys.executable)
-    logger.info(pythonPath)
-    pathToSEGYImport = os.path.join(pythonPath, '..', 'bin', 'SEGYImport')
-    logger.info(pathToSEGYImport)
-    checkSEGYImportVersion = subprocess.run([pathToSEGYImport, '--version'], 
+    python_path = os.path.dirname(sys.executable)
+    logger.info(python_path)
+    path_to_SEGYImport = os.path.join(python_path, '..', 'bin', 'SEGYImport')
+    logger.info(path_to_SEGYImport)
+    check_SEGYImport_version = subprocess.run([path_to_SEGYImport, '--version'], 
                                             capture_output=True, text=True)
-    assert checkSEGYImportVersion.returncode == 0
-    assert "SEGYImport" in checkSEGYImportVersion.stdout
+    assert check_SEGYImport_version.returncode == 0
+    assert "SEGYImport" in check_SEGYImport_version.stdout
 
 
 @pytest.mark.skipif(sys.platform.startswith('darwin'), reason="do not run OpenVDS SEGYImport on mac os")
