@@ -45,7 +45,6 @@ class TableCollection(ChildCollection):
         stage: Union[str, List[str], bool] = None,
         column: Union[str, List[str], bool] = None,
         uuid: Union[str, List[str], bool] = None,
-        size=500,
     ) -> "TableCollection":
         """Filter tables
 
@@ -72,6 +71,4 @@ class TableCollection(ChildCollection):
             column=column,
             uuid=uuid,
         )
-        return TableCollection(
-            self._sumo, self._case_uuid, query, self._pit, size=size
-        )
+        return TableCollection(self._sumo, self._case_uuid, query, self._pit)

@@ -4,6 +4,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import pyarrow.feather as pf
 from sumo.wrapper import SumoClient
+from fmu.sumo.explorer.objects._document_collection import DocumentCollection
 from fmu.sumo.explorer.objects._child import Child
 
 
@@ -109,20 +110,49 @@ class AggregatedTable:
             dict: parameters connected to iteration
         """
         if len(self._parameters) == 0:
-            self._parameters = self._case.tables.filter(
-                self._name,
-                self._tag,
-                self._iteration,
-                aggregation=self._aggregation,
-                column=self.columns[0],
+            query = {
+                "bool": {
+                    "must": [
+                        {"term": {"class.keyword": "table"}},
+                        {
+                            "term": {
+                                "_sumo.parent_object.keyword": self._case.uuid
+                            }
+                        },
+                        {"term": {"data.name.keyword": self._name}},
+                        {"term": {"data.tagname.keyword": self._tag}},
+                        {
+                            "term": {
+                                "fmu.iteration.name.keyword": self._iteration
+                            }
+                        },
+                        {
+                            "term": {
+                                "fmu.aggregation.operation.keyword": "collection"
+                            }
+                        },
+                        {
+                            "term": {
+                                "data.spec.columns.keyword": self.columns[0]
+                            }
+                        },
+                    ]
+                }
+            }
+            doc = DocumentCollection(
+                "table",
+                self._case._sumo,
+                query,
+                select="fmu.iteration.parameters",
                 size=1,
-            )[0]["fmu"]["iteration"]["parameters"]
+            )[0]
+            self._parameters = doc["_source"]["fmu"]["iteration"]["parameters"]
         return self._parameters
 
     def __len__(self):
         return len(self._collection)
 
-    def __getitem__(self, col_name) -> pd.DataFrame:
+    def __getitem__(self, col_name) -> Table:
         item = None
         try:
             item = self._collection.filter(column=col_name)[0]
