@@ -1,3 +1,4 @@
+"""Module containing utility class"""
 from typing import List, Dict
 import json
 from sumo.wrapper import SumoClient
@@ -97,7 +98,7 @@ class Utils:
         Returns:
             Dict: Extended query object
         """
-
+        return_value = old
         if new is not None:
             stringified = json.dumps(old)
             extended = json.loads(stringified)
@@ -116,9 +117,8 @@ class Utils:
                         extended[key] = new[key]
                 else:
                     extended[key] = new[key]
-            return extended
-        else:
-            return old
+            return_value = extended
+        return return_value
 
     def build_terms(self, keys_vals: Dict) -> List[Dict]:
         """Build a list of term objects

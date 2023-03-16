@@ -1,3 +1,4 @@
+"""Module with classes handling time filtering"""
 from enum import Enum
 
 
@@ -21,7 +22,7 @@ class TimeFilter:
 
     def __init__(
         self,
-        type: TimeType,
+        time_type: TimeType,
         start: str = None,
         end: str = None,
         overlap: bool = False,
@@ -30,7 +31,7 @@ class TimeFilter:
         """Initialize TimeFilter
 
         Args:
-            type (TimeType): time type (TIMESTAMP, INTERVAL, ALL, NONE)
+            time_type (TimeType): time type (TIMESTAMP, INTERVAL, ALL, NONE)
             start (str): start of range
             end (str): end of range
             overlap (bool): include overlapping intervals
@@ -40,14 +41,14 @@ class TimeFilter:
 
             Get surfaces with timestamps::
 
-                time = TimeFilter(type=TimeType.TIMESTAMP)
+                time = TimeFilter(time_type=TimeType.TIMESTAMP)
 
                 case.surfaces.filter(time=time)
 
             Get surfaces whith timestamp in range::
 
                 time = TimeFilter(
-                    type=TimeType.TIMESTAMP,
+                    time_type=TimeType.TIMESTAMP,
                     start="2018-01-01",
                     end="2022-01-01"
                 )
@@ -56,14 +57,14 @@ class TimeFilter:
 
             Get surfaces with intervals::
 
-                time = TimeFilter(type=TimeType.INTERVAL)
+                time = TimeFilter(time_type=TimeType.INTERVAL)
 
                 case.surfaces.filter(time=time)
 
             Get surfaces with intervals in range::
 
                 time = TimeFilter(
-                    type=TimeType.INTERVAL,
+                    time_type=TimeType.INTERVAL,
                     start="2018-01-01",
                     end="2022-01-01"
                 )
@@ -73,7 +74,7 @@ class TimeFilter:
             Get surfaces where intervals overlap::
 
                 time = TimeFIlter(
-                    type=TimeType.INTERVAL,
+                    time_type=TimeType.INTERVAL,
                     start="2018-01-01",
                     end="2022-01-01",
                     overlap=True
@@ -84,7 +85,7 @@ class TimeFilter:
             Get surfaces with exact interval match::
 
                 time = TimeFilter(
-                    type=TimeType.INTERVAL,
+                    time_type=TimeType.INTERVAL,
                     start="2018-01-01",
                     end="2022-01-01",
                     exact=True
@@ -92,7 +93,7 @@ class TimeFilter:
 
                 case.surfaces.filter(time=time)
         """
-        self.type = type
+        self.time_type = time_type
         self.start = start
         self.end = end
         self.overlap = overlap
@@ -102,15 +103,15 @@ class TimeFilter:
         if not start and not end:
             return None
 
-        filter = {"range": {key: {}}}
+        range_filter = {"range": {key: {}}}
 
         if start:
-            filter["range"][key]["gte"] = start
+            range_filter["range"][key]["gte"] = start
 
         if end:
-            filter["range"][key]["lte"] = end
+            range_filter["range"][key]["lte"] = end
 
-        return filter
+        return range_filter
 
     def _get_query(self):
         must = []
@@ -124,7 +125,7 @@ class TimeFilter:
             "data.time.t1.value", self.start, self.end
         )
 
-        if self.type == TimeType.TIMESTAMP:
+        if self.time_type == TimeType.TIMESTAMP:
             must.append({"exists": {"field": "data.time.t0"}})
             must_not.append({"exists": {"field": "data.time.t1"}})
 
@@ -133,7 +134,7 @@ class TimeFilter:
                     must.append({"term": {"data.time.t0.value": self.start}})
                 else:
                     must.append(t0_filter)
-        elif self.type == TimeType.INTERVAL:
+        elif self.time_type == TimeType.INTERVAL:
             must.append({"exists": {"field": "data.time.t0"}})
             must.append({"exists": {"field": "data.time.t1"}})
 
@@ -149,7 +150,7 @@ class TimeFilter:
                     else:
                         must.append(t0_filter)
                         must.append(t1_filter)
-        elif self.type == TimeType.ALL:
+        elif self.time_type == TimeType.ALL:
             must.append({"exists": {"field": "data.time"}})
 
             if t0_filter and t1_filter:
@@ -180,10 +181,10 @@ class TimeFilter:
                         should.append(
                             {"bool": {"must": [t0_filter, t1_filter]}}
                         )
-        elif self.type == TimeType.NONE:
+        elif self.time_type == TimeType.NONE:
             must_not.append({"exists": {"field": "data.time"}})
         else:
-            raise Exception(f"Invalid TimeType: {self.type}")
+            raise TypeError(f"Invalid TimeType: {self.time_type}")
 
         query = {"bool": {}}
 

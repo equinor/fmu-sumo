@@ -4,19 +4,13 @@ import json
 from pathlib import Path
 from uuid import UUID
 import pytest
+from xtgeo import RegularSurface
 from context import (
     Explorer,
     Utils,
-    Document,
-    DocumentCollection,
     Case,
     CaseCollection,
-    Surface,
     SurfaceCollection,
-    Polygons,
-    PolygonsCollection,
-    Table,
-    TableCollection,
 )
 
 from sumo.wrapper import SumoClient
@@ -190,7 +184,7 @@ def test_get_cases_combinations(explorer: Explorer):
 
 def test_case_surfaces_type(test_case: Case):
     """Test that Case.surfaces property is of rype SurfaceCollection"""
-    assert type(test_case.surfaces) == SurfaceCollection
+    assert isinstance(test_case.surfaces, SurfaceCollection)
 
 
 def test_case_surfaces_size(test_case: Case):
@@ -246,6 +240,7 @@ def test_case_surfaces_filter(test_case: Case):
     assert real_surfs[0].name == "Valysar Fm."
     assert real_surfs[0].tagname == "FACIES_Fraction_Channel"
     assert real_surfs[0].realization == 0
+    assert isinstance(real_surfs[0].to_regular_surface(), RegularSurface)
 
 
 def test_case_surfaces_pagination(test_case: Case):
@@ -253,7 +248,7 @@ def test_case_surfaces_pagination(test_case: Case):
     surfs = test_case.surfaces
     count = 0
 
-    for surf in surfs:
+    for _ in surfs:
         count += 1
 
     assert count == len(surfs)
@@ -263,12 +258,13 @@ def test_get_case_by_uuid(explorer: Explorer, case_uuid: str, case_name: str):
     """Test that explorer.get_case_by_uuid returns the specified case"""
     case = explorer.get_case_by_uuid(case_uuid)
 
-    assert type(case) == Case
+    assert isinstance(case, Case)
     assert case.uuid == case_uuid
     assert case.name == case_name
 
 
 def test_utils_extend_query_object(utils: Utils):
+    """Test extension of query"""
     old = {"bool": {"must": [{"term": {"class.keyword": "surface"}}]}}
     new = {
         "bool": {"must": [{"term": {"fmu.aggregation.operation": "mean"}}]},
@@ -277,7 +273,7 @@ def test_utils_extend_query_object(utils: Utils):
     extended = utils.extend_query_object(old, new)
 
     assert len(extended["bool"]["must"]) == 2
-    assert type(extended["terms"]) == dict
+    assert isinstance(extended["terms"], dict)
 
     new = {
         "bool": {

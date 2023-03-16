@@ -1,20 +1,11 @@
 """Module containg class for surface"""
 from typing import Dict
-from sumo.wrapper import SumoClient
 from xtgeo import RegularSurface, surface_from_file
 from fmu.sumo.explorer.objects._child import Child
 
 
 class Surface(Child):
     """Class representing a surface object in Sumo"""
-
-    def __init__(self, sumo: SumoClient, metadata: Dict) -> None:
-        """
-        Args:
-            sumo (SumoClient): connection to Sumo
-            metadata (dict): surface metadata
-        """
-        Child.__init__(self, sumo, metadata)
 
     @property
     def bbox(self) -> Dict:

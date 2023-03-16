@@ -1,3 +1,4 @@
+"""Module containing class for exploring results from sumo"""
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.pit import Pit
 from fmu.sumo.explorer.objects.case_collection import (
@@ -82,9 +83,7 @@ class Explorer:
 
         if asset is not None:
             if asset not in res:
-                raise Exception(f"No permissions for asset: {asset}")
-            else:
-                return res[asset]
+                raise PermissionError(f"No permissions for asset: {asset}")
 
         return res
 
