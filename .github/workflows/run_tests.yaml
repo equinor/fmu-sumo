@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.8.14]
-        os: [ubuntu-latest]
+        os: [macOS-latest]
     permissions:
       contents: read
       id-token: write
