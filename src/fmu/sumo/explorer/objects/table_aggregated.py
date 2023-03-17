@@ -87,5 +87,5 @@ class AggregatedTable:
             return self._collection.filter(column=column)[0]
         except IndexError as i_ex:
             raise IndexError(
-                f"Column: '{column}' does not exist try again"
+                f"Column: '{column}' does not exist, try again"
             ) from i_ex
