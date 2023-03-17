@@ -64,6 +64,8 @@ class Explorer:
         self._pit = Pit(self._sumo, keep_alive) if keep_alive else None
         self._utils = Utils(self._sumo)
 
+        print("testing!")
+
     @property
     def cases(self):
         """Cases in Sumo"""
