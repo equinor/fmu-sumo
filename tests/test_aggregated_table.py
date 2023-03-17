@@ -1,8 +1,7 @@
 """Testing of Aggregated table class"""
 import pandas as pd
 import pyarrow as pa
-from fmu.sumo.explorer import Explorer
-from fmu.sumo.explorer.objects.table import AggregatedTable
+from fmu.sumo.explorer import Explorer, AggregatedTable
 import pytest
 
 

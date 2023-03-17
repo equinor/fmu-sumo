@@ -17,7 +17,6 @@ _CHILD_FIELDS = [
     "fmu.case.user.id",
     "fmu.realization.id",
     "fmu.iteration.name",
-    "fmu.iteration.parameters",
     "fmu.context.stage",
     "fmu.aggregation.operation",
     "_sumo.status",
@@ -36,10 +35,9 @@ class ChildCollection(DocumentCollection):
         case_uuid: str,
         query: Dict = None,
         pit: Pit = None,
-        size=500,
     ):
         self._case_uuid = case_uuid
-        super().__init__(doc_type, sumo, query, _CHILD_FIELDS, pit, size=size)
+        super().__init__(doc_type, sumo, query, _CHILD_FIELDS, pit)
 
     @property
     def names(self) -> List[str]:

@@ -15,7 +15,6 @@ class DocumentCollection:
         query: Dict = None,
         select: List[str] = None,
         pit: Pit = None,
-        size=500,
     ):
         self._utils = Utils(sumo)
         self._type = doc_type
@@ -30,7 +29,6 @@ class DocumentCollection:
         self._field_values = {}
         self._query = self._init_query(doc_type, query)
         self._select = select
-        self._size = size
 
     def __len__(self) -> int:
         """Get size of document collection
@@ -96,7 +94,7 @@ class DocumentCollection:
         query = {
             "query": self._query,
             "sort": [{"_doc": {"order": "desc"}}],
-            "size": self._size,
+            "size": 500,
         }
 
         if self._select:

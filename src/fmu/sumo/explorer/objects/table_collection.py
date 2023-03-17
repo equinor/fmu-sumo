@@ -15,7 +15,6 @@ class TableCollection(ChildCollection):
         case_uuid: str,
         query: Dict = None,
         pit: Pit = None,
-        size=500,
     ):
         """
         Args:
@@ -24,7 +23,7 @@ class TableCollection(ChildCollection):
             query (dict): elastic query object
             pit (Pit): point in time
         """
-        super().__init__("table", sumo, case_uuid, query, pit, size)
+        super().__init__("table", sumo, case_uuid, query, pit)
 
     def __getitem__(self, index) -> Table:
         doc = super().__getitem__(index)
