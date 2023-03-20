@@ -139,149 +139,149 @@ def test_get_cases(explorer: Explorer):
     assert isinstance(cases[0], Case)
 
 
-# def test_get_cases_fields(explorer: Explorer):
-#     """Test CaseCollection.filter method with the field argument.
+def test_get_cases_fields(explorer: Explorer):
+    """Test CaseCollection.filter method with the field argument.
 
-#     Shall be case insensitive.
-#     """
+    Shall be case insensitive.
+    """
 
-#     cases = explorer.cases.filter(field="DROGON")
-#     for case in cases:
-#         assert case.field.lower() == "drogon"
-
-
-# def test_get_cases_status(explorer: Explorer):
-#     """Test the CaseCollection.filter method with the status argument."""
-
-#     cases = explorer.cases.filter(status="keep")
-#     for case in cases:
-#         assert case.status == "keep"
+    cases = explorer.cases.filter(field="DROGON")
+    for case in cases:
+        assert case.field.lower() == "drogon"
 
 
-# def test_get_cases_user(explorer: Explorer):
-#     """Test the CaseCollection.filter method with the user argument."""
+def test_get_cases_status(explorer: Explorer):
+    """Test the CaseCollection.filter method with the status argument."""
 
-#     cases = explorer.cases.filter(user="peesv")
-#     for case in cases:
-#         assert case.user == "peesv"
-
-
-# def test_get_cases_combinations(explorer: Explorer):
-#     """Test the CaseCollection.filter method with combined arguments."""
-
-#     cases = explorer.cases.filter(
-#         field=["DROGON", "JOHAN SVERDRUP"],
-#         user=["peesv", "dbs"],
-#         status=["keep"],
-#     )
-#     for case in cases:
-#         assert (
-#             case.user in ["peesv", "dbs"]
-#             and case.field in ["DROGON", "JOHAN SVERDRUP"]
-#             and case.status == "keep"
-#         )
+    cases = explorer.cases.filter(status="keep")
+    for case in cases:
+        assert case.status == "keep"
 
 
-# def test_case_surfaces_type(test_case: Case):
-#     """Test that Case.surfaces property is of rype SurfaceCollection"""
-#     assert isinstance(test_case.surfaces, SurfaceCollection)
+def test_get_cases_user(explorer: Explorer):
+    """Test the CaseCollection.filter method with the user argument."""
+
+    cases = explorer.cases.filter(user="peesv")
+    for case in cases:
+        assert case.user == "peesv"
 
 
-# def test_case_surfaces_size(test_case: Case):
-#     """Test that Case.surfaces has the correct size"""
-#     assert len(test_case.surfaces) == 219
+def test_get_cases_combinations(explorer: Explorer):
+    """Test the CaseCollection.filter method with combined arguments."""
+
+    cases = explorer.cases.filter(
+        field=["DROGON", "JOHAN SVERDRUP"],
+        user=["peesv", "dbs"],
+        status=["keep"],
+    )
+    for case in cases:
+        assert (
+            case.user in ["peesv", "dbs"]
+            and case.field in ["DROGON", "JOHAN SVERDRUP"]
+            and case.status == "keep"
+        )
 
 
-# def test_case_surfaces_filter(test_case: Case):
-#     """Test that Case.surfaces has the correct size"""
-#     # filter on iteration stage
-#     agg_surfs = test_case.surfaces.filter(stage="iteration")
-#     assert len(agg_surfs) == 7
-
-#     agg_surfs = test_case.surfaces.filter(aggregation=True)
-#     assert len(agg_surfs)
-
-#     # filter on realization stage
-#     real_surfs = test_case.surfaces.filter(stage="realization")
-#     assert len(real_surfs) == 212
-
-#     real_surfs = test_case.surfaces.filter(realization=True)
-#     assert len(real_surfs) == 212
-
-#     # filter on iteration
-#     real_surfs = real_surfs.filter(iteration="iter-0")
-#     assert len(real_surfs) == 212
-
-#     for surf in real_surfs:
-#         assert surf.iteration == "iter-0"
-
-#     # filter on name
-#     real_surfs = real_surfs.filter(name="Valysar Fm.")
-#     assert len(real_surfs) == 56
-
-#     for surf in real_surfs:
-#         assert surf.iteration == "iter-0"
-#         assert surf.name == "Valysar Fm."
-
-#     # filter on tagname
-#     real_surfs = real_surfs.filter(tagname="FACIES_Fraction_Channel")
-#     assert len(real_surfs) == 4
-
-#     for surf in real_surfs:
-#         assert surf.iteration == "iter-0"
-#         assert surf.name == "Valysar Fm."
-#         assert surf.tagname == "FACIES_Fraction_Channel"
-
-#     # filter on realization
-#     real_surfs = real_surfs.filter(realization=0)
-#     assert len(real_surfs) == 1
-
-#     assert real_surfs[0].iteration == "iter-0"
-#     assert real_surfs[0].name == "Valysar Fm."
-#     assert real_surfs[0].tagname == "FACIES_Fraction_Channel"
-#     assert real_surfs[0].realization == 0
-#     assert isinstance(real_surfs[0].to_regular_surface(), RegularSurface)
+def test_case_surfaces_type(test_case: Case):
+    """Test that Case.surfaces property is of rype SurfaceCollection"""
+    assert isinstance(test_case.surfaces, SurfaceCollection)
 
 
-# def test_case_surfaces_pagination(test_case: Case):
-#     """Test the pagination logic of SurfaceCollection (DocumentCollection)"""
-#     surfs = test_case.surfaces
-#     count = 0
-
-#     for _ in surfs:
-#         count += 1
-
-#     assert count == len(surfs)
+def test_case_surfaces_size(test_case: Case):
+    """Test that Case.surfaces has the correct size"""
+    assert len(test_case.surfaces) == 219
 
 
-# def test_get_case_by_uuid(explorer: Explorer, case_uuid: str, case_name: str):
-#     """Test that explorer.get_case_by_uuid returns the specified case"""
-#     case = explorer.get_case_by_uuid(case_uuid)
+def test_case_surfaces_filter(test_case: Case):
+    """Test that Case.surfaces has the correct size"""
+    # filter on iteration stage
+    agg_surfs = test_case.surfaces.filter(stage="iteration")
+    assert len(agg_surfs) == 7
 
-#     assert isinstance(case, Case)
-#     assert case.uuid == case_uuid
-#     assert case.name == case_name
+    agg_surfs = test_case.surfaces.filter(aggregation=True)
+    assert len(agg_surfs)
+
+    # filter on realization stage
+    real_surfs = test_case.surfaces.filter(stage="realization")
+    assert len(real_surfs) == 212
+
+    real_surfs = test_case.surfaces.filter(realization=True)
+    assert len(real_surfs) == 212
+
+    # filter on iteration
+    real_surfs = real_surfs.filter(iteration="iter-0")
+    assert len(real_surfs) == 212
+
+    for surf in real_surfs:
+        assert surf.iteration == "iter-0"
+
+    # filter on name
+    real_surfs = real_surfs.filter(name="Valysar Fm.")
+    assert len(real_surfs) == 56
+
+    for surf in real_surfs:
+        assert surf.iteration == "iter-0"
+        assert surf.name == "Valysar Fm."
+
+    # filter on tagname
+    real_surfs = real_surfs.filter(tagname="FACIES_Fraction_Channel")
+    assert len(real_surfs) == 4
+
+    for surf in real_surfs:
+        assert surf.iteration == "iter-0"
+        assert surf.name == "Valysar Fm."
+        assert surf.tagname == "FACIES_Fraction_Channel"
+
+    # filter on realization
+    real_surfs = real_surfs.filter(realization=0)
+    assert len(real_surfs) == 1
+
+    assert real_surfs[0].iteration == "iter-0"
+    assert real_surfs[0].name == "Valysar Fm."
+    assert real_surfs[0].tagname == "FACIES_Fraction_Channel"
+    assert real_surfs[0].realization == 0
+    assert isinstance(real_surfs[0].to_regular_surface(), RegularSurface)
 
 
-# def test_utils_extend_query_object(utils: Utils):
-#     """Test extension of query"""
-#     old = {"bool": {"must": [{"term": {"class.keyword": "surface"}}]}}
-#     new = {
-#         "bool": {"must": [{"term": {"fmu.aggregation.operation": "mean"}}]},
-#         "terms": {"fmu.iteration.name.keyword": ["iter-0", "iter-1"]},
-#     }
-#     extended = utils.extend_query_object(old, new)
+def test_case_surfaces_pagination(test_case: Case):
+    """Test the pagination logic of SurfaceCollection (DocumentCollection)"""
+    surfs = test_case.surfaces
+    count = 0
 
-#     assert len(extended["bool"]["must"]) == 2
-#     assert isinstance(extended["terms"], dict)
+    for _ in surfs:
+        count += 1
 
-#     new = {
-#         "bool": {
-#             "must_not": [{"term": {"key": "value"}}],
-#             "must": [{"term": {"key": "value"}}],
-#         }
-#     }
+    assert count == len(surfs)
 
-#     extended = utils.extend_query_object(extended, new)
 
-#     assert len(extended["bool"]["must"]) == 3
+def test_get_case_by_uuid(explorer: Explorer, case_uuid: str, case_name: str):
+    """Test that explorer.get_case_by_uuid returns the specified case"""
+    case = explorer.get_case_by_uuid(case_uuid)
+
+    assert isinstance(case, Case)
+    assert case.uuid == case_uuid
+    assert case.name == case_name
+
+
+def test_utils_extend_query_object(utils: Utils):
+    """Test extension of query"""
+    old = {"bool": {"must": [{"term": {"class.keyword": "surface"}}]}}
+    new = {
+        "bool": {"must": [{"term": {"fmu.aggregation.operation": "mean"}}]},
+        "terms": {"fmu.iteration.name.keyword": ["iter-0", "iter-1"]},
+    }
+    extended = utils.extend_query_object(old, new)
+
+    assert len(extended["bool"]["must"]) == 2
+    assert isinstance(extended["terms"], dict)
+
+    new = {
+        "bool": {
+            "must_not": [{"term": {"key": "value"}}],
+            "must": [{"term": {"key": "value"}}],
+        }
+    }
+
+    extended = utils.extend_query_object(extended, new)
+
+    assert len(extended["bool"]["must"]) == 3
