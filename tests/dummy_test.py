@@ -6,7 +6,7 @@ def test_uppercase():
 def test_sumo_perms():
     sumo = Explorer("dev", interactive=False)
     print("Before perms")
-    perms = sumo.get_permissions
+    perms = sumo.get_permissions()
     print("After perms")
     print(perms)
 
