@@ -5,7 +5,7 @@ def test_uppercase():
 
 
 def test_sumo():
-    sumo = Explorer("dev")
+    sumo = Explorer("dev", interactive=False)
     cases = sumo.cases.filter(asset="Drogon")
     assert cases.names > 0
 
