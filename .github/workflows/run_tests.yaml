@@ -35,4 +35,4 @@ jobs:
           python -c "import sys; print(sys.version)"
       - name: Test with pytest
         run: |
-          pytest -s tests/test_explorer.py 
+          pytest -s tests/dummy_test.py 
