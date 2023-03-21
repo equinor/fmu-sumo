@@ -86,9 +86,8 @@ class SurfaceCollection(ChildCollection):
             objects = self._utils.get_objects(500, self._query, ["_id"])
             object_ids = list(map(lambda obj: obj["_id"], objects))
 
-            res = self._sumo.post(
-                "/aggregate",
-                json={"operation": [operation], "object_ids": object_ids},
+            res = self._sumo.get_aggregate(
+                json={"operation": [operation], "object_ids": object_ids}
             )
 
             self._aggregation_cache[operation] = xtgeo.surface_from_file(
