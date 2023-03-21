@@ -24,6 +24,15 @@ jobs:
           pip install pytest
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           pip install . 
+      - name: Check some stuff
+        run: |
+          pip check
+          pip show fmu-sumo
+          pip show openvds
+          python --version
+          pip --version
+          pytest --version
+          python -c "import sys; print(sys.version)"
       - name: Test with pytest
         run: |
-          pytest
+          pytest -s
