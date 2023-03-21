@@ -44,6 +44,7 @@ jobs:
           pytest --version
           python -c "import sys; print(sys.version)"
           python -c "from fmu.sumo.explorer import Explorer; sumo = Explorer('dev', interactive=False)"
+          python -c "from fmu.sumo.explorer import Explorer; sumo = Explorer('dev', interactive=False); cases=sumo.cases.filter(asset='Drogon'); print(len(cases))"
       - name: Test with pytest
         run: |
           access_token=$(az account get-access-token --scope api://88d2b022-3539-4dda-9e66-853801334a86/.default --query accessToken --output tsv)

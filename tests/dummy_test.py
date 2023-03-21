@@ -9,4 +9,3 @@ def test_sumo():
     cases = sumo.cases.filter(asset="Drogon")
     assert cases.names > 0
 
-
