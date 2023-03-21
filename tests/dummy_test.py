@@ -10,5 +10,5 @@ def test_sumo_perms():
     # print("After perms")
     # print(perms)
 
-def test_sumo_fail():
-    raise Exception("dummyexc")
+# def test_sumo_fail():
+#     raise Exception("dummyexc")
