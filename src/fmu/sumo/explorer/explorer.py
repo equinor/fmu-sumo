@@ -83,8 +83,10 @@ class Explorer:
 
         if asset is not None:
             if asset not in res:
-                raise PermissionError(f"No permissions for asset: {asset}")
-
+                raise Exception(f"No permissions for asset: {asset}")
+            else:
+                return res[asset]
+            
         return res
 
     def get_case_by_uuid(self, uuid: str) -> Case:
