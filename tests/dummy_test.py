@@ -4,8 +4,9 @@ def test_uppercase():
     assert "loud noises".upper() == "LOUD NOISES"
 
 
-def test_sumo
+def test_sumo():
     sumo = Explorer("dev")
     cases = sumo.cases.filter(asset="Drogon")
+    assert cases.names > 0
 
 
