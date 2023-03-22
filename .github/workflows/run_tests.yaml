@@ -41,6 +41,4 @@ jobs:
           export ACCESS_TOKEN=$access_token
 
           pip install -r requirements/requirements_test.txt
-          pytest -s --timeout=120 --verbosity=10 tests/test_explorer.py
-          pytest -s --timeout=120 --verbosity=10 tests/test_uploader.py
-          pytest -s --timeout=120 --verbosity=10 tests/test_aggregated_table.py
+          pytest -s --timeout=120 
