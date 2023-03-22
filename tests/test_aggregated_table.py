@@ -5,16 +5,24 @@ from fmu.sumo.explorer import Explorer, AggregatedTable
 import pytest
 
 
-@pytest.fixture(name="case")
-def case_fixture():
-    """Init of case"""
-    exp = Explorer("dev")
-    case = exp.cases.filter(name="drogon_ahm-2023-02-22")[0]
-    return case
+@pytest.fixture(name="explorer")
+def fixture_explorer(token: str) -> Explorer:
+    """Returns explorer"""
+    return Explorer("dev", token=token)
 
 
-def test_aggregated_summary_arrow(case):
+# @pytest.fixture(name="case")
+# def case_fixture():
+#     """Init of case"""
+#     exp = Explorer("dev")
+#     case = exp.cases.filter(name="drogon_ahm-2023-02-22")[0]
+#     return case
+
+
+def test_aggregated_summary_arrow(explorer: Explorer):
     """Test usage of Aggregated class with default type"""
+
+    case = explorer.cases.filter(name="drogon_ahm-2023-02-22")[0]
 
     table = AggregatedTable(case, "summary", "eclipse", "iter-0")
 
@@ -29,13 +37,15 @@ def test_aggregated_summary_arrow(case):
         )
 
 
-def test_aggregated_summary_pandas(case):
+def test_aggregated_summary_pandas(explorer: Explorer):
     """Test usage of Aggregated class with item_type=pandas"""
+    case = explorer.cases.filter(name="drogon_ahm-2023-02-22")[0]
     table = AggregatedTable(case, "summary", "eclipse", "iter-0")
     assert isinstance(table["FOPT"].dataframe, pd.DataFrame)
 
 
-def test_get_fmu_iteration_parameters(case):
+def test_get_fmu_iteration_parameters(explorer: Explorer):
     """Test getting the metadata of of an object"""
+    case = explorer.cases.filter(name="drogon_ahm-2023-02-22")[0]
     table = AggregatedTable(case, "summary", "eclipse", "iter-0")
     assert isinstance(table.parameters, dict)
