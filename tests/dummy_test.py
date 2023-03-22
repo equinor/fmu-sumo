@@ -6,6 +6,7 @@ def test_uppercase():
 
 def test_env():
     token = os.getenv('ACCESS_TOKEN')
+    print(token)
     assert len(token) > 20
 
 def test_sumo_perms():
