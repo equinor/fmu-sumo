@@ -10,7 +10,7 @@ def test_env():
     assert len(token) > 20
 
 def test_sumo_perms():
-    sumo = Explorer("dev", interactive=False)
+    sumo = Explorer("dev", token=os.getenv('ACCESS_TOKEN'), interactive=False)
     print("Before perms")
     perms = sumo.get_permissions()
     print("After perms")
