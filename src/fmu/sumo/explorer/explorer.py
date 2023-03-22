@@ -61,6 +61,9 @@ class Explorer:
             interactive (bool): authenticate using interactive flow (browser)
             keep_alive (str): point in time lifespan
         """
+        print("rowh")
+        print(len(token))
+        print("rowh")
         self._sumo = SumoClient(env, token=token, interactive=interactive)
         self._pit = Pit(self._sumo, keep_alive) if keep_alive else None
         self._utils = Utils(self._sumo)
