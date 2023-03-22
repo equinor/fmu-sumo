@@ -11,3 +11,8 @@ requires = [
 
 [tool.black]
 line-length = 79
+
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "DEBUG"
+log_cli_format = "%(message)s"
