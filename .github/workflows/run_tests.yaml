@@ -42,3 +42,4 @@ jobs:
 
           pip install -r requirements/requirements_test.txt
           pytest -s --timeout=120 --verbosity=10 tests/test_explorer.py
+          pytest -s --timeout=120 --verbosity=10 tests/test_uploader.py
