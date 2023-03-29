@@ -82,6 +82,8 @@ class SurfaceCollection(ChildCollection):
         return intervals
 
     def _aggregate(self, operation: str) -> xtgeo.RegularSurface:
+        if not self._sumo.aggregation_enabled:
+            raise Exception("Failed creating aggregation client.")
         if operation not in self._aggregation_cache:
             objects = self._utils.get_objects(500, self._query, ["_id"])
             object_ids = list(map(lambda obj: obj["_id"], objects))
