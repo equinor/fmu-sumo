@@ -1,5 +1,5 @@
 [![Documentation Status](https://readthedocs.org/projects/fmu-sumo/badge/?version=latest)](https://fmu-sumo.readthedocs.io/en/latest/?badge=latest)
-
+[![Known Vulnerabilities](https://snyk.io/test/github/equinor/fmu-sumo/badge.svg)](https://snyk.io/test/github/equinor/fmu-sumo)
 
 # fmu-sumo
 This package is intended for interaction with Sumo within the FMU (Fast Model Update(TM)) ecosystem.
