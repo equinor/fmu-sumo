@@ -130,62 +130,10 @@ class CaseOnDisk:
     def _get_sumo_parent_id(self):
         """Get the sumo parent ID.
 
-        If parent id is cached on disk, use that. Else call sumo to get it based on
-        fmu_case_uuid."""
+        Sumo parent id is now identical to fmu_case_uuid."""
 
-        # If a relatively new cached file exists we use that and avoid calling Sumo
-        cached_key = "sumo-case-id"
-        cached_file = Path(self._case_metadata_path.parent / "sumo_parent_id.yml")
-        if cached_file.exists():
-            file_age = datetime.datetime.today() - datetime.datetime.fromtimestamp(
-                cached_file.lstat().st_mtime
-            )
-            if file_age.days < 1:
-                logger.debug("cached sumo_parent_id is less than 1 days, using it.")
-                with open(str(cached_file), "r") as infile:
-                    filecontents = yaml.safe_load(infile)
-                sumo_parent_id = filecontents.get(cached_key)
-                logger.debug("Got sumo_parent_id from cache: %s", sumo_parent_id)
-                try:
-                    test_uuid = uuid.UUID(sumo_parent_id)
-                    logger.debug("Getting sumo parent id from cached file")
-                    return sumo_parent_id
-                except ValueError:
-                    pass  # Not a valid uuid, will call Sumo
-
-        # No valid cached file, need to call Sumo to get the parent id
-        query = f"class:case AND fmu.case.uuid:{self.fmu_case_uuid}"
-        search_results = self.sumo_connection.api.get(
-            "/search", query=query, size=2, **{"from": 0}
-        )
-
-        # To catch crazy rare situation when index is empty (first upload to new index)
-        if not search_results.get("hits"):
-            return None
-
-        hits = search_results.get("hits").get("hits")
-
-        if len(hits) == 0:
-            return None
-
-        if len(hits) == 1:
-            sumo_parent_id = hits[0].get("_id")
-
-            try:
-                # Cache the parent id in a file
-                my_dict = {cached_key: sumo_parent_id}
-                with open(str(cached_file), "w") as outfile:
-                    yaml.dump(my_dict, outfile)
-                logger.debug("Caching sumo parent id")
-            except:
-                # Might be concurrency issues, just skip caching to file this time
-                pass
-
-            return sumo_parent_id
-
-        raise ValueError(
-            f"More than one hit for fmu.case.uuid {self.fmu_case_uuid} found on Sumo"
-        )
+        return self._fmu_case_uuid
+    
 
     def register(self):
         """Register this case on Sumo.

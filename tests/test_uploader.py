@@ -35,13 +35,6 @@ class SumoConnection:
         return self._connection
 
 
-def _remove_cached_case_id():
-    try:
-        os.remove("tests/data/test_case_080/sumo_parent_id.yml")
-    except FileNotFoundError:
-        pass
-
-
 ### TESTS ###
 
 
@@ -64,8 +57,6 @@ def test_upload_without_registration(token):
     """Assert that attempting to upload to a non-existing case gives warning."""
     sumo_connection = uploader.SumoConnection(env=ENV, token=token)
 
-    _remove_cached_case_id()
-
     case = uploader.CaseOnDisk(
         case_metadata_path="tests/data/test_case_080/case.yml",
         sumo_connection=sumo_connection,
@@ -80,8 +71,6 @@ def test_upload_without_registration(token):
 def test_case(token):
     """Assert that after uploading case to Sumo, the case is there and the only one."""
     sumo_connection = uploader.SumoConnection(env=ENV, token=token)
-
-    _remove_cached_case_id()
 
     logger.debug("initialize CaseOnDisk")
     e = uploader.CaseOnDisk(
@@ -120,8 +109,6 @@ def test_one_file(token):
 
     sumo_connection = uploader.SumoConnection(env=ENV, token=token)
 
-    _remove_cached_case_id()
-
     e = uploader.CaseOnDisk(
         case_metadata_path="tests/data/test_case_080/case.yml",
         sumo_connection=sumo_connection,
@@ -146,8 +133,6 @@ def test_missing_metadata(token):
     and that upload commences with the other files. Check that the children are present.
     """
     sumo_connection = uploader.SumoConnection(env=ENV, token=token)
-
-    _remove_cached_case_id()
 
     e = uploader.CaseOnDisk(
         case_metadata_path="tests/data/test_case_080/case.yml",
@@ -182,8 +167,6 @@ def test_wrong_metadata(token):
     and that upload commences with the other files. Check that the children are present.
     """
     sumo_connection = uploader.SumoConnection(env=ENV, token=token)
-
-    _remove_cached_case_id()
 
     e = uploader.CaseOnDisk(
         case_metadata_path="tests/data/test_case_080/case.yml",
@@ -260,6 +243,10 @@ def test_seismic_openvds_file(token):
         os.remove(exported_filepath)
     python_path = os.path.dirname(sys.executable)
     path_to_SEGYExport = os.path.join(python_path, '..', 'bin', 'SEGYExport')
+    if sys.platform.startswith("win"):
+        path_to_SEGYExport = path_to_SEGYExport + ".exe"
+    if not os.path.isfile(path_to_SEGYExport):
+        path_to_SEGYExport = os.path.join(python_path, '..', 'shims', 'SEGYExport')
     cmdstr = ' '.join([path_to_SEGYExport, 
         '--url', url,
         '--connection', url_conn,
@@ -293,8 +280,6 @@ def test_teardown(token):
     """Teardown all testdata"""
     sumo_connection = uploader.SumoConnection(env=ENV, token=token)
 
-    _remove_cached_case_id()
-
     e = uploader.CaseOnDisk(
         case_metadata_path="tests/data/test_case_080/case.yml",
         sumo_connection=sumo_connection,
@@ -317,5 +302,3 @@ def test_teardown(token):
     )
     total = search_results["hits"]["total"]["value"]
     assert total == 0
-
-    _remove_cached_case_id()
