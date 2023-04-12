@@ -22,6 +22,7 @@ _CHILD_FIELDS = [
     "_sumo.status",
     "access.asset",
     "masterdata.smda.field",
+    "file.relative_path",
 ]
 
 

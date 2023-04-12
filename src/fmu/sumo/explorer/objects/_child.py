@@ -59,6 +59,11 @@ class Child(Document):
         return self._get_property(["data", "format"])
 
     @property
+    def relative_path(self) -> str:
+        """Object relative file path"""
+        return self._get_property(["file", "relative_path"])
+
+    @property
     def blob(self) -> BytesIO:
         """Object blob"""
         if self._blob is None:
