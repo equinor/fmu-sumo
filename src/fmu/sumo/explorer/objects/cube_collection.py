@@ -1,0 +1,111 @@
+"""Module containing class for colection of polygons """
+from typing import Union, List, Dict, Tuple
+from sumo.wrapper import SumoClient
+from fmu.sumo.explorer.objects._child_collection import ChildCollection
+from fmu.sumo.explorer.objects.cube import Cube
+from fmu.sumo.explorer.pit import Pit
+from fmu.sumo.explorer.timefilter import TimeFilter
+
+TIMESTAMP_QUERY = {
+    "bool": {
+        "must": [{"exists": {"field": "data.time.t0"}}],
+        "must_not": [{"exists": {"field": "data.time.t1"}}],
+    }
+}
+
+
+class CubeCollection(ChildCollection):
+    """Class for representing a collection of polygons objects in Sumo"""
+
+    def __init__(
+        self,
+        sumo: SumoClient,
+        case_uuid: str,
+        query: Dict = None,
+        pit: Pit = None,
+    ):
+        """
+        Args:
+            sumo (SumoClient): connection to Sumo
+            case_uuid (str): parent case uuid
+            query (dict): elastic query object
+            pit (Pit): point in time
+        """
+        super().__init__("cube", sumo, case_uuid, query, pit)
+
+    def __getitem__(self, index) -> Cube:
+        doc = super().__getitem__(index)
+        return Cube(self._sumo, doc)
+
+    @property
+    def timestamps(self) -> List[str]:
+        """List of unique timestamps in CubeCollection"""
+        return self._get_field_values(
+            "data.time.t0.value", TIMESTAMP_QUERY, True
+        )
+
+    @property
+    def intervals(self) -> List[Tuple]:
+        """List of unique intervals in CubeCollection"""
+        res = self._sumo.post(
+            "/search",
+            json={
+                "query": self._query,
+                "aggs": {
+                    "t0": {
+                        "terms": {"field": "data.time.t0.value", "size": 50},
+                        "aggs": {
+                            "t1": {
+                                "terms": {
+                                    "field": "data.time.t1.value",
+                                    "size": 50,
+                                }
+                            }
+                        },
+                    }
+                },
+            },
+        )
+
+        buckets = res.json()["aggregations"]["t0"]["buckets"]
+        intervals = []
+
+        for bucket in buckets:
+            t0 = bucket["key_as_string"]
+
+            for t1 in bucket["t1"]["buckets"]:
+                intervals.append((t0, t1["key_as_string"]))
+
+        return intervals
+
+    def filter(
+        self,
+        name: Union[str, List[str], bool] = None,
+        tagname: Union[str, List[str], bool] = None,
+        iteration: Union[str, List[str], bool] = None,
+        realization: Union[int, List[int], bool] = None,
+        time: TimeFilter = None,
+        uuid: Union[str, List[str], bool] = None,
+    ) -> "CubeCollection":
+        """Filter cubes
+
+        Args:
+            name (Union[str, List[str], bool]): polygon name
+            tagname (Union[str, List[str], bool]): polygon tagname
+            iteration (Union[int, List[int], bool]): iteration id
+            realization Union[int, List[int], bool]: realization id
+            uuid (Union[str, List[str], bool]): polygons object uuid
+
+        Returns:
+            CubeCollection: A filtered CubeCollection
+        """
+        query = super()._add_filter(
+            name=name,
+            tagname=tagname,
+            iteration=iteration,
+            realization=realization,
+            time=time,
+            uuid=uuid,
+        )
+
+        return CubeCollection(self._sumo, self._case_uuid, query, self._pit)

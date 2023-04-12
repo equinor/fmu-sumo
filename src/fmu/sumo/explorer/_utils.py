@@ -85,8 +85,12 @@ class Utils:
             query["_source"] = select
 
         res = self._sumo.post("/search", json=query)
+        hits = res.json()["hits"]["hits"]
 
-        return res.json()["hits"]["hits"][0]
+        if len(hits) == 0:
+            raise Exception(f"Document not found: {uuid}")
+
+        return hits[0]
 
     def extend_query_object(self, old: Dict, new: Dict) -> Dict:
         """Extend query object
