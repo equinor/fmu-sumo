@@ -2,7 +2,7 @@ name: Build and test fmu-sumo
 
 on:
   pull_request:
-    branches: [master]
+    branches: [main]
 
 jobs:
   build_pywheels:
