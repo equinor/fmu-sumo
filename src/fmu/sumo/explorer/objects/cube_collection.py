@@ -1,4 +1,4 @@
-"""Module containing class for colection of polygons """
+"""Module containing class for collection of cubes """
 from typing import Union, List, Dict, Tuple
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._child_collection import ChildCollection
@@ -15,7 +15,7 @@ TIMESTAMP_QUERY = {
 
 
 class CubeCollection(ChildCollection):
-    """Class for representing a collection of polygons objects in Sumo"""
+    """Class for representing a collection of seismic cube objects in Sumo"""
 
     def __init__(
         self,
