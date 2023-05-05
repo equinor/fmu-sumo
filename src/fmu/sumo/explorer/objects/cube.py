@@ -17,6 +17,34 @@ class Cube(Child):
         """
         Child.__init__(self, sumo, metadata)
         self._sumo = sumo
+        self._url = None
+        self._sas = None
+
+    def _populate_url_and_sas(self):
+        res = self._sumo.get(f"/objects('{self.uuid}')/blob/authuri")
+        res = json.loads(res.decode("UTF-8"))
+        self._url = res.get("baseuri") + self.uuid
+        self._sas = res.get("auth")
+
+    @property
+    def url(self) -> str:
+        if self._url is None:
+            self._populate_url_and_sas()
+        return self._url
+
+    @property
+    def sas(self) -> str:
+        if self._sas is None:
+            self._populate_url_and_sas()
+        return self._sas
+
+    @property
+    def openvds_handle(self) -> openvds.core.VDS:
+        if self._url is None or self._sas is None:
+            self._populate_url_and_sas()
+        url = "azureSAS" + self._url[5:] + "/"
+        sas = "Suffix=?" + self._sas
+        return openvds.open(url, sas)
 
     @property
     def timestamp(self) -> str:
@@ -39,37 +67,4 @@ class Cube(Child):
             return (t0, t1)
 
         return None
-
-    @property
-    def url_and_sas(self) -> Dict:
-        res = self._sumo.get(f"/objects('{self.uuid}')/blob/authuri")
-        res = json.loads(res.decode("UTF-8"))
-        url = "azureSAS" + res.get("baseuri")[5:] + self.uuid + "/"
-        sas = "Suffix=?" + res.get("auth")
-        
-        return {
-            "url": url,
-            "sas": sas
-        }
-
-    @property
-    def openvds_handle(self) -> openvds.core.VDS:
-        response = self._sumo.get(f"/objects('{self.uuid}')/blob/authuri")
-
-        json_resp = json.loads(response.decode("UTF-8"))
-        my_url = "azureSAS" + json_resp.get("baseuri")[5:] + self.uuid + "/"
-        my_url_conn = "Suffix=?" + json_resp.get("auth")
-
-        return openvds.open(my_url, my_url_conn)
-
-    @property
-    def oneseismic_handle(self):
-        response = self._sumo.get(f"/objects('{self.uuid}')/blob/authuri")
-
-        json_resp = json.loads(response.decode("UTF-8"))
-        url = json_resp.get("baseuri") + self.uuid
-        url = url.replace(":443", "")
-        sas = "?" + json_resp.get("auth")
-
-        return oneseismic.simple.open(url, sas)
 
