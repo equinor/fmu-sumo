@@ -14,7 +14,7 @@ class Polygons(Child):
             sumo (SumoClient): connection to Sumo
             metadata (dict): polygon metadata
         """
-        Child.__init__(self, sumo, metadata)
+        super().__init__(sumo, metadata)
 
     def to_dataframe(self) -> pd.DataFrame:
         """Get polygons object as a DataFrame
