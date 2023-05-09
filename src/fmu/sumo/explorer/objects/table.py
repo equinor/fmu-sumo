@@ -28,10 +28,12 @@ class Table(Child):
             DataFrame: A DataFrame object
         """
         if not self._dataframe:
-            try:
+            if self.format == "arrow":
                 self._dataframe = pd.read_parquet(self.blob)
-            except UnicodeDecodeError:
+            elif self.format == "csv":
                 self._dataframe = pd.read_csv(self.blob)
+            else:
+                raise Exception(f"Unknown format: {self.format}")
 
         return self._dataframe
 
