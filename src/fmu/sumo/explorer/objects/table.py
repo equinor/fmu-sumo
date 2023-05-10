@@ -28,10 +28,20 @@ class Table(Child):
             DataFrame: A DataFrame object
         """
         if not self._dataframe:
+
             try:
                 self._dataframe = pd.read_parquet(self.blob)
-            except UnicodeDecodeError:
-                self._dataframe = pd.read_csv(self.blob)
+
+            except pa.lib.ArrowInvalid:
+                try:
+                    self._dataframe = pf.read_feather(self.blob)
+                except pa.lib.ArrowInvalid:
+                    try:
+                        self._dataframe = pd.read_csv(self.blob)
+
+
+                    except UnicodeDecodeError as ud_error:
+                        raise TypeError("Come on, no way this is converting to pandas!!") from ud_error
 
         return self._dataframe
 
