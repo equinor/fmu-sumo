@@ -17,6 +17,7 @@ class Cube(Child):
         """
         super().__init__(sumo, metadata)
         self._url = None
+        self._sas = None
 
     def _populate_url(self):
         res = self._sumo.get(f"/objects('{self.uuid}')/blob/authuri")
@@ -26,7 +27,13 @@ class Cube(Child):
     def url(self) -> str:
         if self._url is None:
             self._populate_url()
-        return self._url
+        return self._url.split("?")[0] + "/"
+
+    @property
+    def sas(self) -> str:
+        if self._url is None:
+            self._populate_url()
+        return self._url.split("?")[1]
 
     @property
     def openvds_handle(self) -> openvds.core.VDS:
