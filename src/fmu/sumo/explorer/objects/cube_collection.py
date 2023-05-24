@@ -84,17 +84,20 @@ class CubeCollection(ChildCollection):
         tagname: Union[str, List[str], bool] = None,
         iteration: Union[str, List[str], bool] = None,
         realization: Union[int, List[int], bool] = None,
+        stage: Union[str, List[str], bool] = None,
         time: TimeFilter = None,
         uuid: Union[str, List[str], bool] = None,
     ) -> "CubeCollection":
         """Filter cubes
 
         Args:
-            name (Union[str, List[str], bool]): polygon name
-            tagname (Union[str, List[str], bool]): polygon tagname
+            name (Union[str, List[str], bool]): cube name
+            tagname (Union[str, List[str], bool]): cube tagname
             iteration (Union[int, List[int], bool]): iteration id
             realization Union[int, List[int], bool]: realization id
-            uuid (Union[str, List[str], bool]): polygons object uuid
+            stage (Union[str, List[str], bool]): context/stage
+            time (TimeFilter): time filter
+            uuid (Union[str, List[str], bool]): cube object uuid
 
         Returns:
             CubeCollection: A filtered CubeCollection
@@ -104,6 +107,7 @@ class CubeCollection(ChildCollection):
             tagname=tagname,
             iteration=iteration,
             realization=realization,
+            stage=stage,
             time=time,
             uuid=uuid,
         )
