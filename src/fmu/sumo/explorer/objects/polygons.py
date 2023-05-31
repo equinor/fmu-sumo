@@ -3,7 +3,7 @@ from typing import Dict
 import pandas as pd
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._child import Child
-
+from warnings import warn
 
 class Polygons(Child):
     """Class representig a polygons object in Sumo"""
@@ -16,12 +16,15 @@ class Polygons(Child):
         """
         super().__init__(sumo, metadata)
 
-    def to_dataframe(self) -> pd.DataFrame:
+
+    def to_pandas(self) -> pd.DataFrame:
         """Get polygons object as a DataFrame
 
         Returns:
             DataFrame: A DataFrame object
         """
+        warn('.to_dataframe() is deprecated, renamed to .to_pandas() ', DeprecationWarning, stacklevel=2)
+
         try:
             return pd.read_csv(self.blob)
         except TypeError as type_err:

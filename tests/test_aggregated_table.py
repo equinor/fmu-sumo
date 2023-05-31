@@ -29,7 +29,7 @@ def test_aggregated_summary_arrow(explorer: Explorer):
     assert len(table.columns) == 972 + 2
     column = table["FOPT"]
 
-    assert isinstance(column.arrowtable, pa.Table)
+    assert isinstance(column.to_arrow, pa.Table)
     with pytest.raises(IndexError) as e_info:
         table = table["banana"]
         assert (
@@ -41,7 +41,7 @@ def test_aggregated_summary_pandas(explorer: Explorer):
     """Test usage of Aggregated class with item_type=pandas"""
     case = explorer.cases.filter(name="drogon_ahm-2023-02-22")[0]
     table = AggregatedTable(case, "summary", "eclipse", "iter-0")
-    assert isinstance(table["FOPT"].dataframe, pd.DataFrame)
+    assert isinstance(table["FOPT"].to_pandas, pd.DataFrame)
 
 
 def test_get_fmu_iteration_parameters(explorer: Explorer):
