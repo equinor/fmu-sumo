@@ -18,8 +18,18 @@ class Table(Child):
             metadata: (dict): child object metadata
         """
         super().__init__(sumo, metadata)
-        self._dataframe  = None
+        self._dataframe = None
         self._arrowtable = None
+
+    @property
+    def dataframe(self) -> pd.DataFrame:
+        """Return object as a pandas DataFrame
+
+        Returns:
+            DataFrame: A DataFrame object
+        """
+        warn('.dataframe() is deprecated, renamed to .to_pandas()', DeprecationWarning, stacklevel=2)
+        return self.to_pandas
 
     @property
     def to_pandas(self) -> pd.DataFrame:
@@ -28,18 +38,17 @@ class Table(Child):
         Returns:
             DataFrame: A DataFrame object
         """
-        warn('.dataframe() is deprecated, renamed to .to_pandas() ', DeprecationWarning, stacklevel=2)
         if not self._dataframe :
 
             try:
-                self._dataframe  = pd.read_parquet(self.blob)
+                self._dataframe = pd.read_parquet(self.blob)
 
             except pa.lib.ArrowInvalid:
                 try:
-                    self._dataframe  = pf.read_feather(self.blob)
+                    self._dataframe = pf.read_feather(self.blob)
                 except pa.lib.ArrowInvalid:
                     try:
-                        self._dataframe  = pd.read_csv(self.blob)
+                        self._dataframe = pd.read_csv(self.blob)
 
 
                     except UnicodeDecodeError as ud_error:
@@ -49,7 +58,18 @@ class Table(Child):
 
     @to_pandas.setter
     def to_pandas(self, frame: pd.DataFrame):
-        self._dataframe  = frame
+        self._dataframe = frame
+
+    @property
+    def arrowtable(self) -> pa.Table:
+        """Return object as an arrow Table
+
+        Returns:
+            pa.Table: _description_
+        """
+        warn('.arrowtable() is deprecated, renamed to .to_arrows()', DeprecationWarning, stacklevel=2)
+
+        return self.to_arrow
 
     @property
     def to_arrow(self) -> pa.Table:
@@ -58,8 +78,6 @@ class Table(Child):
         Returns:
             pa.Table: _description_
         """
-        warn('.arrowtable() is deprecated, renamed to .to_arrows() ', DeprecationWarning, stacklevel=2)
-
         if not self._arrowtable:
             try:
                 self._arrowtable = pq.read_table(self.blob)
