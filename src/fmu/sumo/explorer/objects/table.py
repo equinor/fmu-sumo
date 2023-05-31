@@ -18,7 +18,7 @@ class Table(Child):
             metadata: (dict): child object metadata
         """
         super().__init__(sumo, metadata)
-        self._topandas = None
+        self._dataframe  = None
         self._arrowtable = None
 
     @property
@@ -29,27 +29,27 @@ class Table(Child):
             DataFrame: A DataFrame object
         """
         warn('.dataframe() is deprecated, renamed to .to_pandas() ', DeprecationWarning, stacklevel=2)
-        if not self._topandas:
+        if not self._dataframe :
 
             try:
-                self._topandas = pd.read_parquet(self.blob)
+                self._dataframe  = pd.read_parquet(self.blob)
 
             except pa.lib.ArrowInvalid:
                 try:
-                    self._topandas = pf.read_feather(self.blob)
+                    self._dataframe  = pf.read_feather(self.blob)
                 except pa.lib.ArrowInvalid:
                     try:
-                        self._topandas = pd.read_csv(self.blob)
+                        self._dataframe  = pd.read_csv(self.blob)
 
 
                     except UnicodeDecodeError as ud_error:
                         raise TypeError("Come on, no way this is converting to pandas!!") from ud_error
 
-        return self._topandas
+        return self._dataframe 
 
     @to_pandas.setter
     def to_pandas(self, frame: pd.DataFrame):
-        self._topandas = frame
+        self._dataframe  = frame
 
     @property
     def to_arrow(self) -> pa.Table:
