@@ -5,6 +5,7 @@ from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._child import Child
 from warnings import warn
 
+
 class Polygons(Child):
     """Class representig a polygons object in Sumo"""
 
@@ -22,7 +23,11 @@ class Polygons(Child):
         Returns:
             DataFrame: A DataFrame object
         """
-        warn('.to_dataframe() is deprecated, renamed to .to_pandas() ', DeprecationWarning, stacklevel=2)
+        warn(
+            ".to_dataframe() is deprecated, renamed to .to_pandas() ",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
         return self.to_pandas
 

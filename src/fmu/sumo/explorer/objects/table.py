@@ -28,7 +28,11 @@ class Table(Child):
         Returns:
             DataFrame: A DataFrame object
         """
-        warn('.dataframe is deprecated, renamed to .to_pandas', DeprecationWarning, stacklevel=2)
+        warn(
+            ".dataframe is deprecated, renamed to .to_pandas",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.to_pandas
 
     @property
@@ -38,8 +42,7 @@ class Table(Child):
         Returns:
             DataFrame: A DataFrame object
         """
-        if not self._dataframe :
-
+        if not self._dataframe:
             try:
                 self._dataframe = pd.read_parquet(self.blob)
 
@@ -50,11 +53,12 @@ class Table(Child):
                     try:
                         self._dataframe = pd.read_csv(self.blob)
 
-
                     except UnicodeDecodeError as ud_error:
-                        raise TypeError("Come on, no way this is converting to pandas!!") from ud_error
+                        raise TypeError(
+                            "Come on, no way this is converting to pandas!!"
+                        ) from ud_error
 
-        return self._dataframe 
+        return self._dataframe
 
     @to_pandas.setter
     def to_pandas(self, frame: pd.DataFrame):
@@ -67,7 +71,11 @@ class Table(Child):
         Returns:
             pa.Table: _description_
         """
-        warn('.arrowtable is deprecated, renamed to .to_arrows', DeprecationWarning, stacklevel=2)
+        warn(
+            ".arrowtable is deprecated, renamed to .to_arrows",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
         return self.to_arrow
 
