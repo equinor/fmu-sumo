@@ -28,7 +28,7 @@ class Table(Child):
         Returns:
             DataFrame: A DataFrame object
         """
-        warn('.dataframe() is deprecated, renamed to .to_pandas()', DeprecationWarning, stacklevel=2)
+        warn('.dataframe is deprecated, renamed to .to_pandas', DeprecationWarning, stacklevel=2)
         return self.to_pandas
 
     @property
@@ -67,7 +67,7 @@ class Table(Child):
         Returns:
             pa.Table: _description_
         """
-        warn('.arrowtable() is deprecated, renamed to .to_arrows()', DeprecationWarning, stacklevel=2)
+        warn('.arrowtable is deprecated, renamed to .to_arrows', DeprecationWarning, stacklevel=2)
 
         return self.to_arrow
 
