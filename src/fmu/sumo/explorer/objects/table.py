@@ -72,7 +72,7 @@ class Table(Child):
             pa.Table: _description_
         """
         warn(
-            ".arrowtable is deprecated, renamed to .to_arrows",
+            ".arrowtable is deprecated, renamed to .to_arrow",
             DeprecationWarning,
             stacklevel=2,
         )

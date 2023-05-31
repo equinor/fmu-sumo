@@ -51,7 +51,7 @@ def test_aggregated_summary_arrow_with_deprecated_function_name(
 
     with pytest.warns(
         DeprecationWarning,
-        match=".arrowtable is deprecated, renamed to .to_arrows",
+        match=".arrowtable is deprecated, renamed to .to_arrow",
     ):
         column.arrowtable
 
