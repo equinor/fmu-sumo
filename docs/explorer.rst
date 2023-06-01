@@ -207,6 +207,9 @@ The `SurfaceCollection` object has a filter method and properties for getting fi
         tagname=tagnames[0]
     )
 
+    stratigraphic = surfaces.filter(stratigraphic = "false")
+    vertical_domain = surfaces.filter(vertical_domain = "depth")
+
 
 The `SurfaceCollection.filter` method takes the following parameters:
 
@@ -217,7 +220,9 @@ The `SurfaceCollection.filter` method takes the following parameters:
 * realization 
 * aggregation
 * stage 
-* time 
+* time
+* stratigraphic
+* vertical_domain
 
 All parameters support a single value, a list of values or a `boolean` value.
 
@@ -253,6 +258,8 @@ We can get list of filter values for the following properties:
 * stages 
 * timestamps
 * intervals
+* stratigraphic
+* vertical_domain
 
 
 Once we have a `Surface` object we can get surface metadata using properties:
@@ -270,6 +277,8 @@ Once we have a `Surface` object we can get surface metadata using properties:
     print(surfaces.uuid)
     print(surfaces.name)
     print(surfaces.tagname)
+    print(surface.stratigraphic)
+    print(surface.vertical_domain)
 
 We can get the surface binary data as a `BytesIO` object using the `blob` property. 
 The `to_regular_surface` method returns the surface as a `xtgeo.RegularSurface` object.
@@ -398,6 +407,8 @@ The `SurfaceCollection` class can be used to do on-demand surface aggregations.
         iteration="iter-0",
         name="Valysar Fm.",
         tagname="FACIES_Fraction_Channel"
+        stratigraphic="false"
+        vertical_domain="depth"
     )
 
     mean = surfaces.mean()

@@ -102,6 +102,8 @@ class SurfaceCollection(ChildCollection):
         self,
         name: Union[str, List[str], bool] = None,
         tagname: Union[str, List[str], bool] = None,
+        stratigraphic: Union[str, List[str], bool] = None,
+        vertical_domain: Union[str, List[str], bool] = None,
         iteration: Union[str, List[str], bool] = None,
         realization: Union[int, List[int], bool] = None,
         aggregation: Union[str, List[str], bool] = None,
@@ -122,6 +124,8 @@ class SurfaceCollection(ChildCollection):
             stage (Union[str, List[str], bool]): context/stage
             time (TimeFilter): time filter
             uuid (Union[str, List[str], bool]): surface object uuid
+            stratigraphic (Union[str, List[str], bool]): surface stratigraphic
+            vertical_domain (Union[str, List[str], bool]): surface vertical_domain
 
         Returns:
             SurfaceCollection: A filtered SurfaceCollection
@@ -170,6 +174,8 @@ class SurfaceCollection(ChildCollection):
             stage=stage,
             time=time,
             uuid=uuid,
+            stratigraphic=stratigraphic,
+            vertical_domain=vertical_domain,
         )
 
         return SurfaceCollection(self._sumo, self._case_uuid, query, self._pit)

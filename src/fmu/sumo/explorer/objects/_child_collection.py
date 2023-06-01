@@ -13,6 +13,8 @@ _CHILD_FIELDS = [
     "data.format",
     "data.bbox",
     "data.spec",
+    "data.stratigraphic",
+    "data.vertical_domain",
     "fmu.case.name",
     "fmu.case.user.id",
     "fmu.realization.id",
@@ -69,6 +71,17 @@ class ChildCollection(DocumentCollection):
     def stages(self) -> List[str]:
         """List of unique stages"""
         return self._get_field_values("fmu.context.stage.keyword")
+    
+    @property
+    def stratigraphic(self) -> List[str]:
+        """List of unqiue object stratigraphic"""
+        return self._get_field_values("data.stratigraphic")
+    
+    @property
+    def vertical_domain(self) -> List[str]:
+        """List of unqiue object vertical domain"""
+        return self._get_field_values("data.vertical_domain")
+
 
     def _init_query(self, doc_type: str, query: Dict = None) -> Dict:
         new_query = super()._init_query(doc_type, query)
@@ -93,6 +106,8 @@ class ChildCollection(DocumentCollection):
         column: Union[str, List[str], bool] = None,
         time: TimeFilter = None,
         uuid: Union[str, List[str], bool] = None,
+        stratigraphic: Union[str, List[str], bool] = None,
+        vertical_domain: Union[str, List[str], bool] = None,
     ):
         must = []
         must_not = []
@@ -106,6 +121,8 @@ class ChildCollection(DocumentCollection):
             "fmu.context.stage.keyword": stage,
             "data.spec.columns.keyword": column,
             "_id": uuid,
+            "data.stratigraphic.keyword": stratigraphic,
+            "data.vertical_domain.keyword": vertical_domain,
         }
 
         for prop, value in prop_map.items():
