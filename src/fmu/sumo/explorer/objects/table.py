@@ -1,4 +1,5 @@
 """module containing class for table"""
+import logging
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -6,6 +7,8 @@ import pyarrow.feather as pf
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._child import Child
 from warnings import warn
+
+logging.basicConfig(handlers=logging.NullHandler)
 
 
 class Table(Child):
@@ -20,6 +23,7 @@ class Table(Child):
         super().__init__(sumo, metadata)
         self._dataframe = None
         self._arrowtable = None
+        self._logger = logging.getLogger("__name__" + ".Table")
 
     @property
     def dataframe(self) -> pd.DataFrame:
@@ -28,6 +32,7 @@ class Table(Child):
         Returns:
             DataFrame: A DataFrame object
         """
+<<<<<<< Updated upstream
         warn(
             ".dataframe is deprecated, renamed to .to_pandas",
             DeprecationWarning,
@@ -47,9 +52,24 @@ class Table(Child):
                 self._dataframe = pd.read_parquet(self.blob)
 
             except pa.lib.ArrowInvalid:
+=======
+        if self._dataframe is None:
+            if self["data"]["format"] == "csv":
+                worked = "csv"
+                self._logger.debug("Treating blob as csv")
+>>>>>>> Stashed changes
                 try:
+                    self._dataframe = pd.read_csv(self.blob)
+                    worked = "csv"
+
+                except UnicodeDecodeError as ud_e:
+                    raise UnicodeDecodeError("Maybe not pandas?") from ud_e
+            else:
+                try:
+                    worked = "feather"
                     self._dataframe = pf.read_feather(self.blob)
                 except pa.lib.ArrowInvalid:
+<<<<<<< Updated upstream
                     try:
                         self._dataframe = pd.read_csv(self.blob)
 
@@ -58,6 +78,11 @@ class Table(Child):
                             "Come on, no way this is converting to pandas!!"
                         ) from ud_error
 
+=======
+                    worked = "parquet"
+                self._dataframe = pd.read_parquet(self.blob)
+        self._logger.debug("Read blob as %s to return pandas", worked)
+>>>>>>> Stashed changes
         return self._dataframe
 
     @to_pandas.setter
@@ -71,6 +96,7 @@ class Table(Child):
         Returns:
             pa.Table: _description_
         """
+<<<<<<< Updated upstream
         warn(
             ".arrowtable is deprecated, renamed to .to_arrow",
             DeprecationWarning,
@@ -90,13 +116,29 @@ class Table(Child):
             try:
                 self._arrowtable = pq.read_table(self.blob)
             except pa.lib.ArrowInvalid:
+=======
+        if self._arrowtable is None:
+            if self["data"]["format"] == "arrow":
+>>>>>>> Stashed changes
                 try:
+                    worked = "feather"
                     self._arrowtable = pf.read_table(self.blob)
                 except pa.lib.ArrowInvalid:
+                    worked = "parquet"
+                    self._arrowtable = pq.read_table(self.blob)
+            else:
+                self._logger.warning(
+                    "Reading csv format into arrow, you will not get the full benefit of native arrow"
+                )
+                worked = "csv"
+                try:
                     self._arrowtable = pa.Table.from_pandas(
                         pd.read_csv(self.blob)
                     )
-            except TypeError as type_err:
-                raise OSError("Cannot read this") from type_err
+
+                except TypeError as type_err:
+                    raise OSError("Cannot read this into arrow") from type_err
+
+            self._logger.debug("Read blob as %s to return arrow", worked)
 
         return self._arrowtable
