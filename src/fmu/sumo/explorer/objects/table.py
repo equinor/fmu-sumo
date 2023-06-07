@@ -32,7 +32,6 @@ class Table(Child):
         Returns:
             DataFrame: A DataFrame object
         """
-<<<<<<< Updated upstream
         warn(
             ".dataframe is deprecated, renamed to .to_pandas",
             DeprecationWarning,
@@ -47,17 +46,11 @@ class Table(Child):
         Returns:
             DataFrame: A DataFrame object
         """
-        if not self._dataframe:
-            try:
-                self._dataframe = pd.read_parquet(self.blob)
 
-            except pa.lib.ArrowInvalid:
-=======
         if self._dataframe is None:
             if self["data"]["format"] == "csv":
                 worked = "csv"
                 self._logger.debug("Treating blob as csv")
->>>>>>> Stashed changes
                 try:
                     self._dataframe = pd.read_csv(self.blob)
                     worked = "csv"
@@ -69,7 +62,6 @@ class Table(Child):
                     worked = "feather"
                     self._dataframe = pf.read_feather(self.blob)
                 except pa.lib.ArrowInvalid:
-<<<<<<< Updated upstream
                     try:
                         self._dataframe = pd.read_csv(self.blob)
 
@@ -78,11 +70,9 @@ class Table(Child):
                             "Come on, no way this is converting to pandas!!"
                         ) from ud_error
 
-=======
                     worked = "parquet"
                 self._dataframe = pd.read_parquet(self.blob)
         self._logger.debug("Read blob as %s to return pandas", worked)
->>>>>>> Stashed changes
         return self._dataframe
 
     @to_pandas.setter
@@ -96,7 +86,6 @@ class Table(Child):
         Returns:
             pa.Table: _description_
         """
-<<<<<<< Updated upstream
         warn(
             ".arrowtable is deprecated, renamed to .to_arrow",
             DeprecationWarning,
@@ -112,14 +101,8 @@ class Table(Child):
         Returns:
             pa.Table: _description_
         """
-        if not self._arrowtable:
-            try:
-                self._arrowtable = pq.read_table(self.blob)
-            except pa.lib.ArrowInvalid:
-=======
         if self._arrowtable is None:
             if self["data"]["format"] == "arrow":
->>>>>>> Stashed changes
                 try:
                     worked = "feather"
                     self._arrowtable = pf.read_table(self.blob)
@@ -127,7 +110,7 @@ class Table(Child):
                     worked = "parquet"
                     self._arrowtable = pq.read_table(self.blob)
             else:
-                self._logger.warning(
+                warn(
                     "Reading csv format into arrow, you will not get the full benefit of native arrow"
                 )
                 worked = "csv"
