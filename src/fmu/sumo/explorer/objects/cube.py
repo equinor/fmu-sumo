@@ -1,5 +1,4 @@
 """Module containing class for cube object"""
-import json
 import openvds
 from typing import Dict
 from sumo.wrapper import SumoClient
@@ -62,4 +61,3 @@ class Cube(Child):
             return (t0, t1)
 
         return None
-

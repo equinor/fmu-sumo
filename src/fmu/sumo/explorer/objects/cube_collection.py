@@ -87,6 +87,8 @@ class CubeCollection(ChildCollection):
         stage: Union[str, List[str], bool] = None,
         time: TimeFilter = None,
         uuid: Union[str, List[str], bool] = None,
+        is_observation: bool = None,
+        is_prediction: bool = None
     ) -> "CubeCollection":
         """Filter cubes
 
@@ -98,6 +100,8 @@ class CubeCollection(ChildCollection):
             stage (Union[str, List[str], bool]): context/stage
             time (TimeFilter): time filter
             uuid (Union[str, List[str], bool]): cube object uuid
+            is_observation (bool): cube is_observation
+            is_prediction (bool): cube is_prediction
 
         Returns:
             CubeCollection: A filtered CubeCollection
@@ -110,6 +114,8 @@ class CubeCollection(ChildCollection):
             stage=stage,
             time=time,
             uuid=uuid,
+            is_observation=is_observation,
+            is_prediction=is_prediction
         )
 
         return CubeCollection(self._sumo, self._case_uuid, query, self._pit)

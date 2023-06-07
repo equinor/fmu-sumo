@@ -25,6 +25,8 @@ _CHILD_FIELDS = [
     "access.asset",
     "masterdata.smda.field",
     "file.relative_path",
+    "data.is_observation",
+    "data.is_prediction"
 ]
 
 
@@ -71,17 +73,16 @@ class ChildCollection(DocumentCollection):
     def stages(self) -> List[str]:
         """List of unique stages"""
         return self._get_field_values("fmu.context.stage.keyword")
-    
+
     @property
     def stratigraphic(self) -> List[str]:
         """List of unqiue object stratigraphic"""
         return self._get_field_values("data.stratigraphic")
-    
+
     @property
     def vertical_domain(self) -> List[str]:
         """List of unqiue object vertical domain"""
         return self._get_field_values("data.vertical_domain")
-
 
     def _init_query(self, doc_type: str, query: Dict = None) -> Dict:
         new_query = super()._init_query(doc_type, query)
@@ -108,6 +109,8 @@ class ChildCollection(DocumentCollection):
         uuid: Union[str, List[str], bool] = None,
         stratigraphic: Union[str, List[str], bool] = None,
         vertical_domain: Union[str, List[str], bool] = None,
+        is_observation: bool = None,
+        is_prediction: bool = None
     ):
         must = []
         must_not = []
@@ -123,6 +126,8 @@ class ChildCollection(DocumentCollection):
             "_id": uuid,
             "data.stratigraphic.keyword": stratigraphic,
             "data.vertical_domain.keyword": vertical_domain,
+            "data.is_observation.keyword": is_observation,
+            "data.is_prediction.keyword": is_prediction
         }
 
         for prop, value in prop_map.items():

@@ -27,12 +27,12 @@ class Child(Document):
     def tagname(self) -> str:
         """Object tagname"""
         return self._get_property(["data", "tagname"])
-    
+
     @property
     def stratigraphic(self) -> str:
         """Object stratigraphic"""
         return self._get_property(["data", "stratigraphic"])
-    
+
     @property
     def vertical_domain(self) -> str:
         """Object vertical_domain"""
@@ -72,6 +72,16 @@ class Child(Document):
     def relative_path(self) -> str:
         """Object relative file path"""
         return self._get_property(["file", "relative_path"])
+
+    @property
+    def is_observation(self) -> str:
+        """Object is_observation"""
+        return self._get_property(["data", "is_observation"])
+
+    @property
+    def is_prediction(self) -> str:
+        """Object is_prediction"""
+        return self._get_property(["data", "is_prediction"])
 
     @property
     def blob(self) -> BytesIO:
