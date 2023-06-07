@@ -53,9 +53,7 @@ def test_aggregated_summary_arrow_with_deprecated_function_name(
         DeprecationWarning,
         match=".arrowtable is deprecated, renamed to .to_arrow",
     ):
-        column.arrowtable
-
-    assert isinstance(column.arrowtable, pa.Table)
+        assert isinstance(column.arrowtable, pa.Table)
     with pytest.raises(IndexError) as e_info:
         table = table["banana"]
         assert (

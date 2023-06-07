@@ -56,22 +56,21 @@ class Table(Child):
                     worked = "csv"
 
                 except UnicodeDecodeError as ud_e:
-                    raise UnicodeDecodeError("Maybe not pandas?") from ud_e
+                    raise UnicodeDecodeError("Maybe not csv?") from ud_e
             else:
                 try:
                     worked = "feather"
                     self._dataframe = pf.read_feather(self.blob)
                 except pa.lib.ArrowInvalid:
                     try:
-                        self._dataframe = pd.read_csv(self.blob)
+                        worked = "parquet"
+                        self._dataframe = pd.read_parquet(self.blob)
 
                     except UnicodeDecodeError as ud_error:
                         raise TypeError(
                             "Come on, no way this is converting to pandas!!"
                         ) from ud_error
 
-                    worked = "parquet"
-                self._dataframe = pd.read_parquet(self.blob)
         self._logger.debug("Read blob as %s to return pandas", worked)
         return self._dataframe
 
