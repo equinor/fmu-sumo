@@ -74,16 +74,6 @@ class Child(Document):
         return self._get_property(["file", "relative_path"])
 
     @property
-    def is_observation(self) -> str:
-        """Object is_observation"""
-        return self._get_property(["data", "is_observation"])
-
-    @property
-    def is_prediction(self) -> str:
-        """Object is_prediction"""
-        return self._get_property(["data", "is_prediction"])
-
-    @property
     def blob(self) -> BytesIO:
         """Object blob"""
         if self._blob is None:
