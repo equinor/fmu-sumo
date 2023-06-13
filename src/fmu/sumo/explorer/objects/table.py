@@ -8,8 +8,6 @@ from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._child import Child
 from warnings import warn
 
-logging.basicConfig(handlers=logging.NullHandler)
-
 
 class Table(Child):
     """Class representing a table object in Sumo"""
