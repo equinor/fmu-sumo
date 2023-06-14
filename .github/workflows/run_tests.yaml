@@ -3,6 +3,8 @@ name: Build and test fmu-sumo
 on:
   pull_request:
     branches: [main]
+  schedule: 
+    - cron: "*/30 * * * *"
 
 jobs:
   build_pywheels:
