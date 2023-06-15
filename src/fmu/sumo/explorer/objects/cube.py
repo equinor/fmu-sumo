@@ -1,4 +1,5 @@
 """Module containing class for cube object"""
+import json
 import openvds
 from typing import Dict
 from sumo.wrapper import SumoClient
@@ -20,25 +21,42 @@ class Cube(Child):
 
     def _populate_url(self):
         res = self._sumo.get(f"/objects('{self.uuid}')/blob/authuri")
-        self._url = res.decode("UTF-8")
+        try:
+            res = json.loads(res.decode("UTF-8"))
+            self._url = res.get("baseuri") + self.uuid
+            self._sas = res.get("auth")
+        except:
+            self._url = res.decode("UTF-8")
 
     @property
     def url(self) -> str:
         if self._url is None:
             self._populate_url()
-        return self._url.split("?")[0] + "/"
+        if self._sas is None:
+            return self._url    
+        else: 
+            return self._url.split("?")[0] + "/"
 
     @property
     def sas(self) -> str:
         if self._url is None:
             self._populate_url()
-        return self._url.split("?")[1]
+        if self._sas is None:
+            return self._url.split("?")[1]
+        else:
+            return self._sas
 
     @property
     def openvds_handle(self) -> openvds.core.VDS:
         if self._url is None:
             self._populate_url()
-        return openvds.open(self._url)
+        
+        if self._sas is None:
+            return openvds.open(self._url)
+        else: 
+            url = "azureSAS" + self._url[5:] + "/"
+            sas = "Suffix=?" + self._sas
+            return openvds.open(url, sas)
 
     @property
     def timestamp(self) -> str:
