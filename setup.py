@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from setuptools import setup, find_packages
 import os
 import pathlib
 from urllib.parse import urlparse
-
 from pip._internal.req import parse_requirements as parse
-from setuptools import find_packages, setup
 
 
 def _format_requirement(req):
