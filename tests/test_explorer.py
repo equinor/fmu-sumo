@@ -1,4 +1,5 @@
 """Tests explorer"""
+import openvds
 import logging
 import json
 from pathlib import Path
@@ -38,6 +39,10 @@ def fixture_case_uuid() -> str:
     """Returns case uuid"""
     return "2c2f47cf-c7ab-4112-87f9-b4797ec51cb6"
 
+@pytest.fixture(name="seismic_case_uuid")
+def fixture_seismic_case_uuid() -> str:
+    """Returns seismic case uuid"""
+    return "c616019d-d344-4094-b2ee-dd4d6d336217"
 
 @pytest.fixture(name="explorer")
 def fixture_explorer(token: str) -> Explorer:
@@ -262,6 +267,25 @@ def test_get_case_by_uuid(explorer: Explorer, case_uuid: str, case_name: str):
     assert case.uuid == case_uuid
     assert case.name == case_name
 
+def test_seismic_case_by_uuid(explorer: Explorer, seismic_case_uuid: str):
+    """Test that explorer returns openvds compatible cubes for seismic case"""
+    case = explorer.get_case_by_uuid(seismic_case_uuid)
+
+    assert isinstance(case, Case)
+    assert case.uuid == seismic_case_uuid
+    assert len(case.cubes) == 10
+    cube = case.cubes[0]
+    openvds_handle = cube.openvds_handle
+
+    layout = openvds.getLayout(openvds_handle)
+    channel_count = layout.getChannelCount()
+    assert channel_count == 3
+    channel_list = []
+    for i in range(channel_count):
+        channel_list.append(layout.getChannelName(i))
+    assert 'Amplitude' in channel_list
+    assert 'Trace' in channel_list
+    assert 'SEGYTraceHeader' in channel_list
 
 def test_utils_extend_query_object(utils: Utils):
     """Test extension of query"""
