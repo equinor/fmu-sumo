@@ -3,7 +3,7 @@ name: Build and test fmu-sumo
 on:
   pull_request:
     branches: [main]
-  schedule: 
+  schedule:
     - cron: "4 4 * * 0"
 
 jobs:
@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [3.8.14]
+        python-version: [3.8.17]
         os: [ubuntu-latest]
     permissions:
       contents: read
@@ -43,4 +43,4 @@ jobs:
           export ACCESS_TOKEN=$access_token
 
           pip install -r requirements/requirements_test.txt
-          pytest -s --timeout=300 
+          pytest -s --timeout=300
