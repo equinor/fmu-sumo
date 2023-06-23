@@ -30,8 +30,9 @@ try:
     from sphinx.setup_command import BuildDoc
 
     CMDCLASS.update({"build_sphinx": BuildDoc})
-except ImportError:
+except ImportError as e:
     # sphinx not installed - do not provide build_sphinx cmd
+    print(f"SPHINX NOT FOUND: {e}")
     pass
 
 is_docs = os.getenv("READTHEDOCS") == "True"
