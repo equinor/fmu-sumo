@@ -26,6 +26,6 @@ jobs:
 
       - name: Install and build docs
         run: |
-          pip install pip -U && pip install wheel -U
-          pip install .[docs]
+          python -m pip install pip -U && python -m pip install wheel -U
+          python -m pip install .[docs]
           python setup.py build_sphinx
