@@ -76,11 +76,11 @@ exclude_patterns = ["_build"]
 
 pygments_style = "sphinx"
 
-html_theme = "sphinx_rtd_theme"
+# html_theme = "sphinx_rtd_theme"
 
-html_theme_options = {
-    "style_nav_header_background": "#C0C0C0",
-}
+# html_theme_options = {
+#     "style_nav_header_background": "#C0C0C0",
+# }
 
 
 # html_logo = "images/xtgeo-logo.png"

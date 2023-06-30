@@ -1,5 +1,5 @@
-sphinx
-sphinx-rtd-theme
+sphinx>=7.0.1
+# sphinx-rtd-theme
 autoapi
 sphinx-autodoc-typehints
 sphinxcontrib-apidoc
