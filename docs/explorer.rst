@@ -418,5 +418,5 @@ The `SurfaceCollection` class can be used to do on-demand surface aggregations.
 
     p10.quickplot()
 
-In this example we perform aggregations on all realized instance of the surface `Valysar Fm. (FACIES_Fraction_Channel)` in iteration 0.
+In this example we perform aggregations on all realized instances of the surface `Valysar Fm. (FACIES_Fraction_Channel)` in iteration 0.
 The aggregation methods return `xtgeo.RegularSurface` objects.
