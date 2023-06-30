@@ -49,9 +49,50 @@ class SurfaceCollection(ChildCollection):
         )
 
     @property
+    async def timestamps_async(self) -> List[str]:
+        """List of unique timestamps in CubeCollection"""
+        return await self._get_field_values_async(
+            "data.time.t0.value", TIMESTAMP_QUERY, True
+        )
+
+    @property
     def intervals(self) -> List[Tuple]:
         """List of unique intervals in SurfaceCollection"""
         res = self._sumo.post(
+            "/search",
+            json={
+                "query": self._query,
+                "aggs": {
+                    "t0": {
+                        "terms": {"field": "data.time.t0.value", "size": 50},
+                        "aggs": {
+                            "t1": {
+                                "terms": {
+                                    "field": "data.time.t1.value",
+                                    "size": 50,
+                                }
+                            }
+                        },
+                    }
+                },
+            },
+        )
+
+        buckets = res.json()["aggregations"]["t0"]["buckets"]
+        intervals = []
+
+        for bucket in buckets:
+            t0 = bucket["key_as_string"]
+
+            for t1 in bucket["t1"]["buckets"]:
+                intervals.append((t0, t1["key_as_string"]))
+
+        return intervals
+
+    @property
+    async def intervals_async(self) -> List[Tuple]:
+        """List of unique intervals in SurfaceCollection"""
+        res = await self._sumo.post_async(
             "/search",
             json={
                 "query": self._query,
@@ -88,6 +129,22 @@ class SurfaceCollection(ChildCollection):
             object_ids = list(map(lambda obj: obj["_id"], objects))
 
             res = self._sumo.post(
+                "/aggregate",
+                json={"operation": [operation], "object_ids": object_ids},
+            )
+
+            self._aggregation_cache[operation] = xtgeo.surface_from_file(
+                BytesIO(res.content)
+            )
+
+        return self._aggregation_cache[operation]
+
+    async def _aggregate_async(self, operation: str) -> xtgeo.RegularSurface:
+        if operation not in self._aggregation_cache:
+            objects = await self._utils.get_objects_async(500, self._query, ["_id"])
+            object_ids = list(map(lambda obj: obj["_id"], objects))
+
+            res = await self._sumo.post_async(
                 "/aggregate",
                 json={"operation": [operation], "object_ids": object_ids},
             )
@@ -184,26 +241,54 @@ class SurfaceCollection(ChildCollection):
         """Perform a mean aggregation"""
         return self._aggregate("mean")
 
+    async def mean_async(self) -> xtgeo.RegularSurface:
+        """Perform a mean aggregation"""
+        return await self._aggregate_async("mean")
+
     def min(self) -> xtgeo.RegularSurface:
         """Perform a minimum aggregation"""
         return self._aggregate("min")
+
+    async def min_async(self) -> xtgeo.RegularSurface:
+        """Perform a minimum aggregation"""
+        return await self._aggregate_async("min")
 
     def max(self) -> xtgeo.RegularSurface:
         """Perform a maximum aggregation"""
         return self._aggregate("max")
 
+    async def max_async(self) -> xtgeo.RegularSurface:
+        """Perform a maximum aggregation"""
+        return await self._aggregate_async("max")
+
     def std(self) -> xtgeo.RegularSurface:
         """Perform a standard deviation aggregation"""
         return self._aggregate("std")
+
+    async def std_async(self) -> xtgeo.RegularSurface:
+        """Perform a standard deviation aggregation"""
+        return await self._aggregate_async("std")
 
     def p10(self) -> xtgeo.RegularSurface:
         """Perform a percentile aggregation"""
         return self._aggregate("p10")
 
+    async def p10_async(self) -> xtgeo.RegularSurface:
+        """Perform a percentile aggregation"""
+        return await self._aggregate_async("p10")
+
     def p50(self) -> xtgeo.RegularSurface:
         """Perform a percentile aggregation"""
         return self._aggregate("p50")
 
+    async def p50_async(self) -> xtgeo.RegularSurface:
+        """Perform a percentile aggregation"""
+        return await self._aggregate_async("p50")
+
     def p90(self) -> xtgeo.RegularSurface:
         """Perform a percentile aggregation"""
         return self._aggregate("p90")
+
+    async def p90_async(self) -> xtgeo.RegularSurface:
+        """Perform a percentile aggregation"""
+        return await self._aggregate_async("p90")

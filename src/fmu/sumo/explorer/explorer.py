@@ -87,6 +87,23 @@ class Explorer:
 
         return res
 
+    async def get_permissions_async(self, asset: str = None):
+        """Get permissions
+
+        Args:
+            asset (str): asset in Sumo
+
+        Returns:
+          dict: Dictionary of user permissions
+        """
+        res = await self._sumo.get_async("/userpermissions")
+
+        if asset is not None:
+            if asset not in res:
+                raise PermissionError(f"No permissions for asset: {asset}")
+
+        return res
+
     def get_case_by_uuid(self, uuid: str) -> Case:
         """Get case object by uuid
 
@@ -97,6 +114,18 @@ class Explorer:
             Case: case object
         """
         metadata = self._utils.get_object(uuid, _CASE_FIELDS)
+        return Case(self._sumo, metadata)
+
+    async def get_case_by_uuid_async(self, uuid: str) -> Case:
+        """Get case object by uuid
+
+        Args:
+            uuid (str): case uuid
+
+        Returns:
+            Case: case object
+        """
+        metadata = await self._utils.get_object_async(uuid, _CASE_FIELDS)
         return Case(self._sumo, metadata)
 
     def get_surface_by_uuid(self, uuid: str) -> Surface:
@@ -111,6 +140,18 @@ class Explorer:
         metadata = self._utils.get_object(uuid, _CHILD_FIELDS)
         return Surface(self._sumo, metadata)
 
+    async def get_surface_by_uuid_async(self, uuid: str) -> Surface:
+        """Get surface object by uuid
+
+        Args:
+            uuid (str): surface uuid
+
+        Returns:
+            Surface: surface object
+        """
+        metadata = await self._utils.get_object_async(uuid, _CHILD_FIELDS)
+        return Surface(self._sumo, metadata)
+
     def get_polygons_by_uuid(self, uuid: str) -> Polygons:
         """Get polygons object by uuid
 
@@ -123,6 +164,18 @@ class Explorer:
         metadata = self._utils.get_object(uuid, _CHILD_FIELDS)
         return Polygons(self._sumo, metadata)
 
+    async def get_polygons_by_uuid_async(self, uuid: str) -> Polygons:
+        """Get polygons object by uuid
+
+        Args:
+            uuid (str): polygons uuid
+
+        Returns:
+            Polygons: polygons object
+        """
+        metadata = await self._utils.get_object_async(uuid, _CHILD_FIELDS)
+        return Polygons(self._sumo, metadata)
+
     def get_table_by_uuid(self, uuid: str) -> Table:
         """Get table object by uuid
 
@@ -133,4 +186,16 @@ class Explorer:
             Table: table object
         """
         metadata = self._utils.get_object(uuid, _CHILD_FIELDS)
+        return Table(self._sumo, metadata)
+
+    async def get_table_by_uuid_async(self, uuid: str) -> Table:
+        """Get table object by uuid
+
+        Args:
+            uuid (str): table uuid
+
+        Returns:
+            Table: table object
+        """
+        metadata = await self._utils.get_object_async(uuid, _CHILD_FIELDS)
         return Table(self._sumo, metadata)

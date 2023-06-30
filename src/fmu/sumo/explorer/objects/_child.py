@@ -81,3 +81,12 @@ class Child(Document):
             self._blob = BytesIO(res)
 
         return self._blob
+
+    @property
+    async def blob_async(self) -> BytesIO:
+        """Object blob"""
+        if self._blob is None:
+            res = await self._sumo.get_async(f"/objects('{self.uuid}')/blob")
+            self._blob = BytesIO(res)
+
+        return self._blob

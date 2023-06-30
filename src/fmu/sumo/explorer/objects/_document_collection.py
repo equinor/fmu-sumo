@@ -41,6 +41,17 @@ class DocumentCollection:
 
         return self._len
 
+    async def length_async(self) -> int:
+        """Get size of document collection. Async equivalent to 'len(collection)'
+
+        Returns:
+            Document collection size
+        """
+        if self._len is None:
+            await self._next_batch_async()
+
+        return self._len
+
     def __getitem__(self, index: int) -> Dict:
         """Get document
 
@@ -64,6 +75,29 @@ class DocumentCollection:
 
         return self._items[index]
 
+    async def getitem_async(self, index: int) -> Dict:
+        """Get document. Async equivalent to 'collection[index]'
+
+        Arguments:
+            - index (int): index
+
+        Returns:
+            A document at a given index
+        """
+        if index >= await self.length_async():
+            raise IndexError
+
+        if len(self._items) <= index:
+            while len(self._items) <= index:
+                prev_len = len(self._items)
+                await self._next_batch_async()
+                curr_len = len(self._items)
+
+                if prev_len == curr_len:
+                    raise IndexError
+
+        return self._items[index]
+
     def _get_field_values(
         self, field: str, query: Dict = None, key_as_string: bool = False
     ) -> List:
@@ -79,6 +113,27 @@ class DocumentCollection:
             bucket_query = self._utils.extend_query_object(self._query, query)
             key = "key_as_string" if key_as_string is True else "key"
             buckets = self._utils.get_buckets(field, bucket_query)
+            self._field_values[field] = list(
+                map(lambda bucket: bucket[key], buckets)
+            )
+
+        return self._field_values[field]
+
+    async def _get_field_values_async(
+        self, field: str, query: Dict = None, key_as_string: bool = False
+    ) -> List:
+        """Get List of unique values for a given field
+
+        Arguments:
+            - field (str): a metadata field
+
+        Returns:
+            A List of unique values for the given field
+        """
+        if field not in self._field_values:
+            bucket_query = self._utils.extend_query_object(self._query, query)
+            key = "key_as_string" if key_as_string is True else "key"
+            buckets = await self._utils.get_buckets_async(field, bucket_query)
             self._field_values[field] = list(
                 map(lambda bucket: bucket[key], buckets)
             )
@@ -110,6 +165,40 @@ class DocumentCollection:
             query["pit"] = self._pit.get_pit_object()
 
         res = self._sumo.post("/search", json=query).json()
+        hits = res["hits"]
+
+        if self._len is None:
+            self._len = hits["total"]["value"]
+
+        if len(hits["hits"]) > 0:
+            self._after = hits["hits"][-1]["sort"]
+            self._items.extend(hits["hits"])
+
+    async def _next_batch_async(self) -> List[Dict]:
+        """Get next batch of documents
+
+        Returns:
+            The next batch of documents
+        """
+        query = {
+            "query": self._query,
+            "sort": [{"_doc": {"order": "desc"}}],
+            "size": 500,
+        }
+
+        if self._select:
+            query["_source"] = self._select
+
+        if self._len is None:
+            query["track_total_hits"] = True
+
+        if self._after is not None:
+            query["search_after"] = self._after
+
+        if self._pit is not None:
+            query["pit"] = self._pit.get_pit_object()
+
+        res = await self._sumo.post_async("/search", json=query).json()
         hits = res["hits"]
 
         if self._len is None:

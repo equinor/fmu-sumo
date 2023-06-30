@@ -33,9 +33,19 @@ class CaseCollection(DocumentCollection):
         return self._get_field_values("fmu.case.name.keyword")
 
     @property
+    async def names_async(self) -> List[str]:
+        """List of unique case names"""
+        return await self._get_field_values_async("fmu.case.name.keyword")
+
+    @property
     def statuses(self) -> List[str]:
         """List of unique statuses"""
         return self._get_field_values("_sumo.status.keyword")
+
+    @property
+    async def statuses_async(self) -> List[str]:
+        """List of unique statuses"""
+        return await self._get_field_values_async("_sumo.status.keyword")
 
     @property
     def users(self) -> List[str]:
@@ -43,14 +53,31 @@ class CaseCollection(DocumentCollection):
         return self._get_field_values("fmu.case.user.id.keyword")
 
     @property
+    async def users_async(self) -> List[str]:
+        """List of unique user names"""
+        return await self._get_field_values_async("fmu.case.user.id.keyword")
+
+    @property
     def assets(self) -> List[str]:
         """List of unique asset names"""
         return self._get_field_values("access.asset.name.keyword")
 
     @property
+    async def assets_async(self) -> List[str]:
+        """List of unique asset names"""
+        return await self._get_field_values_async("access.asset.name.keyword")
+
+    @property
     def fields(self) -> List[str]:
         """List of unique field names"""
         return self._get_field_values(
+            "masterdata.smda.field.identifier.keyword"
+        )
+
+    @property
+    async def fields_async(self) -> List[str]:
+        """List of unique field names"""
+        return await self._get_field_values_async(
             "masterdata.smda.field.identifier.keyword"
         )
 

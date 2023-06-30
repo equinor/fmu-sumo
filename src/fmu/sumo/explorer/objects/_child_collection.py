@@ -52,9 +52,19 @@ class ChildCollection(DocumentCollection):
         return self._get_field_values("data.name.keyword")
 
     @property
+    async def names_async(self) -> List[str]:
+        """List of unique object names"""
+        return await self._get_field_values_async("data.name.keyword")
+
+    @property
     def tagnames(self) -> List[str]:
         """List of unqiue object tagnames"""
         return self._get_field_values("data.tagname.keyword")
+
+    @property
+    async def tagnames_async(self) -> List[str]:
+        """List of unqiue object tagnames"""
+        return await self._get_field_values_async("data.tagname.keyword")
 
     @property
     def iterations(self) -> List[int]:
@@ -62,9 +72,19 @@ class ChildCollection(DocumentCollection):
         return self._get_field_values("fmu.iteration.name.keyword")
 
     @property
+    async def iterations_async(self) -> List[int]:
+        """List of unique object iteration names"""
+        return await self._get_field_values_async("fmu.iteration.name.keyword")
+
+    @property
     def realizations(self) -> List[int]:
         """List of unique object realization ids"""
         return self._get_field_values("fmu.realization.id")
+
+    @property
+    async def realizations_async(self) -> List[int]:
+        """List of unique object realization ids"""
+        return await self._get_field_values_async("fmu.realization.id")
 
     @property
     def aggregations(self) -> List[str]:
@@ -72,9 +92,19 @@ class ChildCollection(DocumentCollection):
         return self._get_field_values("fmu.aggregation.operation.keyword")
 
     @property
+    async def aggregations_async(self) -> List[str]:
+        """List of unique object aggregation operations"""
+        return await self._get_field_values_async("fmu.aggregation.operation.keyword")
+
+    @property
     def stages(self) -> List[str]:
         """List of unique stages"""
         return self._get_field_values("fmu.context.stage.keyword")
+
+    @property
+    async def stages_async(self) -> List[str]:
+        """List of unique stages"""
+        return await self._get_field_values_async("fmu.context.stage.keyword")
 
     @property
     def stratigraphic(self) -> List[str]:
@@ -82,9 +112,19 @@ class ChildCollection(DocumentCollection):
         return self._get_field_values("data.stratigraphic")
 
     @property
+    async def stratigraphic_async(self) -> List[str]:
+        """List of unqiue object stratigraphic"""
+        return await self._get_field_values_async("data.stratigraphic")
+
+    @property
     def vertical_domain(self) -> List[str]:
         """List of unqiue object vertical domain"""
         return self._get_field_values("data.vertical_domain")
+
+    @property
+    async def vertical_domain_async(self) -> List[str]:
+        """List of unqiue object vertical domain"""
+        return await self._get_field_values_async("data.vertical_domain")
 
     def _init_query(self, doc_type: str, query: Dict = None) -> Dict:
         new_query = super()._init_query(doc_type, query)

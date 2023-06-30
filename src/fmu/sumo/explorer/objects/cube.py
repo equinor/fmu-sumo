@@ -25,7 +25,16 @@ class Cube(Child):
             res = json.loads(res.decode("UTF-8"))
             self._url = res.get("baseuri") + self.uuid
             self._sas = res.get("auth")
-        except:
+        except Exception:
+            self._url = res.decode("UTF-8")
+
+    async def _populate_url_async(self):
+        res = await self._sumo.get_async(f"/objects('{self.uuid}')/blob/authuri")
+        try:
+            res = json.loads(res.decode("UTF-8"))
+            self._url = res.get("baseuri") + self.uuid
+            self._sas = res.get("auth")
+        except Exception:
             self._url = res.decode("UTF-8")
 
     @property
@@ -33,8 +42,17 @@ class Cube(Child):
         if self._url is None:
             self._populate_url()
         if self._sas is None:
-            return self._url    
-        else: 
+            return self._url
+        else:
+            return self._url.split("?")[0] + "/"
+
+    @property
+    async def url_async(self) -> str:
+        if self._url is None:
+            await self._populate_url_async()
+        if self._sas is None:
+            return self._url
+        else:
             return self._url.split("?")[0] + "/"
 
     @property
@@ -47,13 +65,34 @@ class Cube(Child):
             return self._sas
 
     @property
+    async def sas_async(self) -> str:
+        if self._url is None:
+            await self._populate_url_async()
+        if self._sas is None:
+            return self._url.split("?")[1]
+        else:
+            return self._sas
+
+    @property
     def openvds_handle(self) -> openvds.core.VDS:
         if self._url is None:
             self._populate_url()
-        
+
         if self._sas is None:
             return openvds.open(self._url)
-        else: 
+        else:
+            url = "azureSAS" + self._url[5:] + "/"
+            sas = "Suffix=?" + self._sas
+            return openvds.open(url, sas)
+
+    @property
+    async def openvds_handle_async(self) -> openvds.core.VDS:
+        if self._url is None:
+            await self._populate_url_async()
+
+        if self._sas is None:
+            return openvds.open(self._url)
+        else:
             url = "azureSAS" + self._url[5:] + "/"
             sas = "Suffix=?" + self._sas
             return openvds.open(url, sas)

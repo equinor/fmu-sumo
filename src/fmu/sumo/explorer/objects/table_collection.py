@@ -34,6 +34,11 @@ class TableCollection(ChildCollection):
         """List of unique column names"""
         return self._get_field_values("data.spec.columns.keyword")
 
+    @property
+    async def columns_async(self) -> List[str]:
+        """List of unique column names"""
+        return await self._get_field_values_async("data.spec.columns.keyword")
+
     def filter(
         self,
         name: Union[str, List[str], bool] = None,

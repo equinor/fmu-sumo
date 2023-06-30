@@ -49,3 +49,14 @@ class Surface(Child):
             return surface_from_file(self.blob)
         except TypeError as type_err:
             raise TypeError(f"Unknown format: {self.format}") from type_err
+
+    async def to_regular_surface_async(self) -> RegularSurface:
+        """Get surface object as a RegularSurface
+
+        Returns:
+            RegularSurface: A RegularSurface object
+        """
+        try:
+            return surface_from_file(await self.blob_async)
+        except TypeError as type_err:
+            raise TypeError(f"Unknown format: {self.format}") from type_err

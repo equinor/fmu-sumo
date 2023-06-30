@@ -79,6 +79,37 @@ class AggregatedTable:
 
         return self._parameters
 
+    @property
+    async def parameters_async(self):
+        """Return parameter set for iteration
+
+        Returns:
+            dict: parameters connected to iteration
+        """
+        if not self._parameters:
+            must = self._utils.build_terms(
+                {
+                    "class.keyword": "table",
+                    "_sumo.parent_object.keyword": self._case.uuid,
+                    "data.name.keyword": self._name,
+                    "data.tagname.keyword": self._tag,
+                    "fmu.iteration.name.keyword": self._iteration,
+                    "fmu.aggregation.operation.keyword": "collection",
+                }
+            )
+
+            query = {
+                "size": 1,
+                "_source": ["fmu.iteration.parameters"],
+                "query": {"bool": {"must": must}},
+            }
+
+            res = await self._sumo.post_async("/search", json=query)
+            doc = res.json()["hits"]["hits"][0]
+            self._parameters = doc["_source"]["fmu"]["iteration"]["parameters"]
+
+        return self._parameters
+
     def __len__(self):
         return len(self._collection)
 

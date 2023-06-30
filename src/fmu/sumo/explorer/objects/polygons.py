@@ -29,7 +29,7 @@ class Polygons(Child):
             stacklevel=2,
         )
 
-        return self.to_pandas
+        return self.to_pandas()
 
     def to_pandas(self) -> pd.DataFrame:
         """Get polygons object as a DataFrame
@@ -40,5 +40,17 @@ class Polygons(Child):
 
         try:
             return pd.read_csv(self.blob)
+        except TypeError as type_err:
+            raise TypeError(f"Unknown format: {self.format}") from type_err
+
+    async def to_pandas_async(self) -> pd.DataFrame:
+        """Get polygons object as a DataFrame
+
+        Returns:
+            DataFrame: A DataFrame object
+        """
+
+        try:
+            return pd.read_csv(await self.blob_async)
         except TypeError as type_err:
             raise TypeError(f"Unknown format: {self.format}") from type_err

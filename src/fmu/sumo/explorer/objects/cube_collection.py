@@ -45,9 +45,50 @@ class CubeCollection(ChildCollection):
         )
 
     @property
+    async def timestamps_async(self) -> List[str]:
+        """List of unique timestamps in CubeCollection"""
+        return await self._get_field_values_async(
+            "data.time.t0.value", TIMESTAMP_QUERY, True
+        )
+
+    @property
     def intervals(self) -> List[Tuple]:
         """List of unique intervals in CubeCollection"""
         res = self._sumo.post(
+            "/search",
+            json={
+                "query": self._query,
+                "aggs": {
+                    "t0": {
+                        "terms": {"field": "data.time.t0.value", "size": 50},
+                        "aggs": {
+                            "t1": {
+                                "terms": {
+                                    "field": "data.time.t1.value",
+                                    "size": 50,
+                                }
+                            }
+                        },
+                    }
+                },
+            },
+        )
+
+        buckets = res.json()["aggregations"]["t0"]["buckets"]
+        intervals = []
+
+        for bucket in buckets:
+            t0 = bucket["key_as_string"]
+
+            for t1 in bucket["t1"]["buckets"]:
+                intervals.append((t0, t1["key_as_string"]))
+
+        return intervals
+
+    @property
+    async def intervals_async(self) -> List[Tuple]:
+        """List of unique intervals in CubeCollection"""
+        res = await self._sumo.post_async(
             "/search",
             json={
                 "query": self._query,

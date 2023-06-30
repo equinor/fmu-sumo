@@ -72,6 +72,40 @@ class Table(Child):
         self._logger.debug("Read blob as %s to return pandas", worked)
         return self._dataframe
 
+    async def to_pandas_async(self) -> pd.DataFrame:
+        """Return object as a pandas DataFrame
+
+        Returns:
+            DataFrame: A DataFrame object
+        """
+
+        if self._dataframe is None:
+            if self["data"]["format"] == "csv":
+                worked = "csv"
+                self._logger.debug("Treating blob as csv")
+                try:
+                    self._dataframe = pd.read_csv(await self.blob_async)
+                    worked = "csv"
+
+                except UnicodeDecodeError as ud_e:
+                    raise UnicodeDecodeError("Maybe not csv?") from ud_e
+            else:
+                try:
+                    worked = "feather"
+                    self._dataframe = pf.read_feather(await self.blob_async)
+                except pa.lib.ArrowInvalid:
+                    try:
+                        worked = "parquet"
+                        self._dataframe = pd.read_parquet(await self.blob_async)
+
+                    except UnicodeDecodeError as ud_error:
+                        raise TypeError(
+                            "Come on, no way this is converting to pandas!!"
+                        ) from ud_error
+
+        self._logger.debug("Read blob as %s to return pandas", worked)
+        return self._dataframe
+
     @to_pandas.setter
     def to_pandas(self, frame: pd.DataFrame):
         self._dataframe = frame
@@ -89,9 +123,8 @@ class Table(Child):
             stacklevel=2,
         )
 
-        return self.to_arrow
+        return self.to_arrow()
 
-    @property
     def to_arrow(self) -> pa.Table:
         """Return object as an arrow Table
 
@@ -114,6 +147,37 @@ class Table(Child):
                 try:
                     self._arrowtable = pa.Table.from_pandas(
                         pd.read_csv(self.blob)
+                    )
+
+                except TypeError as type_err:
+                    raise OSError("Cannot read this into arrow") from type_err
+
+            self._logger.debug("Read blob as %s to return arrow", worked)
+
+        return self._arrowtable
+
+    async def to_arrow_async(self) -> pa.Table:
+        """Return object as an arrow Table
+
+        Returns:
+            pa.Table: _description_
+        """
+        if self._arrowtable is None:
+            if self["data"]["format"] == "arrow":
+                try:
+                    worked = "feather"
+                    self._arrowtable = pf.read_table(await self.blob_async)
+                except pa.lib.ArrowInvalid:
+                    worked = "parquet"
+                    self._arrowtable = pq.read_table(await self.blob_async)
+            else:
+                warn(
+                    "Reading csv format into arrow, you will not get the full benefit of native arrow"
+                )
+                worked = "csv"
+                try:
+                    self._arrowtable = pa.Table.from_pandas(
+                        pd.read_csv(await self.blob_async)
                     )
 
                 except TypeError as type_err:
