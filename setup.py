@@ -33,6 +33,7 @@ try:
     CMDCLASS.update({"build_sphinx": BuildDoc})
 except ImportError as e:
     # sphinx not installed - do not provide build_sphinx cmd
+    print(f"Failed to import sphinx comman: {e}")
     pass
 
 is_docs = os.getenv("READTHEDOCS") == "True"
