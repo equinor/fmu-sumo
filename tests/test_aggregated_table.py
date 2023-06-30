@@ -29,7 +29,7 @@ def test_aggregated_summary_arrow(explorer: Explorer):
     assert len(table.columns) == 972 + 2
     column = table["FOPT"]
 
-    assert isinstance(column.to_arrow, pa.Table)
+    assert isinstance(column.to_arrow(), pa.Table)
     with pytest.raises(IndexError) as e_info:
         table = table["banana"]
         assert (
@@ -51,7 +51,7 @@ def test_aggregated_summary_arrow_with_deprecated_function_name(
 
     with pytest.warns(
         DeprecationWarning,
-        match=".arrowtable is deprecated, renamed to .to_arrow",
+        match=".arrowtable is deprecated, renamed to .to_arrow()",
     ):
         assert isinstance(column.arrowtable, pa.Table)
     with pytest.raises(IndexError) as e_info:
@@ -74,7 +74,7 @@ def test_aggregated_summary_pandas_with_deprecated_function_name(
     """Test usage of Aggregated class with item_type=pandas with deprecated function name"""
     case = explorer.cases.filter(name="drogon_ahm-2023-02-22")[0]
     table = AggregatedTable(case, "summary", "eclipse", "iter-0")
-    with pytest.warns(match=".dataframe is deprecated, renamed to .to_pandas"):
+    with pytest.warns(match=".dataframe is deprecated, renamed to .to_pandas()"):
         mydata = table["FOPT"].dataframe
     assert isinstance(mydata, pd.DataFrame)
 
