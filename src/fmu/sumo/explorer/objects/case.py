@@ -53,19 +53,18 @@ class Case(Document):
             query = {
                 "query": {"term": {"_sumo.parent_object.keyword": self.uuid}},
                 "aggs": {
-                    "id": {
-                        "terms": {"field": "fmu.iteration.id", "size": 50},
+                    "uuid": {
+                        "terms": {"field": "fmu.iteration.uuid.keyword", "size": 50},
                         "aggs": {
                             "name": {
                                 "terms": {
-                                    "field": "fmu.iteration.name.keyword",
-                                    "size": 1,
+                                    "field": "fmu.iteration.name.keyword", 
+                                    "size": 1
                                 }
                             },
                             "realizations": {
-                                "terms": {
+                                "cardinality": {
                                     "field": "fmu.realization.id",
-                                    "size": 1000,
                                 }
                             },
                         },
@@ -75,15 +74,15 @@ class Case(Document):
             }
 
             res = self._sumo.post("/search", json=query)
-            buckets = res.json()["aggregations"]["id"]["buckets"]
+            buckets = res.json()["aggregations"]["uuid"]["buckets"]
             iterations = []
 
             for bucket in buckets:
                 iterations.append(
                     {
-                        "id": bucket["key"],
+                        "uuid": bucket["key"],
                         "name": bucket["name"]["buckets"][0]["key"],
-                        "realizations": len(bucket["realizations"]["buckets"]),
+                        "realizations": bucket["realizations"]["value"],
                     }
                 )
 
