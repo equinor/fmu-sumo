@@ -100,3 +100,5 @@ src/fmu/sumo/version.py
 
 # local expermentation
 testing.ipynb
+# files generated during testing
+*.csv
