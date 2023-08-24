@@ -13,6 +13,8 @@ from fmu.config.utilities import yaml_load
 from fmu.dataio import ExportData
 from fmu.sumo.uploader.scripts.sumo_upload import sumo_upload_main
 
+logging.basicConfig(level=logging.DEBUG)
+
 
 def _define_submodules():  #  -> Tuple(tuple, dict):
     """Fetch all submodules
@@ -265,7 +267,7 @@ def export_with_config(config_path):
     return export_folder, suffixes
 
 
-def upload(upload_folder, suffixes, env="prod", threads=5):
+def upload(upload_folder, suffixes, env="prod", threads=5, start_del="real"):
     """Upload to sumo
 
     Args:
@@ -274,16 +276,23 @@ def upload(upload_folder, suffixes, env="prod", threads=5):
         env (str, optional): sumo environment to upload to. Defaults to "prod".
         threads (int, optional): Threads to use in upload. Defaults to 5.
     """
-    case_path = Path(re.sub(r"\/share\/.*)", "", upload_folder))
+    logger = logging.getLogger(__file__ + ".upload")
+    case_path = Path(re.sub(rf"\/{start_del}.*", "", upload_folder))
+    logger.info("Case to upload from %s", case_path)
     case_meta_path = case_path / "share/metadata/fmu_case.yml"
+    logger.info("Case meta object %s", case_meta_path)
     for suffix in suffixes:
+        logger.info(suffix)
+        upload_search = f"{upload_folder}/*.{suffix}"
+        logger.info("Upload folder %s", upload_search)
         sumo_upload_main(
             case_path,
-            f"{upload_folder}*.{suffix}",
-            case_meta_path,
+            upload_search,
             env,
+            case_meta_path,
             threads,
         )
+        logger.debug("Uploaded")
 
 
 def parse_args():
@@ -313,7 +322,7 @@ def parse_args():
         type=str,
         help=(
             "Use this to get documentation of one of the datatypes to upload\n"
-            + f"valid options are {', '.join(SUBMODULES)}"
+            + f"valid options are \n{', '.join(SUBMODULES)}"
         ),
     )
     return parser.parse_args()

@@ -6,7 +6,8 @@ import pyarrow as pa
 import pytest
 import fmu.sumo.utilities.ecl2csv as sumo_ecl2csv
 
-# from fmu.sumo.uploader import CaseOnDisk, SumoConnection
+from fmu.sumo.uploader import CaseOnDisk, SumoConnection
+from sumo.wrapper import SumoClient
 
 REEK_ROOT = Path(__file__).parent / "data/reek"
 REEK_BASE = "2_R001_REEK"
@@ -228,24 +229,29 @@ def test_parse_args(mocker, submod):
     assert all([arg in options for arg in arg_keys]), "Not all passed"
 
 
-# def test_upload():
-#     sumo = SumoConnection("test")
-#     case_metadata_path = REEK_ROOT / "share/metadata/fmu_case.yml"
-#     case = CaseOnDisk(
-#         case_metadata_path=case_metadata_path,
-#         sumo_connection=sumo,
-#         verbosity="DEBUG",
-#     )
+def test_upload():
+    sumo = SumoClient("test")
+    sumocon = SumoConnection("test")
+    case_metadata_path = REEK_ROOT / "share/metadata/fmu_case.yml"
+    print(f"This is the case metadata %s", case_metadata_path)
+    # case_metadata_path = "share/metadata/fmu_case.yml"
 
-#     case_uuid = case.register()
-#     path = f"/objects('{case_uuid}')"
+    case = CaseOnDisk(
+        case_metadata_path=case_metadata_path,
+        sumo_connection=sumocon,
+        verbosity="DEBUG",
+    )
 
-#     sumo.delete(path)
+    case_uuid = case.register()
+    sumo_ecl2csv.upload(
+        str(REEK_ROOT / "realization-0/iter-0/share/results/tables"),
+        ["csv"],
+        "test",
+    )
+    path = f"/objects('{case_uuid}')"
 
-
-def test_export_from_commmandline(tmp_path):
-    tmpcsvfile = tmp_path / "2_R001_REEK--summary.csv"
+    # sumo.delete(path)
 
 
 if __name__ == "__main__":
-    test_parse_args()
+    pass
