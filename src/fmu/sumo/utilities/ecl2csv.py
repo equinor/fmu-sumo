@@ -1,4 +1,5 @@
 """Export with metadata"""
+import re
 from typing import Tuple
 from pathlib import Path
 import logging
@@ -10,6 +11,7 @@ import ecl2df
 from pyarrow import Table
 from fmu.config.utilities import yaml_load
 from fmu.dataio import ExportData
+from fmu.sumo.uploader.scripts.sumo_upload import sumo_upload_main
 
 
 def _define_submodules():  #  -> Tuple(tuple, dict):
@@ -190,7 +192,7 @@ def export_csv(
         )
         exp_path = exp.export(frame)
     else:
-        exp_path = "Nothing produces"
+        exp_path = "Nothing produced"
     return exp_path
 
 
@@ -237,102 +239,125 @@ def export_with_config(config_path):
     """
     logger = logging.getLogger(__file__ + ".export_w_config")
     config = yaml_load(config_path)
+    export_path = None
+    count = 0
+    suffixes = set()
     try:
         sim_specifics = config["ecl2csv"]
         datafiles, submods, options = read_config(sim_specifics)
         for datafile in datafiles:
             for submod in submods:
-                export_csv(
+                export_path = export_csv(
                     datafile,
                     submod,
                     global_variables_file=config_path,
                     **options,
                 )
+                count += 1
+                export_path = Path(export_path)
+                suffixes.add(export_path.suffix)
     except KeyError:
         logger.warning(
             "No export from reservoir simulator, forgot to include ecl2csv in config?"
         )
+    export_folder = str(export_path.parent)
+    logger.info("Exported %i files to %s", count, export_folder)
+    return export_folder, suffixes
 
 
-# def filter_args_w_options(args):
-#     """Filter the command line arguments to fit to function
+def upload(upload_folder, suffixes, env="prod", threads=5):
+    """Upload to sumo
 
-#     Args:
-#         args (argparse.NameSpace): the arguments are namespace
-
-#     Returns:
-#         dict: the filtered arguments
-#     """
-#     logger = logging.getLogger(__file__ + ".filter_args_w_options")
-#     export_arrow = False
-#     try:
-#         export_arrow = args.arrow = True
-#     except AttributeError:
-#         logger.info("No option for export to arrow in %s", args.subcommand)
-#     key_args = {
-#         key: value
-#         for key, value in vars(args).items()
-#         if key in SUBMOD_DICT[args.subcommand]
-#     }
-#     if export_arrow:
-#         key_args["arrow_convertor"] = SUBMOD_DICT[args.subcommand][
-#             "arrow_convertor"
-#         ]
-#     logger.debug("Arguments filtered: %s", key_args)
-#     return key_args
+    Args:
+        upload_folder (str): folder to upload from
+        suffixes (set, list, tuple): suffixes to include in upload
+        env (str, optional): sumo environment to upload to. Defaults to "prod".
+        threads (int, optional): Threads to use in upload. Defaults to 5.
+    """
+    case_path = Path(re.sub(r"\/share\/.*)", "", upload_folder))
+    case_meta_path = case_path / "share/metadata/fmu_case.yml"
+    for suffix in suffixes:
+        sumo_upload_main(
+            case_path,
+            f"{upload_folder}*.{suffix}",
+            case_meta_path,
+            env,
+            threads,
+        )
 
 
-# def parse_args():
-#     """Parse arguments"""
-#     parser = argparse.ArgumentParser(
-#         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-#         description=(
-#             "ecl2csv ("
-#             # + __version__
-#             + ") is a modified command line frontend to ecl2df. "
-#         ),
-#     )
-#     # parser.add_argument(
-#     #     "--datafile_path",
-#     #     type=str,
-#     #     help="path to simulator datafile for run",
-#     # )
-#     subparsers = parser.add_subparsers(
-#         required=True,
-#         dest="subcommand",
-#         parser_class=argparse.ArgumentParser,
-#     )
-#     for submod in SUBMODULES:
-#         subparser = subparsers.add_parser(submod)
-#         importlib.import_module("ecl2df." + submod).fill_parser(subparser)
-#     parser.add_argument(
-#         "--config_path",
-#         type=str,
-#         help="fmu config file to enable exporting with metadata",
-#         default="fmuconfig/output/global_variables.yml",
-#     )
-#     args = filter_args_w_options(parser.parse_args())
+def parse_args():
+    """Parse arguments for command line tool
 
-#     return args
-
-
-# def export_csv_with_args(
-#     args,
-# ):
-#     """Export datatypes from simulator from command line
-
-#     Args:
-#         args (argparse.NameSpace): Input arguments
-#     """
-#     logger = logging.getLogger(__file__ + ".export_csv_with_args")
-#     export_csv(
-#         args.DATAFILE, args.subcommand, global_variables_file, **key_args
-#     )
+    Returns:
+        argparse.NameSpace: the arguments parsed
+    """
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description="Parsing input to control export of simulator data",
+    )
+    parser.add_argument(
+        "--global_config",
+        type=str,
+        help="config that controls the export",
+        default="fmuconfig/output/global_variables.yml",
+    )
+    parser.add_argument(
+        "--env",
+        type=str,
+        help="Which sumo environment to upload to",
+        default="prod",
+    )
+    parser.add_argument(
+        "--help_on",
+        type=str,
+        help=(
+            "Use this to get documentation of one of the datatypes to upload\n"
+            + f"valid options are {', '.join(SUBMODULES)}"
+        ),
+    )
+    return parser.parse_args()
 
 
-# def main():
-#     # export_csv_with_args(parse_args())
-#     print(parse_args())
+def give_help(submod, only_general=False):
+    """Give descriptions of variables available for submodule
+
+    Args:
+        submod (str): submodule
+
+    Returns:
+        str: description of submodule input
+    """
+    general_info = """
+    This utility uses the library ecl2csv, but uploads directly to sumo. Required options are:
+    A config file in yaml format, where you specifiy the variables to extract. What is required
+    is a keyword in the config saying sim2sumo. under there you have three optional arguments:
+    * datafile: this can be a string, a list, or it can be absent altogether
+    * datatypes: this needs to be a list, or non existent
+    * options: The options are listed below in the orignal documentation from ecl2csv. The eclfiles
+               option is replaced with what is under datafile
+
+    """
+    if only_general:
+        text_to_return = general_info
+    else:
+        try:
+            text_to_return = general_info + SUBMOD_DICT[submod]["doc"]
+        except KeyError:
+            text_to_return = f"subtype {submod} does not exist"
+
+    return text_to_return
+
+
+def main():
+    """Main function to be called"""
+    args = parse_args()
+    print(args.help_on)
+    if args.help_on is not None:
+        print(give_help(args.help_on))
+    else:
+        upload_folder, suffixes = export_with_config(args.config_path)
+        upload(upload_folder, suffixes, args.env)
 
 
 if __name__ == "__main__":

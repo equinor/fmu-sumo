@@ -6,6 +6,8 @@ import pyarrow as pa
 import pytest
 import fmu.sumo.utilities.ecl2csv as sumo_ecl2csv
 
+# from fmu.sumo.uploader import CaseOnDisk, SumoConnection
+
 REEK_ROOT = Path(__file__).parent / "data/reek"
 REEK_BASE = "2_R001_REEK"
 REEK_ECL_MODEL = REEK_ROOT / "eclipse/model/"
@@ -224,6 +226,21 @@ def test_parse_args(mocker, submod):
     ), f"for {submod} these unknown arguments were passed {unknowns}"
 
     assert all([arg in options for arg in arg_keys]), "Not all passed"
+
+
+# def test_upload():
+#     sumo = SumoConnection("test")
+#     case_metadata_path = REEK_ROOT / "share/metadata/fmu_case.yml"
+#     case = CaseOnDisk(
+#         case_metadata_path=case_metadata_path,
+#         sumo_connection=sumo,
+#         verbosity="DEBUG",
+#     )
+
+#     case_uuid = case.register()
+#     path = f"/objects('{case_uuid}')"
+
+#     sumo.delete(path)
 
 
 def test_export_from_commmandline(tmp_path):
