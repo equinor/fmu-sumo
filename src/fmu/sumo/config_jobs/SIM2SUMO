@@ -1,0 +1,15 @@
+-- This forward model uploads results from reservoir simulators eclipse or opm
+-- to sumo. It is called from the ERT config file as a regular forward model
+
+-- Arguments:
+-- CONFIG_PATH: path to fmu config, which needs to be p
+
+STDERR ecl2csv_sumo.stderr
+STDOUT ecl2csv_sumo.stdout
+
+EXECUTABLE ecl2csv_sumo
+
+ARGLIST <CONFIG_PATH>
+
+MAX_ARG 1
+ARG_TYPE 0 STRING

@@ -6,6 +6,7 @@ import importlib
 import argparse
 from inspect import signature
 import pandas as pd
+import ecl2df as sim2df
 import ecl2df
 from pyarrow import Table
 from fmu.config.utilities import yaml_load
@@ -120,7 +121,7 @@ def get_dataframe(
         }
         logger.debug("Exporting with arguments %s", right_kwargs)
         try:
-            frame = extract_df(ecl2df.EclFiles(datafile_path), **right_kwargs)
+            frame = extract_df(sim2df.EclFiles(datafile_path), **right_kwargs)
             if arrow:
                 try:
                     frame = kwargs["arrow_convertor"](frame)
@@ -143,7 +144,7 @@ def check_options(submod, key_args):
     """Check keyword args against possible optiopns
 
     Args:
-        submod (str): the submodule to use from ecl2df
+        submod (str): the submodule to use from sim2df
         key_args (dict): the keyword arguments supplied
 
     Raises:
@@ -237,30 +238,34 @@ def export_with_config(config_path):
         config_path (str): path to existing yaml file
     """
     logger = logging.getLogger(__file__ + ".export_w_config")
-    config = yaml_load(config_path)
-    export_path = None
-    count = 0
     suffixes = set()
+    export_folder = None
     try:
-        sim_specifics = config["ecl2csv"]
-        datafiles, submods, options = read_config(sim_specifics)
-        for datafile in datafiles:
-            for submod in submods:
-                export_path = export_csv(
-                    datafile,
-                    submod,
-                    global_variables_file=config_path,
-                    **options,
-                )
-                count += 1
-                export_path = Path(export_path)
-                suffixes.add(export_path.suffix)
-    except KeyError:
-        logger.warning(
-            "No export from reservoir simulator, forgot to include ecl2csv in config?"
-        )
-    export_folder = str(export_path.parent)
-    logger.info("Exported %i files to %s", count, export_folder)
+        count = 0
+        config = yaml_load(config_path)
+        try:
+            sim_specifics = config["sim2sumo"]
+            datafiles, submods, options = read_config(sim_specifics)
+            for datafile in datafiles:
+                for submod in submods:
+                    export_path = export_csv(
+                        datafile,
+                        submod,
+                        global_variables_file=config_path,
+                        **options,
+                    )
+                    count += 1
+                    export_path = Path(export_path)
+                    suffixes.add(export_path.suffix)
+        except KeyError:
+            logger.warning(
+                "No export from reservoir simulator\n,"
+                + " forgot to include sim2sumo keyword in config?"
+            )
+        export_folder = str(export_path.parent)
+        logger.info("Exported %i files to %s", count, export_folder)
+    except FileNotFoundError:
+        logger.warning("No config file at: %s", config_path)
     return export_folder, suffixes
 
 
@@ -274,22 +279,25 @@ def upload(upload_folder, suffixes, env="prod", threads=5, start_del="real"):
         threads (int, optional): Threads to use in upload. Defaults to 5.
     """
     logger = logging.getLogger(__file__ + ".upload")
-    case_path = Path(re.sub(rf"\/{start_del}.*", "", upload_folder))
-    logger.info("Case to upload from %s", case_path)
-    case_meta_path = case_path / "share/metadata/fmu_case.yml"
-    logger.info("Case meta object %s", case_meta_path)
-    for suffix in suffixes:
-        logger.info(suffix)
-        upload_search = f"{upload_folder}/*.{suffix}"
-        logger.info("Upload folder %s", upload_search)
-        sumo_upload_main(
-            case_path,
-            upload_search,
-            env,
-            case_meta_path,
-            threads,
-        )
-        logger.debug("Uploaded")
+    try:
+        case_path = Path(re.sub(rf"\/{start_del}.*", "", upload_folder))
+        logger.info("Case to upload from %s", case_path)
+        case_meta_path = case_path / "share/metadata/fmu_case.yml"
+        logger.info("Case meta object %s", case_meta_path)
+        for suffix in suffixes:
+            logger.info(suffix)
+            upload_search = f"{upload_folder}/*.{suffix}"
+            logger.info("Upload folder %s", upload_search)
+            sumo_upload_main(
+                case_path,
+                upload_search,
+                env,
+                case_meta_path,
+                threads,
+            )
+            logger.debug("Uploaded")
+    except TypeError:
+        logger.warning("Nothing to export..")
 
 
 def parse_args():
@@ -349,7 +357,7 @@ def give_help(submod, only_general=False):
     general_info = """
     This utility uses the library ecl2csv, but uploads directly to sumo. Required options are:
     A config file in yaml format, where you specifiy the variables to extract. What is required
-    is a keyword in the config saying sim2sumo. under there you have three optional arguments:
+    is a keyword in the config saying sim2df. under there you have three optional arguments:
     * datafile: this can be a string, a list, or it can be absent altogether
     * datatypes: this needs to be a list, or non existent
     * options: The options are listed below in the original documentation from ecl2csv. The eclfiles
