@@ -1,6 +1,5 @@
 """Export with metadata"""
 import re
-from typing import Tuple
 from pathlib import Path
 import logging
 import importlib
@@ -12,8 +11,6 @@ from pyarrow import Table
 from fmu.config.utilities import yaml_load
 from fmu.dataio import ExportData
 from fmu.sumo.uploader.scripts.sumo_upload import sumo_upload_main
-
-logging.basicConfig(level=logging.DEBUG)
 
 
 def _define_submodules():  #  -> Tuple(tuple, dict):
@@ -305,27 +302,39 @@ def parse_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Parsing input to control export of simulator data",
     )
-    parser.add_argument(
-        "--global_config",
+    subparsers = parser.add_subparsers(dest="command")
+    subparsers.default = "execute"
+
+    exec_parser = subparsers.add_parser("execute")
+    help_parser = subparsers.add_parser("help")
+
+    exec_parser.add_argument(
+        "--config_path",
         type=str,
         help="config that controls the export",
         default="fmuconfig/output/global_variables.yml",
     )
-    parser.add_argument(
+    exec_parser.add_argument(
         "--env",
         type=str,
         help="Which sumo environment to upload to",
         default="prod",
     )
-    parser.add_argument(
-        "--help_on",
+    help_parser.add_argument(
+        "help_on",
         type=str,
         help=(
             "Use this to get documentation of one of the datatypes to upload\n"
             + f"valid options are \n{', '.join(SUBMODULES)}"
         ),
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    if len(vars(args)) == 1 and args.command == "execute":
+        # Help out the default option, otherwise
+        # NameSpace will only contain execute
+        args = exec_parser.parse_args()
+
+    return args
 
 
 def give_help(submod, only_general=False):
@@ -343,7 +352,7 @@ def give_help(submod, only_general=False):
     is a keyword in the config saying sim2sumo. under there you have three optional arguments:
     * datafile: this can be a string, a list, or it can be absent altogether
     * datatypes: this needs to be a list, or non existent
-    * options: The options are listed below in the orignal documentation from ecl2csv. The eclfiles
+    * options: The options are listed below in the original documentation from ecl2csv. The eclfiles
                option is replaced with what is under datafile
 
     """
@@ -353,18 +362,25 @@ def give_help(submod, only_general=False):
         try:
             text_to_return = general_info + SUBMOD_DICT[submod]["doc"]
         except KeyError:
-            text_to_return = f"subtype {submod} does not exist"
+            text_to_return = (
+                f"subtype {submod} does not exist!!, existing options:\n"
+                + "\n".join(SUBMODULES)
+            )
 
     return text_to_return
 
 
 def main():
     """Main function to be called"""
+    logger = logging.getLogger(__file__ + ".main")
     args = parse_args()
-    print(args.help_on)
-    if args.help_on is not None:
+    logger.debug(vars(args))
+    try:
         print(give_help(args.help_on))
-    else:
+    except AttributeError:
+        logger.debug("Executing with:")
+        logger.debug("config: %s: ", args.config_path)
+        logger.debug("Sumo env: %s: ", args.env)
         upload_folder, suffixes = export_with_config(args.config_path)
         upload(upload_folder, suffixes, args.env)
 

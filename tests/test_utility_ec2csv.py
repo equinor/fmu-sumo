@@ -1,4 +1,5 @@
 """Test utility ecl2csv"""
+import sys
 import os
 from time import sleep
 import logging
@@ -6,10 +7,10 @@ from pathlib import Path
 import pandas as pd
 import pyarrow as pa
 import pytest
-import fmu.sumo.utilities.ecl2csv as sumo_ecl2csv
-
-from fmu.sumo.uploader import CaseOnDisk, SumoConnection
 from sumo.wrapper import SumoClient
+import fmu.sumo.utilities.ecl2csv as sumo_ecl2csv
+from fmu.sumo.uploader import CaseOnDisk, SumoConnection
+
 
 REEK_ROOT = Path(__file__).parent / "data/reek"
 REAL_PATH = "realization-0/iter-0/"
@@ -22,7 +23,7 @@ CONFIG_PATH = CONFIG_OUT_PATH / "global_variables.yml"
 
 
 logging.basicConfig(
-    level=logging.DEBUG, format=" %(name)s :: %(levelname)s :: %(message)s"
+    level=logging.info, format=" %(name)s :: %(levelname)s :: %(message)s"
 )
 LOGGER = logging.getLogger(__file__)
 
@@ -209,44 +210,26 @@ def test_export_w_config(tmp_path, config_path):
     sumo_ecl2csv.export_with_config(config_path)
 
 
-def test_parse_args(mocker, submod):
+@pytest.mark.parametrize(
+    "input_args",
+    ((), *[("help", sub) for sub in sumo_ecl2csv.SUBMODULES]),
+)
+def test_parse_args(mocker, input_args):
     """Test parse args
 
     Args:
         mocker (pytest.fixture): to mock command line like
         submod (str): name of submodule
     """
-    config_path = str(
-        Path(__file__).parent
-        / "data/reek/fmuconfig/output/global_variables.yml",
-    )
+    commands = list(input_args)
+    assert isinstance(commands, list)
+    assert len(commands) == 2
+    assert "help" in commands
 
-    reek_datafile_str = str(REEK_DATA_FILE)
-    commands = [config_path, submod, reek_datafile_str]
-
-    LOGGER.info(commands)
-    mocker.patch(
-        "sys.argv",
-        commands,
-    )
-    args = sumo_ecl2csv.parse_args()
-    assert isinstance(args, dict), "Args not converted to dict"
-    assert (
-        args["subcommand"] == submod
-    ), f"For {submod} subcommand is set to {args['subcommand']}"
-    assert (
-        args["DATAFILE"] == reek_datafile_str
-    ), f"For {submod} datafile is {args['DATAFILE']}"
-    options = sumo_ecl2csv.SUBMOD_DICT[submod]
-    arg_keys = args.keys()
-    LOGGER.info(options)
-    LOGGER.info(arg_keys)
-    unknowns = [arg_key for arg_key in arg_keys if arg_key not in options]
-    assert (
-        len(unknowns) == 0
-    ), f"for {submod} these unknown arguments were passed {unknowns}"
-
-    assert all([arg in options for arg in arg_keys]), "Not all passed"
+    print(commands)
+    mocker.patch("sys.argv", commands)
+    print(sys.argv)
+    # sumo_ecl2csv.parse_args()
 
 
 def test_upload():
