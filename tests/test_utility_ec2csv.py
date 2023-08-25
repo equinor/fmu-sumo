@@ -1,5 +1,7 @@
 """Test utility ecl2csv"""
 import os
+from time import sleep
+import logging
 from pathlib import Path
 import pandas as pd
 import pyarrow as pa
@@ -10,22 +12,30 @@ from fmu.sumo.uploader import CaseOnDisk, SumoConnection
 from sumo.wrapper import SumoClient
 
 REEK_ROOT = Path(__file__).parent / "data/reek"
+REAL_PATH = "realization-0/iter-0/"
+REEK_REAL = REEK_ROOT / REAL_PATH
 REEK_BASE = "2_R001_REEK"
-REEK_ECL_MODEL = REEK_ROOT / "eclipse/model/"
+REEK_ECL_MODEL = REEK_REAL / "eclipse/model/"
 REEK_DATA_FILE = REEK_ECL_MODEL / f"{REEK_BASE}-0.DATA"
-CONFIG_OUT_PATH = REEK_ROOT / "fmuconfig/output/"
+CONFIG_OUT_PATH = REEK_REAL / "fmuconfig/output/"
 CONFIG_PATH = CONFIG_OUT_PATH / "global_variables.yml"
+
+
+logging.basicConfig(
+    level=logging.DEBUG, format=" %(name)s :: %(levelname)s :: %(message)s"
+)
+LOGGER = logging.getLogger(__file__)
 
 
 def test_submodules_dict():
     """Test generation of submodule list"""
     sublist, submods = sumo_ecl2csv._define_submodules()
-    print(submods)
+    LOGGER.info(submods)
     assert isinstance(sublist, tuple)
     assert isinstance(submods, dict)
     for submod_name, submod_dict in submods.items():
-        print(submod_name)
-        print(submod_dict)
+        LOGGER.info(submod_name)
+        LOGGER.info(submod_dict)
         assert isinstance(submod_name, str)
         assert (
             "/" not in submod_name
@@ -76,7 +86,7 @@ def test_export_csv(tmp_path, submod):
         submod,
         CONFIG_PATH,
     )
-    print(actual_path)
+    LOGGER.info(actual_path)
     assert isinstance(
         actual_path,
         str,
@@ -101,7 +111,7 @@ def test_export_csv_w_options(tmp_path, submod="summary"):
     actual_path = sumo_ecl2csv.export_csv(
         REEK_DATA_FILE, submod, CONFIG_PATH, **key_args
     )
-    print(actual_path)
+    LOGGER.info(actual_path)
     assert isinstance(
         actual_path,
         str,
@@ -154,16 +164,16 @@ def _assert_right_len(checks, key, to_messure, name):
 def test_read_config(config_path):
     """Test reading of config file via read_config function"""
     os.chdir(REEK_ROOT)
-    print(config_path)
+    LOGGER.info(config_path)
     config = sumo_ecl2csv.yaml_load(config_path)["ecl2csv"]
     assert isinstance(config, (dict, bool))
     dfiles, submods, opts = sumo_ecl2csv.read_config(config)
     name = config_path.name
     checks = CHECK_DICT[name]
-    print(config)
-    print(dfiles)
-    print(submods)
-    print(opts)
+    LOGGER.info(config)
+    LOGGER.info(dfiles)
+    LOGGER.info(submods)
+    LOGGER.info(opts)
     _assert_right_len(checks, "nrdatafile", dfiles, name)
     _assert_right_len(checks, "nrsubmods", submods, name)
     _assert_right_len(checks, "nroptions", opts, name)
@@ -176,16 +186,26 @@ def test_read_config(config_path):
 @pytest.mark.parametrize("config_path", CONFIG_OUT_PATH.glob("*.yml"))
 def test_export_w_config(tmp_path, config_path):
     """Test function export with config"""
-    os.chdir(tmp_path)
-    # The line below is needed for test to work when def of datafile not in
-    # config
-    sim_path = tmp_path / "eclipse"
-    conf_path = tmp_path / "fmuconfig/output/"
+    # Make exec path, needs to be at real..-0/iter-0
+    exec_path = tmp_path / REAL_PATH
+    exec_path.mkdir(parents=True)
+    # Symlink in case meta at root of run
+    case_share_meta = "share/metadata/"
+    (tmp_path / case_share_meta).mkdir(parents=True)
+    case_meta_path = "share/metadata/fmu_case.yml"
+    (tmp_path / case_meta_path).symlink_to(REEK_ROOT / case_meta_path)
+    # Run tests from exec path to get metadata in ship shape
+    os.chdir(exec_path)
+    # The lines below is needed for test to work when definition of datafile
+    #  not in config symlink to model folder, code autodetects
+    sim_path = tmp_path / REAL_PATH / "eclipse"
     sim_path.mkdir(parents=True)
     (sim_path / "model").symlink_to(REEK_ECL_MODEL)
+    # Symlink in config, this is also autodetected
+    conf_path = tmp_path / REAL_PATH / "fmuconfig/output/"
     conf_path.mkdir(parents=True)
     (conf_path / config_path.name).symlink_to(config_path)
-
+    # THE TEST
     sumo_ecl2csv.export_with_config(config_path)
 
 
@@ -204,7 +224,7 @@ def test_parse_args(mocker, submod):
     reek_datafile_str = str(REEK_DATA_FILE)
     commands = [config_path, submod, reek_datafile_str]
 
-    print(commands)
+    LOGGER.info(commands)
     mocker.patch(
         "sys.argv",
         commands,
@@ -219,8 +239,8 @@ def test_parse_args(mocker, submod):
     ), f"For {submod} datafile is {args['DATAFILE']}"
     options = sumo_ecl2csv.SUBMOD_DICT[submod]
     arg_keys = args.keys()
-    print(options)
-    print(arg_keys)
+    LOGGER.info(options)
+    LOGGER.info(arg_keys)
     unknowns = [arg_key for arg_key in arg_keys if arg_key not in options]
     assert (
         len(unknowns) == 0
@@ -230,11 +250,12 @@ def test_parse_args(mocker, submod):
 
 
 def test_upload():
-    sumo = SumoClient("test")
-    sumocon = SumoConnection("test")
+    """Test the upload function"""
+    sumo_env = "dev"
+    sumo = SumoClient(sumo_env)
+    sumocon = SumoConnection(sumo_env)
     case_metadata_path = REEK_ROOT / "share/metadata/fmu_case.yml"
-    print(f"This is the case metadata %s", case_metadata_path)
-    # case_metadata_path = "share/metadata/fmu_case.yml"
+    LOGGER.info("This is the case metadata %s", case_metadata_path)
 
     case = CaseOnDisk(
         case_metadata_path=case_metadata_path,
@@ -246,11 +267,24 @@ def test_upload():
     sumo_ecl2csv.upload(
         str(REEK_ROOT / "realization-0/iter-0/share/results/tables"),
         ["csv"],
-        "test",
+        sumo_env,
     )
+    # There has been instances when this fails, probably because of
+    # some time delay, have introduced a little sleep to get it to be quicker
+    sleep(2)
+    results = sumo.get(
+        "/search", query=f"fmu.case.uuid:{case_uuid} AND class:table", size=0
+    )
+    print(results["hits"])
+    correct = 2
+    returned = results["hits"]["total"]["value"]
+    print("This is returned ", returned)
+    assert (
+        returned == correct
+    ), f"Tried to upload {correct}, but only managed {returned}"
     path = f"/objects('{case_uuid}')"
 
-    # sumo.delete(path)
+    sumo.delete(path)
 
 
 if __name__ == "__main__":
