@@ -211,13 +211,19 @@ def read_config(config):
         config = {}
     datafile = config.get("datafile", "eclipse/model/")
     if isinstance(datafile, str):
+        logger.debug("Using %s to read results", datafile)
         datafile_posix = Path(datafile)
         if datafile_posix.is_dir():
+            logger.debug("Directory, globbing for datafiles")
             datafiles = list(datafile_posix.glob("*.DATA"))
+
         else:
+            logger.debug("File path, will just use this")
             datafiles = [datafile]
     else:
+        logger.debug("List")
         datafiles = datafile
+    logger.debug("Datafile(s) to use %s", datafiles)
     try:
         submods = config["datatypes"]
     except KeyError:
@@ -240,6 +246,7 @@ def export_with_config(config_path):
     logger = logging.getLogger(__file__ + ".export_w_config")
     suffixes = set()
     export_folder = None
+    export_path = None
     try:
         count = 0
         config = yaml_load(config_path)
@@ -262,8 +269,11 @@ def export_with_config(config_path):
                 "No export from reservoir simulator\n,"
                 + " forgot to include sim2sumo keyword in config?"
             )
-        export_folder = str(export_path.parent)
-        logger.info("Exported %i files to %s", count, export_folder)
+        try:
+            export_folder = str(export_path.parent)
+            logger.info("Exported %i files to %s", count, export_folder)
+        except AttributeError:
+            logger.warning("No results exported ")
     except FileNotFoundError:
         logger.warning("No config file at: %s", config_path)
     return export_folder, suffixes
@@ -300,12 +310,17 @@ def upload(upload_folder, suffixes, env="prod", threads=5, start_del="real"):
         logger.warning("Nothing to export..")
 
 
+def get_parser():
+    pass
+
+
 def parse_args():
     """Parse arguments for command line tool
 
     Returns:
         argparse.NameSpace: the arguments parsed
     """
+    logger = logging.getLogger(__file__ + ".parse_args")
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description="Parsing input to control export of simulator data",
@@ -341,7 +356,7 @@ def parse_args():
         # Help out the default option, otherwise
         # NameSpace will only contain execute
         args = exec_parser.parse_args()
-
+    logger.debug("Returning %s", args)
     return args
 
 
@@ -378,6 +393,21 @@ def give_help(submod, only_general=False):
     return text_to_return
 
 
+def upload_with_config(config_path, env="prod"):
+    """Upload simulator results to sumo
+
+    Args:
+        config_path (str): Path to config file
+        env (str, optional): The sumo environment. Defaults to "prod".
+    """
+    logger = logging.getLogger(__file__ + ".upload_with_config")
+    logger.debug("Executing with:")
+    logger.debug("config: %s: ", config_path)
+    logger.debug("Sumo env: %s: ", env)
+    upload_folder, suffixes = export_with_config(config_path)
+    upload(upload_folder, suffixes, env)
+
+
 def main():
     """Main function to be called"""
     logger = logging.getLogger(__file__ + ".main")
@@ -386,11 +416,7 @@ def main():
     try:
         print(give_help(args.help_on))
     except AttributeError:
-        logger.debug("Executing with:")
-        logger.debug("config: %s: ", args.config_path)
-        logger.debug("Sumo env: %s: ", args.env)
-        upload_folder, suffixes = export_with_config(args.config_path)
-        upload(upload_folder, suffixes, args.env)
+        upload_with_config(args.config_path, args.env)
 
 
 if __name__ == "__main__":
