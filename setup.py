@@ -66,8 +66,8 @@ setup(
             "sumo_upload = fmu.sumo.uploader.scripts.sumo_upload",
         ],
         "console_scripts": [
-            "sumo_upload=fmu.sumo.uploader.scripts.sumo_upload:main"
-            sim2sumo="fmu.sumo.utilities.scripts.sim2sumo:main"
+            "sumo_upload=fmu.sumo.uploader.scripts.sumo_upload:main",
+            "sim2sumo=fmu.sumo.utilities.scripts.sim2sumo:main",
         ],
     },
     cmdclass=CMDCLASS,
