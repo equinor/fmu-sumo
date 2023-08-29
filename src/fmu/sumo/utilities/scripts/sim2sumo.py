@@ -7,22 +7,9 @@ import os
 import argparse
 import logging
 from pathlib import Path
-
-try:
-    from ert.shared.plugins.plugin_manager import hook_implementation  # type: ignore
-except ModuleNotFoundError:
-    from ert_shared.plugins.plugin_manager import hook_implementation  # type: ignore
-
-try:
-    from ert.shared.plugins.plugin_response import plugin_response  # type: ignore
-except ModuleNotFoundError:
-    from ert_shared.plugins.plugin_response import plugin_response  # type: ignore
-
-try:
-    from ert import ErtScript  # type: ignore
-except ModuleNotFoundError:
-    from res.job_queue import ErtScript  # type: ignore
-
+from ert.shared.plugins.plugin_manager import hook_implementation
+from ert.shared.plugins.plugin_response import plugin_response
+from ert import ErtScript
 from fmu.sumo.utilities.sim2sumo import parse_args, upload_with_config
 
 LOGGER = logger = logging.getLogger(__name__)
@@ -37,17 +24,17 @@ EXAMPLES = """
 
 FOR full blown example add this to your ert config:
 
-FORWARD_MODEL SIM2SUMO(<CONFIG_PATH>= <your config location>, <SUMO_ENV>=<sumo env to upload to>)
-<CONFIG_PATH> refers to the config file that controls the upload. Defaults to
-   fmuconfig/output/global_variables.yml
+FORWARD_MODEL SIM2SUMO(<S2S_CONF_PATH>= <your config location>, <SUMO_ENV>=<sumo env to upload to>)
+<S2S_CONFIG_PATH> refers to the config file that controls the upload. This file can be a regular
+fmu config file, or a completely separate file, but needs to be in yaml format, and contain
+a section called sim2sumo to produce any results. Defaults to fmuconfig/output/global_variables.yml
 <SUMO_ENV> refers to the sumo environment to upload to. Defaults to prod
 
-For minimum amount of code added put section utilize the defaults. This means that if you
+For minimum amount of clutter in your ert config utilize the defaults. This means that if you
 add section sim2sumo to the fmu config file, and store it at the recommendation and upload to
-the prod environment for sumo then you call in the ert config can be reduced to
+the prod environment for sumo then your call in the ert config can be reduced to
 
-FORWARD_MODEL SIM2SUMO
-in ert config."""
+FORWARD_MODEL SIM2SUMO."""
 
 
 class Sim2Sumo(ErtScript):
