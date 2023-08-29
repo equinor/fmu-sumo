@@ -67,6 +67,14 @@ class Sim2Sumo(ErtScript):
 @hook_implementation
 @plugin_response(plugin_name="SIM2SUMO")
 def job_documentation(job_name):
+    """Add job documentation for forward model
+
+    Args:
+        job_name (str): name of job
+
+    Returns:
+        dict: the documentation to be provided
+    """
     if job_name != "SIM2SUMO":
         return None
 

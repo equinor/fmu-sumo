@@ -9,9 +9,24 @@ import pandas as pd
 import ecl2df as sim2df
 import ecl2df
 from pyarrow import Table
-from fmu.config.utilities import yaml_load
+import yaml
 from fmu.dataio import ExportData
 from fmu.sumo.uploader.scripts.sumo_upload import sumo_upload_main
+
+
+def yaml_load(file_name):
+    """Load yaml config file into dict
+
+    Args:
+        file_name (str): name of yaml file
+
+    Returns:
+        dict: the read results
+    """
+    config = {}
+    with open(file_name, "r", encoding="utf-8") as yam:
+        config = yaml.safe_load(yam)
+    return config
 
 
 def _define_submodules():  #  -> Tuple(tuple, dict):
@@ -267,7 +282,7 @@ def export_with_config(config_path):
         except KeyError:
             logger.warning(
                 "No export from reservoir simulator\n,"
-                + " forgot to include sim2sumo keyword in config?"
+                + " No sim2sumo keyword in config?"
             )
         try:
             export_folder = str(export_path.parent)
