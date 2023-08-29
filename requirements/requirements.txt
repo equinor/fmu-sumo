@@ -5,7 +5,7 @@ sumo-wrapper-python @ git+https://github.com/equinor/sumo-wrapper-python.git@mai
 xtgeo
 azure-core
 pyarrow; python_version > "3.6.1"
-# ert
+ert
 ecl2df
 fmu-dataio
 OpenVDS; sys_platform != 'darwin'
