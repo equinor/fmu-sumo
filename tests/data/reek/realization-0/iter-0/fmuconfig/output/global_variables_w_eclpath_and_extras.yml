@@ -24,7 +24,7 @@ access:
   ssdl:
     access_level: internal
     rep_include: true
-ecl2csv:
+sim2sumo:
   datafile: eclipse/model/2_R001_REEK-0.DATA
   datatypes:
     - summary
