@@ -166,7 +166,7 @@ def test_read_config(config_path):
     """Test reading of config file via read_config function"""
     os.chdir(REEK_REAL)
     LOGGER.info(config_path)
-    config = sim2sumo.yaml_load(config_path)["ecl2csv"]
+    config = sim2sumo.yaml_load(config_path)["sim2sumo"]
     assert isinstance(config, (dict, bool))
     dfiles, submods, opts = sim2sumo.read_config(config)
     name = config_path.name

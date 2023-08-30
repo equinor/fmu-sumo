@@ -1,4 +1,5 @@
 """Export with metadata"""
+import sys
 import re
 from pathlib import Path
 import logging
@@ -126,6 +127,7 @@ def get_dataframe(
     extract_df = SUBMOD_DICT[submod]["extract"]
     arrow = kwargs.get("arrow", False)
     frame = None
+    trace = None
     if print_help:
         print(SUBMOD_DICT[submod]["doc"])
     else:
@@ -145,12 +147,13 @@ def get_dataframe(
                     frame = convert_to_arrow(frame)
 
         except TypeError:
-            logger.warning(
-                "Couldn't produce results!! Most likely something with you call"
-            )
+            trace = sys.exc_info()[1]
         except FileNotFoundError:
+            trace = sys.exc_info()[1]
+        if trace is not None:
             logger.warning(
-                "Cannot produce results!!, most likely no results present"
+                "Trace: %s, \nNo results produced ",
+                trace,
             )
     return frame
 
@@ -182,7 +185,7 @@ def check_options(submod, key_args):
 def export_csv(
     datafile_path: str,
     submod: str,
-    global_variables_file="fmuconfig/output/global_variables.yml",
+    config_file="fmuconfig/output/global_variables.yml",
     **kwargs,
 ) -> str:
     """Export csv file with specified datatype
@@ -198,8 +201,8 @@ def export_csv(
     # check_options(submod, kwargs)
     frame = get_dataframe(datafile_path, submod, **kwargs)
     if frame is not None:
-        logger.debug("Reading global variables from %s", global_variables_file)
-        cfg = yaml_load(global_variables_file)
+        logger.debug("Reading global variables from %s", config_file)
+        cfg = yaml_load(config_file)
         exp = ExportData(
             config=cfg,
             name=give_name(datafile_path),
@@ -273,7 +276,7 @@ def export_with_config(config_path):
                     export_path = export_csv(
                         datafile,
                         submod,
-                        global_variables_file=config_path,
+                        config_file=config_path,
                         **options,
                     )
                     count += 1
