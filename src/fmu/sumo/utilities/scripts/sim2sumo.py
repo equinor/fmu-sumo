@@ -64,6 +64,12 @@ class Sim2Sumo(ErtScript):
 #     workflow.category = "export"
 
 
+def main():
+    """Main function, to be executed as console script"""
+    args = parse_args()
+    upload_with_config(args.config_path, args.env)
+
+
 @hook_implementation
 @plugin_response(plugin_name="SIM2SUMO")
 def job_documentation(job_name):
