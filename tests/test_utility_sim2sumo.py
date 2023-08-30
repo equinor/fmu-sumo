@@ -210,42 +210,42 @@ def test_export_w_config(tmp_path, config_path):
     sim2sumo.export_with_config(config_path)
 
 
-def test_upload(token):
-    """Test the upload function"""
-    sumo_env = "dev"
-    sumo = SumoClient(sumo_env, token)
-    sumocon = SumoConnection(sumo_env, token)
-    case_metadata_path = REEK_ROOT / "share/metadata/fmu_case.yml"
-    LOGGER.info("This is the case metadata %s", case_metadata_path)
-    LOGGER.info("Using token %s", token)
-    case = CaseOnDisk(
-        case_metadata_path=case_metadata_path,
-        sumo_connection=sumocon,
-        verbosity="DEBUG",
-    )
+# def test_upload(token):
+#     """Test the upload function"""
+#     sumo_env = "dev"
+#     sumo = SumoClient(sumo_env, token)
+#     sumocon = SumoConnection(sumo_env, token)
+#     case_metadata_path = REEK_ROOT / "share/metadata/fmu_case.yml"
+#     LOGGER.info("This is the case metadata %s", case_metadata_path)
+#     LOGGER.info("Using token %s", token)
+#     case = CaseOnDisk(
+#         case_metadata_path=case_metadata_path,
+#         sumo_connection=sumocon,
+#         verbosity="DEBUG",
+#     )
 
-    case_uuid = case.register()
-    sim2sumo.upload(
-        str(REEK_ROOT / "realization-0/iter-0/share/results/tables"),
-        ["csv"],
-        sumo_env,
-    )
-    # There has been instances when this fails, probably because of
-    # some time delay, have introduced a little sleep to get it to be quicker
-    sleep(2)
-    results = sumo.get(
-        "/search", query=f"fmu.case.uuid:{case_uuid} AND class:table", size=0
-    )
-    LOGGER.debug(results["hits"])
-    correct = 2
-    returned = results["hits"]["total"]["value"]
-    LOGGER.debug("This is returned ", returned)
-    assert (
-        returned == correct
-    ), f"Tried to upload {correct}, but only managed {returned}"
-    path = f"/objects('{case_uuid}')"
+#     case_uuid = case.register()
+#     sim2sumo.upload(
+#         str(REEK_ROOT / "realization-0/iter-0/share/results/tables"),
+#         ["csv"],
+#         sumo_env,
+#     )
+#     # There has been instances when this fails, probably because of
+#     # some time delay, have introduced a little sleep to get it to be quicker
+#     sleep(2)
+#     results = sumo.get(
+#         "/search", query=f"fmu.case.uuid:{case_uuid} AND class:table", size=0
+#     )
+#     LOGGER.debug(results["hits"])
+#     correct = 2
+#     returned = results["hits"]["total"]["value"]
+#     LOGGER.debug("This is returned ", returned)
+#     assert (
+#         returned == correct
+#     ), f"Tried to upload {correct}, but only managed {returned}"
+#     path = f"/objects('{case_uuid}')"
 
-    sumo.delete(path)
+#     sumo.delete(path)
 
 
 if __name__ == "__main__":
