@@ -235,11 +235,11 @@ def test_export_w_config(tmp_path, config_path):
 # # sim2sumo.parse_args()
 
 
-def test_upload():
+def test_upload(token):
     """Test the upload function"""
     sumo_env = "dev"
-    sumo = SumoClient(sumo_env)
-    sumocon = SumoConnection(sumo_env)
+    sumo = SumoClient(sumo_env, token)
+    sumocon = SumoConnection(sumo_env, token)
     case_metadata_path = REEK_ROOT / "share/metadata/fmu_case.yml"
     LOGGER.info("This is the case metadata %s", case_metadata_path)
 
