@@ -155,7 +155,25 @@ def get_dataframe(
                 "Trace: %s, \nNo results produced ",
                 trace,
             )
+    if submod == "rft":
+        tidy()
     return frame
+
+
+def tidy():
+    """Utility function to tidy up mess from ecl2df"""
+    # Ecl2df creates three files for rft data, see unwanted list below
+    logger = logging.getLogger(__file__ + ".tidy")
+    unwanteds = ["seg.csv", "con.csv", "icd.csv"]
+    cwd = Path().cwd()
+    for unwanted in unwanteds:
+        unwanted_posix = cwd / unwanted
+        if unwanted_posix.is_file():
+            logger.info(
+                "Deleting unwanted file from rft export %s",
+                str(unwanted_posix),
+            )
+            unwanted_posix.unlink()
 
 
 def export_csv(
@@ -362,7 +380,7 @@ def give_help(submod, only_general=False):
     general_info = """
     This utility uses the library ecl2csv, but uploads directly to sumo. Required options are:
     A config file in yaml format, where you specifiy the variables to extract. What is required
-    is a keyword in the config saying sim2df. under there you have three optional arguments:
+    is a keyword in the config called "sim2simo". under there you have three optional arguments:
     * datafile: this can be a string, a list, or it can be absent altogether
     * datatypes: this needs to be a list, or non existent
     * options: The options are listed below in the original documentation from ecl2csv. The eclfiles

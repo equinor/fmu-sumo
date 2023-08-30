@@ -43,7 +43,7 @@ class Sim2Sumo(ErtScript):
     This is used for the ERT workflow context."""
 
     # pylint: disable=too-few-public-methods
-    def run(self, *args):
+    def run(self):
         # pylint: disable=no-self-use
         """Parse with a simplified command line parser, for ERT only,
         call sumo_upload_main()"""
