@@ -30,7 +30,7 @@ def yaml_load(file_name):
     return config
 
 
-def _define_submodules():  #  -> Tuple(tuple, dict):
+def _define_submodules():
     """Fetch all submodules
 
     Returns:
@@ -156,30 +156,6 @@ def get_dataframe(
                 trace,
             )
     return frame
-
-
-def check_options(submod, key_args):
-    """Check keyword args against possible optiopns
-
-    Args:
-        submod (str): the submodule to use from sim2df
-        key_args (dict): the keyword arguments supplied
-
-    Raises:
-        KeyError: if key(s) in key_args not available for submodule
-    """
-    unknowns = [
-        key
-        for key in key_args.keys()
-        if key not in SUBMOD_DICT[submod]["options"]
-    ]
-    if len(unknowns) > 0:
-        raise KeyError(
-            (
-                f"these unknown options are included in call {unknowns}\n"
-                + f"please read the docs: \n {SUBMOD_DICT[submod]['doc']}"
-            )
-        )
 
 
 def export_csv(
@@ -326,10 +302,6 @@ def upload(upload_folder, suffixes, env="prod", threads=5, start_del="real"):
             logger.debug("Uploaded")
     except TypeError:
         logger.warning("Nothing to export..")
-
-
-def get_parser():
-    pass
 
 
 def parse_args():
