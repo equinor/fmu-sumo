@@ -311,7 +311,7 @@ def upload(upload_folder, suffixes, env="prod", threads=5, start_del="real"):
         logger.info("Case meta object %s", case_meta_path)
         for suffix in suffixes:
             logger.info(suffix)
-            upload_search = f"{upload_folder}/*.{suffix}"
+            upload_search = f"{upload_folder}/*{suffix}"
             logger.info("Upload folder %s", upload_search)
             sumo_upload_main(
                 case_path,
