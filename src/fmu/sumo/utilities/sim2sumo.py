@@ -24,9 +24,13 @@ def yaml_load(file_name):
     Returns:
         dict: the read results
     """
+    logger = logging.getLogger(__file__ + ".yaml_load")
     config = {}
-    with open(file_name, "r", encoding="utf-8") as yam:
-        config = yaml.safe_load(yam)
+    try:
+        with open(file_name, "r", encoding="utf-8") as yam:
+            config = yaml.safe_load(yam)
+    except OSError:
+        logger.warning("Cannot open file, will return empty dict")
     return config
 
 
@@ -52,7 +56,7 @@ def _define_submodules():
         submodules[submod]["options"] = tuple(
             name
             for name in signature(func).parameters.keys()
-            if name not in ["deck", "eclfiles"]
+            if name not in {"deck", "eclfiles"}
         )
         submodules[submod]["doc"] = func.__doc__
         try:
