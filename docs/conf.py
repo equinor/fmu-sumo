@@ -26,10 +26,7 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.autodoc",
     "sphinx_autodoc_typehints",
-    "sphinx_togglebutton",
 ]
-
-togglebutton_hint = "Expand"
 
 autodoc_mock_imports = [
     "ert",
