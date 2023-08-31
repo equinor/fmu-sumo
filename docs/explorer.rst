@@ -9,6 +9,10 @@ Api Reference
 
 - `API reference <apiref/fmu.sumo.explorer.html>`_
 
+.. warning::
+    OpenVDS does not publish builds for MacOS. You can still use the Explorer without OpenVDS,
+    but some Cube methods will not work.
+
 Usage and examples
 ------------------
 

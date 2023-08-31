@@ -7,6 +7,8 @@ This package is intended for interaction with Sumo within the FMU (Fast Model Up
 
 ## Explorer
 
+> :warning: OpenVDS does not publish builds for MacOS. You can still use the Explorer without OpenVDS, but some Cube methods will not work.
+
 Explore and retrieve data from Sumo.
 
 ```python

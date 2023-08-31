@@ -1,9 +1,18 @@
 """Module containing class for cube object"""
 import json
-import openvds
 from typing import Dict
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._child import Child
+import sys
+import warnings
+
+if sys.platform == "darwin":
+    try:
+        import openvds
+    except ImportError:
+        warnings.warn("OpenVDS is missing. Some Cube methods will not work.")
+else:
+    import openvds
 
 
 class Cube(Child):
@@ -29,7 +38,9 @@ class Cube(Child):
             self._url = res.decode("UTF-8")
 
     async def _populate_url_async(self):
-        res = await self._sumo.get_async(f"/objects('{self.uuid}')/blob/authuri")
+        res = await self._sumo.get_async(
+            f"/objects('{self.uuid}')/blob/authuri"
+        )
         try:
             res = json.loads(res.decode("UTF-8"))
             self._url = res.get("baseuri") + self.uuid
@@ -74,7 +85,7 @@ class Cube(Child):
             return self._sas
 
     @property
-    def openvds_handle(self) -> openvds.core.VDS:
+    def openvds_handle(self):
         if self._url is None:
             self._populate_url()
 
@@ -86,7 +97,7 @@ class Cube(Child):
             return openvds.open(url, sas)
 
     @property
-    async def openvds_handle_async(self) -> openvds.core.VDS:
+    async def openvds_handle_async(self):
         if self._url is None:
             await self._populate_url_async()
 
