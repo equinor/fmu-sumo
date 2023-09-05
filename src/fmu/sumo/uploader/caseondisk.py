@@ -232,15 +232,16 @@ class CaseOnDisk:
         realization_id = self.files[0].metadata["fmu"]["realization"]["id"]
         query = f"fmu.case.uuid:${fmu_id} AND fmu.realization.id:${realization_id}"
         
-        print(fmu_id)
-        print(realization_id)
+        logger.info(f"FMU ID: ${fmu_id}")
+        logger.info(f"Realization ID: ${realization_id}")
         
         res = self.sumo_connection._api.get("/search", query=query)
         
         if(res.json()["hits"]["total"] == 0):
-            print("Parameters.txt does not exist, upload it!")
+            logger.info("Parameters.txt does not exist, upload it!")
+            raise Exception("Parameters.txt does not exist!")
         else:
-            print("Parameters.txt exists!")
+            logger.info("Parameters.txt exists!")
         
     
 
