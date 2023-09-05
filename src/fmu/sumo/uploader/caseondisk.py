@@ -15,6 +15,7 @@ import pandas as pd
 from fmu.sumo.uploader._fileondisk import FileOnDisk
 from fmu.sumo.uploader._upload_files import upload_files
 
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.CRITICAL)
 
@@ -224,6 +225,24 @@ class CaseOnDisk:
             raise ValueError("Could not get fmu_case_uuid from case metadata")
 
         return fmu_case_uuid
+    
+    def _upload_parameters(self):
+        """Upload parameters.txt if it is not present in Sumo for the current realization"""
+        fmu_id = self._fmu_case_uuid
+        realization_id = self.files[0].metadata["fmu"]["realization"]["id"]
+        query = f"fmu.case.uuid:${fmu_id} AND fmu.realization.id:${realization_id}"
+        
+        print(fmu_id)
+        print(realization_id)
+        
+        res = self.sumo_connection._api.get("/search", query=query)
+        
+        if(res.json()["hits"]["total"] == 0):
+            print("Parameters.txt does not exist, upload it!")
+        else:
+            print("Parameters.txt exists!")
+        
+    
 
     def upload(self, threads=4, max_attempts=1, register_case=False):
         """Trigger upload of files.
@@ -372,6 +391,8 @@ class CaseOnDisk:
         logger.info("Failed: %s", str(len(failed_uploads)))
         logger.info("Rejected: %s", str(len(rejected_uploads)))
         logger.info("Wall time: %s sec", str(_dt))
+        
+        self._upload_parameters()
 
         return ok_uploads
 
