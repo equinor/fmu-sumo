@@ -10,14 +10,18 @@ import warnings
 import datetime
 
 import yaml
+import json
 import pandas as pd
+import hashlib
+import base64
 
 from fmu.sumo.uploader._fileondisk import FileOnDisk
 from fmu.sumo.uploader._upload_files import upload_files
+from fmu.dataio import ExportData
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.CRITICAL)
+logger.setLevel(logging.INFO)
 
 # pylint: disable=C0103 # allow non-snake case variable names
 
@@ -228,20 +232,43 @@ class CaseOnDisk:
     
     def _upload_parameters(self):
         """Upload parameters.txt if it is not present in Sumo for the current realization"""
-        fmu_id = self._fmu_case_uuid
-        realization_id = self.files[0].metadata["fmu"]["realization"]["id"]
-        query = f"fmu.case.uuid:${fmu_id} AND fmu.realization.id:${realization_id}"
+        logger.info("Uploading parameters.txt")
+
+        fmu_id = self.fmu_case_uuid
+        realization_id = self.files[0].metadata["fmu"]["realization"]["uuid"]
+        query = f"fmu.case.uuid:{fmu_id} AND fmu.realization.uuid:{realization_id} AND data.content:parameters"
+        search_res = self.sumo_connection.api.get("/search", query=query)
         
-        logger.info(f"FMU ID: ${fmu_id}")
-        logger.info(f"Realization ID: ${realization_id}")
-        
-        res = self.sumo_connection._api.get("/search", query=query)
-        
-        if(res.json()["hits"]["total"] == 0):
-            logger.info("Parameters.txt does not exist, upload it!")
-            raise Exception("Parameters.txt does not exist!")
+        if search_res["hits"]["total"]["value"] == 0:
+            with open("./fmuconfig/output/global_variables.yml", "r") as variables_yml:
+                global_config= yaml.safe_load(variables_yml)
+
+            with open("./parameters.txt", "r") as parameters_txt:
+                parameters = {} 
+
+                for line in parameters_txt:
+                    words = line.split(" ")
+                    parameters[words[0]] = words[1]  
+
+                bytes = json.dumps(parameters).encode("utf-8")
+
+            digester = hashlib.md5(bytes)
+            md5 = base64.b64encode(digester.digest()).decode("utf-8")
+            exd = ExportData(config=global_config, content="parameters", name="parameters")
+
+            metadata = exd.generate_metadata(parameters)
+            metadata["_sumo"] = {"blob_size": len(bytes), "blob_md5": md5}
+
+            # temporary hack, remove when schema no longer requires data.spec for dicts
+            metadata["data"]["spec"] = {"test": 123}
+
+            upload_res = self.sumo_connection.api.post(f"/objects('{fmu_id}')", json=metadata)
+            self.sumo_connection.api.blob_client.upload_blob(
+                blob=bytes, 
+                url=upload_res.json()["blob_url"]
+            )
         else:
-            logger.info("Parameters.txt exists!")
+            logger.info("Parameters.txt already exists")
         
     
 
@@ -392,7 +419,7 @@ class CaseOnDisk:
         logger.info("Failed: %s", str(len(failed_uploads)))
         logger.info("Rejected: %s", str(len(rejected_uploads)))
         logger.info("Wall time: %s sec", str(_dt))
-        
+
         self._upload_parameters()
 
         return ok_uploads

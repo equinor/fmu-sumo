@@ -26,7 +26,7 @@ except ModuleNotFoundError:
 from fmu.sumo import uploader
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.CRITICAL)
+logger.setLevel(logging.INFO)
 
 # This documentation is for sumo_uploader as an ERT workflow
 DESCRIPTION = """SUMO_UPLOAD will upload files to Sumo. The typical use case is as add-on to 
