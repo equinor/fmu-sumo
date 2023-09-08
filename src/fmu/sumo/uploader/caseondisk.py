@@ -21,7 +21,7 @@ from fmu.dataio import ExportData
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.CRITICAL)
 
 # pylint: disable=C0103 # allow non-snake case variable names
 
