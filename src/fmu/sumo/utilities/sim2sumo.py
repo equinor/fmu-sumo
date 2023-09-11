@@ -223,9 +223,24 @@ def read_config(config):
     """
     # datafile can be read as list, or string which can be either folder or filepath
     logger = logging.getLogger(__file__ + ".read_config")
-    if isinstance(config, bool):
-        config = {}
-    datafile = config.get("datafile", "eclipse/model/")
+    logger.debug("Input config keys are %s", config.keys())
+
+    defaults = {
+        "datafile": "eclipse/model/",
+        "datatypes": ["summary", "rft", "satfunc"],
+        "options": {"arrow": False},
+    }
+    try:
+        simconfig = config["sim2sumo"]
+    except KeyError:
+        logger.warning(
+            "No specification in config, will use defaults %s", defaults
+        )
+        simconfig = defaults
+    if isinstance(simconfig, bool):
+        simconfig = defaults
+
+    datafile = simconfig.get("datafile", "eclipse/model/")
     if isinstance(datafile, str):
         logger.debug("Using %s to read results", datafile)
         datafile_posix = Path(datafile)
@@ -240,12 +255,13 @@ def read_config(config):
         logger.debug("List")
         datafiles = datafile
     logger.debug("Datafile(s) to use %s", datafiles)
+
     try:
-        submods = config["datatypes"]
+        submods = simconfig["datatypes"]
     except KeyError:
         submods = SUBMODULES
     try:
-        options = config["options"]
+        options = simconfig["options"]
     except KeyError:
         logger.info("No special options selected")
         options = {}
@@ -265,26 +281,19 @@ def export_with_config(config_path):
     export_path = None
     try:
         count = 0
-        config = yaml_load(config_path)
-        try:
-            sim_specifics = config["sim2sumo"]
-            datafiles, submods, options = read_config(sim_specifics)
-            for datafile in datafiles:
-                for submod in submods:
-                    export_path = export_csv(
-                        datafile,
-                        submod,
-                        config_file=config_path,
-                        **options,
-                    )
-                    count += 1
-                    export_path = Path(export_path)
-                    suffixes.add(export_path.suffix)
-        except KeyError:
-            logger.warning(
-                "No export from reservoir simulator\n,"
-                + " No sim2sumo keyword in config?"
-            )
+
+        datafiles, submods, options = read_config(yaml_load(config_path))
+        for datafile in datafiles:
+            for submod in submods:
+                export_path = export_csv(
+                    datafile,
+                    submod,
+                    config_file=config_path,
+                    **options,
+                )
+                count += 1
+                export_path = Path(export_path)
+                suffixes.add(export_path.suffix)
         try:
             export_folder = str(export_path.parent)
             logger.info("Exported %i files to %s", count, export_folder)

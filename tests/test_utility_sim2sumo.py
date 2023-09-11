@@ -137,7 +137,7 @@ CHECK_DICT = {
     },
     "global_variables.yml": {
         "nrdatafile": 2,
-        "nrsubmods": 16,
+        "nrsubmods": 3,
         "nroptions": 1,
         "arrow": False,
     },
@@ -166,7 +166,7 @@ def test_read_config(config_path):
     """Test reading of config file via read_config function"""
     os.chdir(REEK_REAL)
     LOGGER.info(config_path)
-    config = sim2sumo.yaml_load(config_path)["sim2sumo"]
+    config = sim2sumo.yaml_load(config_path)
     assert isinstance(config, (dict, bool))
     dfiles, submods, opts = sim2sumo.read_config(config)
     name = config_path.name
