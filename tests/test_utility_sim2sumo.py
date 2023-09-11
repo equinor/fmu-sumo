@@ -82,7 +82,7 @@ def test_export_csv(tmp_path, submod):
         tmp_path / f"share/results/tables/{REEK_BASE}--{submod}.csv".lower()
     )
     meta_path = export_path.parent / f".{export_path.name}.yml"
-    actual_path = sim2sumo.export_csv(
+    actual_path = sim2sumo.export_results(
         REEK_DATA_FILE,
         submod,
         CONFIG_PATH,
@@ -109,7 +109,7 @@ def test_export_csv_w_options(tmp_path, submod="summary"):
     }
 
     meta_path = export_path.parent / f".{export_path.name}.yml"
-    actual_path = sim2sumo.export_csv(
+    actual_path = sim2sumo.export_results(
         REEK_DATA_FILE, submod, CONFIG_PATH, **key_args
     )
     LOGGER.info(actual_path)

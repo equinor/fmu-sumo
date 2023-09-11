@@ -180,7 +180,7 @@ def tidy():
             unwanted_posix.unlink()
 
 
-def export_csv(
+def export_results(
     datafile_path: str,
     submod: str,
     config_file="fmuconfig/output/global_variables.yml",
@@ -285,7 +285,7 @@ def export_with_config(config_path):
         datafiles, submods, options = read_config(yaml_load(config_path))
         for datafile in datafiles:
             for submod in submods:
-                export_path = export_csv(
+                export_path = export_results(
                     datafile,
                     submod,
                     config_file=config_path,
