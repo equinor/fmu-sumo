@@ -18,6 +18,7 @@ import base64
 from fmu.sumo.uploader._fileondisk import FileOnDisk
 from fmu.sumo.uploader._upload_files import upload_files
 from fmu.dataio import ExportData
+from fmu.dataio._utils import read_parameters_txt
 
 
 logger = logging.getLogger(__name__)
@@ -243,24 +244,15 @@ class CaseOnDisk:
             with open("./fmuconfig/output/global_variables.yml", "r") as variables_yml:
                 global_config= yaml.safe_load(variables_yml)
 
-            with open("./parameters.txt", "r") as parameters_txt:
-                parameters = {} 
+            parameters = read_parameters_txt("./parameters.txt")
 
-                for line in parameters_txt:
-                    words = line.split(" ")
-                    parameters[words[0]] = words[1]  
+            exd = ExportData(config=global_config, content="parameters", name="parameters")
+            metadata = exd.generate_metadata(parameters)
 
-                bytes = json.dumps(parameters).encode("utf-8")
-
+            bytes = json.dumps(parameters).encode("utf-8")
             digester = hashlib.md5(bytes)
             md5 = base64.b64encode(digester.digest()).decode("utf-8")
-            exd = ExportData(config=global_config, content="parameters", name="parameters")
-
-            metadata = exd.generate_metadata(parameters)
             metadata["_sumo"] = {"blob_size": len(bytes), "blob_md5": md5}
-
-            # temporary hack, remove when schema no longer requires data.spec for dicts
-            metadata["data"]["spec"] = {"test": 123}
 
             upload_res = self.sumo_connection.api.post(f"/objects('{fmu_id}')", json=metadata)
             self.sumo_connection.api.blob_client.upload_blob(
