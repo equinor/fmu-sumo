@@ -215,7 +215,10 @@ def test_upload_parameters(token):
         sumo_connection=sumo_connection,
     )
     e.register()
-    e.upload_parameters_txt(glob_var_path="", parameters_path="")
+    e.upload_parameters_txt(
+        glob_var_path="tests/data/parameters/global_variables.yml", 
+        parameters_path="tests/data/parameters/parameters.txt"
+    )
     
     time.sleep(4)
     
