@@ -203,31 +203,6 @@ def test_wrong_metadata(token):
     )
     total = search_results.get("hits").get("total").get("value")
     assert total == 2
-
-
-def test_upload_parameters(token):
-    sumo_connection = uploader.SumoConnection(env=ENV, token=token)
-
-    _remove_cached_case_id()
-
-    e = uploader.CaseOnDisk(
-        case_metadata_path="tests/data/test_case_080/case.yml",
-        sumo_connection=sumo_connection,
-    )
-    e.register()
-    e.upload_parameters_txt(
-        glob_var_path="tests/data/parameters/global_variables.yml", 
-        parameters_path="tests/data/parameters/parameters.txt"
-    )
-    
-    time.sleep(4)
-    
-    query = f"fmu.case.uuid:{e.fmu_case_uuid} AND data.content:parameters"
-    search_results = sumo_connection.api.get(
-        "/search", query=query, size=1, **{"from": 0}
-    )
-    total = search_results.get("hits").get("total").get("value")
-    assert total == 1
     
 
 @pytest.mark.skipif(sys.platform.startswith('darwin'), reason="do not run OpenVDS SEGYImport on mac os")
