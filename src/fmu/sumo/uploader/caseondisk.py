@@ -373,6 +373,22 @@ class CaseOnDisk:
         logger.info("Rejected: %s", str(len(rejected_uploads)))
         logger.info("Wall time: %s sec", str(_dt))
 
+        # Log to Sumo server
+        sumoLogger = self.sumo_connection.api.getLogger(name = "fmu.sumo.uploader.2server")
+        sumoLogger.setLevel(logging.INFO)
+        summary = {
+            "upload_summary": {
+                "parent_id": self.sumo_parent_id,
+                "total_files_count": str(len(self.files)),
+                "ok_files": str(len(ok_uploads)),
+                "failed_files": str(len(failed_uploads)),
+                "rejected_files": str(len(rejected_uploads)),
+                "wall_time_seconds": str(_dt),
+                "upload_statistics": upload_statistics
+            }
+        }
+        sumoLogger.info(str(summary))
+
         return ok_uploads
 
 
