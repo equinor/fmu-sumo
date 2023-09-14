@@ -90,7 +90,7 @@ class CaseOnDisk:
         # Avoid that logging to sumo-server also is visible in local logging:
         self._sumoLogger.propagate = False 
         self._sumoLogger.info("Upload init for sumo_parent_id: " 
-                              + self.sumo_parent_id)
+                              + str(self._sumo_parent_id))
 
     def __str__(self):
         s = f"{self.__class__}, {len(self._files)} files."
