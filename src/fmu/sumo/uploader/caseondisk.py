@@ -18,6 +18,8 @@ from fmu.sumo.uploader._upload_files import upload_files
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.CRITICAL)
 
+sumo_logger_name = __name__ + ".log2server"
+
 # pylint: disable=C0103 # allow non-snake case variable names
 
 
@@ -82,6 +84,13 @@ class CaseOnDisk:
         self._sumo_parent_id = self._get_sumo_parent_id()
         logger.debug("self._sumo_parent_id is %s", self._sumo_parent_id)
         self._files = []
+
+        self._sumoLogger = sumo_connection.api.getLogger(sumo_logger_name)
+        self._sumoLogger.setLevel(logging.INFO)
+        # Avoid that logging to sumo-server also is visible in local logging:
+        self._sumoLogger.propagate = False 
+        self._sumoLogger.info("Upload init for sumo_parent_id: " 
+                              + self.sumo_parent_id)
 
     def __str__(self):
         s = f"{self.__class__}, {len(self._files)} files."
@@ -373,9 +382,6 @@ class CaseOnDisk:
         logger.info("Rejected: %s", str(len(rejected_uploads)))
         logger.info("Wall time: %s sec", str(_dt))
 
-        # Log to Sumo server
-        sumoLogger = self.sumo_connection.api.getLogger(name = "fmu.sumo.uploader.2server")
-        sumoLogger.setLevel(logging.INFO)
         summary = {
             "upload_summary": {
                 "parent_id": self.sumo_parent_id,
@@ -387,7 +393,7 @@ class CaseOnDisk:
                 "upload_statistics": upload_statistics
             }
         }
-        sumoLogger.info(str(summary))
+        self._sumoLogger.info(str(summary))
 
         return ok_uploads
 
