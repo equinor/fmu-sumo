@@ -1,6 +1,7 @@
 """Export with metadata"""
 import sys
 import re
+from typing import Union
 from pathlib import Path
 import logging
 import importlib
@@ -9,10 +10,12 @@ from inspect import signature
 import pandas as pd
 import ecl2df as sim2df
 import ecl2df
-from pyarrow import Table
+import pyarrow as pa
 import yaml
 from fmu.dataio import ExportData
 from fmu.sumo.uploader.scripts.sumo_upload import sumo_upload_main
+
+logging.basicConfig(level="INFO")
 
 
 def yaml_load(file_name):
@@ -68,6 +71,7 @@ def _define_submodules():
                 "No premade function for converting to arrow in %s",
                 submod_path,
             )
+
         logger.debug("Assigning %s to %s", submodules[submod], submod)
 
     logger.debug(
@@ -110,13 +114,13 @@ def convert_to_arrow(frame):
     Returns:
         pa.Table: the converted dataframe
     """
-    table = Table.from_pandas(frame)
+    table = pa.Table.from_pandas(frame)
     return table
 
 
-def get_dataframe(
+def get_results(
     datafile_path: str, submod: str, print_help=False, **kwargs
-) -> pd.DataFrame:
+) -> Union[pa.Table, pd.DataFrame]:
     """Fetch dataframe from simulator results
 
     Args:
@@ -129,8 +133,8 @@ def get_dataframe(
     """
     logger = logging.getLogger(__file__ + ".get_dataframe")
     extract_df = SUBMOD_DICT[submod]["extract"]
-    arrow = kwargs.get("arrow", False)
-    frame = None
+    arrow = kwargs.get("arrow", True)
+    output = None
     trace = None
     if print_help:
         print(SUBMOD_DICT[submod]["doc"])
@@ -142,13 +146,18 @@ def get_dataframe(
         }
         logger.debug("Exporting with arguments %s", right_kwargs)
         try:
-            frame = extract_df(sim2df.EclFiles(datafile_path), **right_kwargs)
+            output = extract_df(sim2df.EclFiles(datafile_path), **right_kwargs)
             if arrow:
                 try:
-                    frame = kwargs["arrow_convertor"](frame)
+                    output = kwargs["arrow_convertor"](output)
                 except KeyError:
                     logger.debug("No arrow convertor defined for %s", submod)
-                    frame = convert_to_arrow(frame)
+                    try:
+                        output = convert_to_arrow(output)
+                    except pa.lib.ArrowInvalid:
+                        logger.warning(
+                            "Cannot convert to arrow, keeping pandas format"
+                        )
 
         except TypeError:
             trace = sys.exc_info()[1]
@@ -161,7 +170,7 @@ def get_dataframe(
             )
     if submod == "rft":
         tidy()
-    return frame
+    return output
 
 
 def tidy():
@@ -195,9 +204,9 @@ def export_results(
     Returns:
         str: path of export
     """
-    logger = logging.getLogger(__file__ + ".export_csv")
+    logger = logging.getLogger(__file__ + ".export_results")
     # check_options(submod, kwargs)
-    frame = get_dataframe(datafile_path, submod, **kwargs)
+    frame = get_results(datafile_path, submod, **kwargs)
     if frame is not None:
         logger.debug("Reading global variables from %s", config_file)
         cfg = yaml_load(config_file)
@@ -228,7 +237,7 @@ def read_config(config):
     defaults = {
         "datafile": "eclipse/model/",
         "datatypes": ["summary", "rft", "satfunc"],
-        "options": {"arrow": False},
+        "options": {"arrow": True},
     }
     try:
         simconfig = config["sim2sumo"]
@@ -265,7 +274,7 @@ def read_config(config):
     except KeyError:
         logger.info("No special options selected")
         options = {}
-    options["arrow"] = options.get("arrow", False)
+    options["arrow"] = options.get("arrow", True)
     return datafiles, submods, options
 
 
