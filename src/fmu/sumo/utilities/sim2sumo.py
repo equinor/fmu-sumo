@@ -278,6 +278,12 @@ def read_config(config):
         logger.info("No special options selected")
         options = {}
     options["arrow"] = options.get("arrow", True)
+    logger.info(
+        "Running with: datafile(s): \n%s \n Types: \n %s \noptions:\n %s",
+        datafiles,
+        submods,
+        options,
+    )
     return datafiles, submods, options
 
 
