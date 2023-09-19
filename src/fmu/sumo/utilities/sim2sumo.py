@@ -163,6 +163,9 @@ def get_results(
             trace = sys.exc_info()[1]
         except FileNotFoundError:
             trace = sys.exc_info()[1]
+        except ValueError:
+            trace = sys.exc_info()[1]
+
         if trace is not None:
             logger.warning(
                 "Trace: %s, \nNo results produced ",
