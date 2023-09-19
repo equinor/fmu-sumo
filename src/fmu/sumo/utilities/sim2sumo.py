@@ -294,6 +294,7 @@ def export_with_config(config_path):
         datafiles, submods, options = read_config(yaml_load(config_path))
         for datafile in datafiles:
             for submod in submods:
+                logger.info("Exporting %s", submod)
                 export_path = export_results(
                     datafile,
                     submod,
