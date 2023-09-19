@@ -136,7 +136,7 @@ CHECK_DICT = {
         "nrdatafile": 1,
         "nrsubmods": 3,
         "nroptions": 4,
-        "arrow": True,
+        "arrow": False,
     },
     "global_variables.yml": {
         "nrdatafile": 2,
