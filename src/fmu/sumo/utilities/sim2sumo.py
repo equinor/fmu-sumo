@@ -15,8 +15,6 @@ import yaml
 from fmu.dataio import ExportData
 from fmu.sumo.uploader.scripts.sumo_upload import sumo_upload_main
 
-logging.basicConfig(level="INFO")
-
 
 def yaml_load(file_name):
     """Load yaml config file into dict
