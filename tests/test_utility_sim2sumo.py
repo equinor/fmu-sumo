@@ -11,6 +11,8 @@ import pytest
 from sumo.wrapper import SumoClient
 if sys.platform.startswith('win'):
     pytest.skip(allow_module_level=True)
+else:
+    from fmu.sumo.utilities import sim2sumo
 
 from fmu.sumo.uploader import CaseOnDisk, SumoConnection
 
