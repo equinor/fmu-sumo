@@ -117,6 +117,8 @@ def sumo_upload_main(
         )
         warnings.warn(
             "Problem related to Sumo upload: " f"{err}")
+        _sumo_logger = sumo_connection.api.getLogger("fmu.sumo.uploader")
+        _sumo_logger.warning("Problem related to Sumo upload for case: ", case_metadata_path, " ", err)
         return
 
 
