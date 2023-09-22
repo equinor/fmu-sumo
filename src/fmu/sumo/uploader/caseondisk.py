@@ -85,10 +85,10 @@ class CaseOnDisk:
         logger.debug("self._sumo_parent_id is %s", self._sumo_parent_id)
         self._files = []
 
-        self._sumo_logger = sumo_connection.api.getLogger("fmu.sumo.uploader")
+        self._sumo_logger = sumo_connection.api.getLogger("log_2_server_caseondisk")
         self._sumo_logger.setLevel(logging.INFO)
         # Avoid that logging to sumo-server also is visible in local logging:
-        # self._sumo_logger.propagate = False 
+        self._sumo_logger.propagate = False 
         self._sumo_logger.info("Upload init for sumo_parent_id: " 
                               + str(self._sumo_parent_id))
 
@@ -324,22 +324,6 @@ class CaseOnDisk:
             upload_statistics = _calculate_upload_stats(ok_uploads)
             logger.info(upload_statistics)
 
-        if failed_uploads:
-            logger.info(f"{len(failed_uploads)} files failed to be uploaded")
-
-            for u in failed_uploads[0:4]:
-                logger.info("\n" + "=" * 50)
-
-                logger.info(f"Filepath: {u.get('blob_file_path')}")
-                logger.info(
-                    f"Metadata: [{u.get('metadata_upload_response_status_code')}] "
-                    f"{u.get('metadata_upload_response_text')}"
-                )
-                logger.info(
-                    f"Blob: [{u.get('blob_upload_response_status_code')}] "
-                    f"{u.get('blob_upload_response_status_text')}"
-                )
-
         if rejected_uploads:
             logger.info(
                 f"\n\n{len(rejected_uploads)} files rejected by Sumo. First 5 rejected files:"
@@ -357,10 +341,11 @@ class CaseOnDisk:
                     f"Blob: [{u.get('blob_upload_response_status_code')}] "
                     f"{u.get('blob_upload_response_status_text')}"
                 )
+                self._sumo_logger.info(_get_log_msg(self.sumo_parent_id, u))
 
         if failed_uploads:
             logger.info(
-                f"\n\n{len(failed_uploads)} files rejected by Sumo. First 5 rejected files:"
+                f"\n\n{len(failed_uploads)} files failed by Sumo. First 5 failed files:"
             )
 
             for u in failed_uploads[0:4]:
@@ -375,23 +360,7 @@ class CaseOnDisk:
                     f"Blob: [{u.get('blob_upload_response_status_code')}] "
                     f"{u.get('blob_upload_response_status_text')}"
                 )
-                # rejected_json = {
-                #     "rejected_upload": {
-                #         "case_uuid": str(self.sumo_parent_id),
-                #         "filepath": str(u.get('blob_file_path')),
-                #         "metadata": {
-                #             "status_code": str(u.get('metadata_upload_response_status_code')),
-                #             "response_text": u.get('metadata_upload_response_text')
-                #         },
-                #         "blob": {
-                #             "status_code": str(u.get('blob_upload_response_status_code')),
-                #             "response_text": (json.dumps(u.get('blob_upload_response_status_text')))
-                #         }
-                #     }
-                # }
-                # print(rejected_json)
-                # logger.info(rejected_json)
-                # #self._sumoLogger.info(str(rejected_json))
+                self._sumo_logger.info(_get_log_msg(self.sumo_parent_id, u))
 
         logger.info("Summary:")
         logger.info("Total files count: %s", str(len(self.files)))
@@ -400,20 +369,39 @@ class CaseOnDisk:
         logger.info("Rejected: %s", str(len(rejected_uploads)))
         logger.info("Wall time: %s sec", str(_dt))
 
-        # summary = {
-        #     "upload_summary": {
-        #         "parent_id": self.sumo_parent_id,
-        #         "total_files_count": str(len(self.files)),
-        #         "ok_files": str(len(ok_uploads)),
-        #         "failed_files": str(len(failed_uploads)),
-        #         "rejected_files": str(len(rejected_uploads)),
-        #         "wall_time_seconds": str(_dt),
-        #         "upload_statistics": upload_statistics
-        #     }
-        # }
-        # self._sumoLogger.info(str(summary))
+        summary = {
+            "upload_summary": {
+                "parent_id": self.sumo_parent_id,
+                "total_files_count": str(len(self.files)),
+                "ok_files": str(len(ok_uploads)),
+                "failed_files": str(len(failed_uploads)),
+                "rejected_files": str(len(rejected_uploads)),
+                "wall_time_seconds": str(_dt),
+                "upload_statistics": upload_statistics
+            }
+        }
+        self._sumo_logger.info(str(summary))
 
         return ok_uploads
+
+def _get_log_msg(sumo_parent_id, u):
+    """Return a suitable logging for upload issues."""
+
+    json = {
+        "upload_issue": {
+            "case_uuid": str(sumo_parent_id),
+            "filepath": str(u.get('blob_file_path')),
+            "metadata": {
+                "status_code": str(u.get('metadata_upload_response_status_code')),
+                "response_text": u.get('metadata_upload_response_text')
+            },
+            "blob": {
+                "status_code": str(u.get('blob_upload_response_status_code')),
+                "response_text": ((u.get('blob_upload_response_status_text')))
+            }
+        }
+    }
+    return json
 
 
 def _sanitize_datetimes(data):

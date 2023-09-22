@@ -67,22 +67,6 @@ def _datetime_now():
     return datetime.datetime.now().isoformat()
 
 
-def _get_log_msg(upload_type, object_id, parent_id, path, status_code, status_text):
-    """Returns suitable to log to Sumo server after
-    a single upload of metadata or blob fails. """
-
-    msg = {
-        "upload_problem": {
-            "upload_type": upload_type,
-            "object_id": object_id,
-            "parent_id": parent_id,
-            "path": path,
-            "status_code": status_code,
-            "status_text": status_text
-        }
-    }
-    return msg
-
 
 def _get_segyimport_cmdstr(blob_url, object_id, file_path, sample_unit):
     """Return the command string for running OpenVDS SEGYImport"""
@@ -203,10 +187,6 @@ class FileOnDisk:
         _t0 = time.perf_counter()
         _t0_metadata = time.perf_counter()
 
-        self._sumo_logger = sumo_connection.api.getLogger("fmu.sumo.uploader")
-        self._sumo_logger.setLevel(logging.INFO)
-        # self._sumo_logger.propagate = False
-
         result = {}
 
         backoff = [1, 3, 9]
@@ -214,8 +194,7 @@ class FileOnDisk:
         # UPLOAD METADATA
 
         for i in backoff:
-            logger.warning("backoff in outer loop is %s", str(i))
-            print("YO")
+            logger.debug("backoff in outer loop is %s", str(i))
 
             try:
 
@@ -248,20 +227,17 @@ class FileOnDisk:
                 result["metadata_upload_response_status_code"] = err.code
                 result["metadata_upload_response_text"] = err.message
                 time.sleep(i)
-                self._sumo_logger.warning(_get_log_msg("metadata", "None", sumo_parent_id, self.metadata_path, err.code, err.message))
                 continue
 
             except AuthenticationError as err:
                 result["status"] = "rejected"
                 result["metadata_upload_response_status_code"] = err.code
                 result["metadata_upload_response_text"] = err.message
-                self._sumo_logger.warning(_get_log_msg("metadata", "None", sumo_parent_id, self.metadata_path, err.code, err.message))
                 return result
             except PermanentError as err:
                 result["status"] = "rejected"
                 result["metadata_upload_response_status_code"] = err.code
                 result["metadata_upload_response_text"] = err.message
-                self._sumo_logger.warning(_get_log_msg("metadata", "None", sumo_parent_id, self.metadata_path, err.code, err.message))
                 return result
 
             break
@@ -276,8 +252,6 @@ class FileOnDisk:
 
         # UPLOAD BLOB
 
-        # self._sumo_logger.info("Sleeping for 5 minutes")
-        # time.sleep(5*60)
 
 
         _t0_blob = time.perf_counter()
@@ -306,7 +280,6 @@ class FileOnDisk:
                             # Outer code expects and interprets http error codes
                             upload_response["status_code"] = 418  
                             upload_response["text"] = "FAILED SEGY upload as OpenVDS. " + cmd_result.stderr
-                            self._sumo_logger.warning(_get_log_msg("seismic_blob", self.sumo_object_id, self.sumo_parent_id, self.path, upload_response.get("status_code"), upload_response.get("text")))
                 else:
                     response = self._upload_byte_string(
                         sumo_connection=sumo_connection,
@@ -343,7 +316,6 @@ class FileOnDisk:
                 logger.debug("Upload failed: %s", str(err))
                 result["status"] = "failed"
                 self._delete_metadata(sumo_connection, self.sumo_object_id)
-                self._sumo_logger.warning(_get_log_msg("blob", self.sumo_object_id, self.sumo_parent_id, self.path, err.code, err.message))
                 return result
 
             except TransientError as err:
@@ -351,21 +323,18 @@ class FileOnDisk:
                 result["status"] = "failed"
                 result["blob_upload_response_status_code"] = err.code
                 time.sleep(i)
-                self._sumo_logger.warning(_get_log_msg("blob", self.sumo_object_id, self.sumo_parent_id, self.path, err.code, err.message))
                 continue
 
             except AuthenticationError as err:
                 logger.debug("Upload failed: %s", upload_response.get("text"))
                 result["status"] = "rejected"
                 self._delete_metadata(sumo_connection, self.sumo_object_id)
-                self._sumo_logger.warning(_get_log_msg("blob", self.sumo_object_id, self.sumo_parent_id, self.path, err.code, err.message))
                 return result
 
             except PermanentError as err:
                 logger.debug("Upload failed: %s", upload_response["text"])
                 result["status"] = "rejected"
                 self._delete_metadata(sumo_connection, self.sumo_object_id)
-                self._sumo_logger.warning(_get_log_msg("blob", self.sumo_object_id, self.sumo_parent_id, self.path, err.code, err.message))
                 return result
 
             break
