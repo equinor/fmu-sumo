@@ -18,7 +18,6 @@ from fmu.sumo.uploader._upload_files import upload_files
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.CRITICAL)
 
-sumo_logger_name = __name__ + ".log2server"
 
 # pylint: disable=C0103 # allow non-snake case variable names
 

@@ -67,7 +67,6 @@ def _datetime_now():
     return datetime.datetime.now().isoformat()
 
 
-
 def _get_segyimport_cmdstr(blob_url, object_id, file_path, sample_unit):
     """Return the command string for running OpenVDS SEGYImport"""
     try: 
@@ -251,7 +250,6 @@ class FileOnDisk:
         blob_url = response.json().get("blob_url")
 
         # UPLOAD BLOB
-
 
 
         _t0_blob = time.perf_counter()
