@@ -205,7 +205,7 @@ class FileOnDisk:
 
         self._sumo_logger = sumo_connection.api.getLogger("fmu.sumo.uploader")
         self._sumo_logger.setLevel(logging.INFO)
-        self._sumo_logger.propagate = False
+        # self._sumo_logger.propagate = False
 
         result = {}
 

@@ -88,7 +88,7 @@ class CaseOnDisk:
         self._sumo_logger = sumo_connection.api.getLogger("fmu.sumo.uploader")
         self._sumo_logger.setLevel(logging.INFO)
         # Avoid that logging to sumo-server also is visible in local logging:
-        self._sumo_logger.propagate = False 
+        # self._sumo_logger.propagate = False 
         self._sumo_logger.info("Upload init for sumo_parent_id: " 
                               + str(self._sumo_parent_id))
 
