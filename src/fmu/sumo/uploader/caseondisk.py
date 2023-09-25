@@ -382,20 +382,20 @@ class CaseOnDisk:
 
         return ok_uploads
 
-def _get_log_msg(sumo_parent_id, u):
+def _get_log_msg(sumo_parent_id, status):
     """Return a suitable logging for upload issues."""
 
     json = {
         "upload_issue": {
             "case_uuid": str(sumo_parent_id),
-            "filepath": str(u.get('blob_file_path')),
+            "filepath": str(status.get('blob_file_path')),
             "metadata": {
-                "status_code": str(u.get('metadata_upload_response_status_code')),
-                "response_text": u.get('metadata_upload_response_text')
+                "status_code": str(status.get('metadata_upload_response_status_code')),
+                "response_text": status.get('metadata_upload_response_text')
             },
             "blob": {
-                "status_code": str(u.get('blob_upload_response_status_code')),
-                "response_text": ((u.get('blob_upload_response_status_text')))
+                "status_code": str(status.get('blob_upload_response_status_code')),
+                "response_text": ((status.get('blob_upload_response_status_text')))
             }
         }
     }
