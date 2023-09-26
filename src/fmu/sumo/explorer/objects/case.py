@@ -6,6 +6,9 @@ from fmu.sumo.explorer.objects.surface_collection import SurfaceCollection
 from fmu.sumo.explorer.objects.polygons_collection import PolygonsCollection
 from fmu.sumo.explorer.objects.table_collection import TableCollection
 from fmu.sumo.explorer.objects.cube_collection import CubeCollection
+from fmu.sumo.explorer.objects.dictionary_collection import (
+    DictionaryCollection,
+)
 from fmu.sumo.explorer._utils import Utils
 from fmu.sumo.explorer.pit import Pit
 
@@ -54,12 +57,15 @@ class Case(Document):
                 "query": {"term": {"_sumo.parent_object.keyword": self.uuid}},
                 "aggs": {
                     "uuid": {
-                        "terms": {"field": "fmu.iteration.uuid.keyword", "size": 50},
+                        "terms": {
+                            "field": "fmu.iteration.uuid.keyword",
+                            "size": 50,
+                        },
                         "aggs": {
                             "name": {
                                 "terms": {
-                                    "field": "fmu.iteration.name.keyword", 
-                                    "size": 1
+                                    "field": "fmu.iteration.name.keyword",
+                                    "size": 1,
                                 }
                             },
                             "realizations": {
@@ -208,3 +214,8 @@ class Case(Document):
     def cubes(self) -> CubeCollection:
         """List of case tables"""
         return CubeCollection(self._sumo, self._uuid, pit=self._pit)
+
+    @property
+    def dictionaries(self) -> DictionaryCollection:
+        """List of case dictionaries"""
+        return DictionaryCollection(self._sumo, self._uuid, pit=self._pit)
