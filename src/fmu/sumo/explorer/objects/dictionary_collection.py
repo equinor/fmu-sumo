@@ -1,4 +1,4 @@
-"""Module containing class for colection of polygons """
+"""Module containing class for colection of dictionaries """
 from typing import Union, List, Dict
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._child_collection import ChildCollection

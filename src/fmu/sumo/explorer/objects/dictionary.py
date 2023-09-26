@@ -1,4 +1,4 @@
-"""Module containing class for polygons object"""
+"""Module containing class for dictionary object"""
 import json
 from typing import Dict
 from sumo.wrapper import SumoClient
