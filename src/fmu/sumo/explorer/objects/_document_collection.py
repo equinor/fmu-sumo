@@ -198,8 +198,8 @@ class DocumentCollection:
         if self._pit is not None:
             query["pit"] = self._pit.get_pit_object()
 
-        res = await self._sumo.post_async("/search", json=query).json()
-        hits = res["hits"]
+        res = await self._sumo.post_async("/search", json=query)
+        hits = res.json()["hits"]
 
         if self._len is None:
             self._len = hits["total"]["value"]
