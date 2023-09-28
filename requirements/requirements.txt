@@ -6,3 +6,4 @@ xtgeo
 azure-core
 pyarrow; python_version > "3.6.1"
 OpenVDS; sys_platform != 'darwin'
+fmu-dataio
