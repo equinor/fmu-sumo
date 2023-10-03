@@ -1,5 +1,7 @@
 """Tests explorer"""
-import openvds
+import sys
+if not sys.platform.startswith('darwin'):
+    import openvds
 import logging
 import json
 from pathlib import Path
