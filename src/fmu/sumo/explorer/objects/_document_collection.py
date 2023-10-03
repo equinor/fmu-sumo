@@ -20,15 +20,39 @@ class DocumentCollection:
         self._type = doc_type
         self._sumo = sumo
         self._query = self._init_query(doc_type, query)
-        self._pit = pit
 
+        self._pit = pit
+        self._new_pit_id = None
         self._after = None
         self._curr_index = 0
         self._len = None
         self._items = []
         self._field_values = {}
-        self._query = self._init_query(doc_type, query)
         self._select = select
+
+    def __iter__(self):
+        self._curr_index = 0
+        return self
+
+    def __next__(self):
+        if self._curr_index < self.__len__():
+            res = self.__getitem__(self._curr_index)
+            self._curr_index += 1
+            return res
+        else:
+            raise StopIteration
+
+    def __aiter__(self):
+        self._curr_index = 0
+        return self
+
+    async def __anext__(self):
+        if self._curr_index < await self.length_async():
+            res = await self.getitem_async(self._curr_index)
+            self._curr_index += 1
+            return res
+        else:
+            raise StopAsyncIteration
 
     def __len__(self) -> int:
         """Get size of document collection
@@ -61,17 +85,14 @@ class DocumentCollection:
         Returns:
             A document at a given index
         """
-        if index >= self.__len__():
+        if index > self.__len__():
             raise IndexError
 
-        if len(self._items) <= index:
-            while len(self._items) <= index:
-                prev_len = len(self._items)
-                self._next_batch()
-                curr_len = len(self._items)
+        while len(self._items) <= index:
+            hits_size = self._next_batch()
 
-                if prev_len == curr_len:
-                    raise IndexError
+            if hits_size == 0:
+                raise IndexError
 
         return self._items[index]
 
@@ -84,17 +105,14 @@ class DocumentCollection:
         Returns:
             A document at a given index
         """
-        if index >= await self.length_async():
+        if index > await self.length_async():
             raise IndexError
 
-        if len(self._items) <= index:
-            while len(self._items) <= index:
-                prev_len = len(self._items)
-                await self._next_batch_async()
-                curr_len = len(self._items)
+        while len(self._items) <= index:
+            hits_size = await self._next_batch_async()
 
-                if prev_len == curr_len:
-                    raise IndexError
+            if hits_size == 0:
+                raise IndexError
 
         return self._items[index]
 
@@ -162,10 +180,13 @@ class DocumentCollection:
             query["search_after"] = self._after
 
         if self._pit is not None:
-            query["pit"] = self._pit.get_pit_object()
+            query["pit"] = self._pit.get_pit_object(self._new_pit_id)
 
         res = self._sumo.post("/search", json=query).json()
         hits = res["hits"]
+
+        if self._pit is not None:
+            self._new_pit_id = res["pit_id"]
 
         if self._len is None:
             self._len = hits["total"]["value"]
@@ -173,6 +194,8 @@ class DocumentCollection:
         if len(hits["hits"]) > 0:
             self._after = hits["hits"][-1]["sort"]
             self._items.extend(hits["hits"])
+
+        return len(hits["hits"])
 
     async def _next_batch_async(self) -> List[Dict]:
         """Get next batch of documents
@@ -196,10 +219,14 @@ class DocumentCollection:
             query["search_after"] = self._after
 
         if self._pit is not None:
-            query["pit"] = self._pit.get_pit_object()
+            query["pit"] = self._pit.get_pit_object(self._new_pit_id)
 
         res = await self._sumo.post_async("/search", json=query)
-        hits = res.json()["hits"]
+        data = res.json()
+        hits = data["hits"]
+
+        if self._pit is not None:
+            self._new_pit_id = data["pit_id"]
 
         if self._len is None:
             self._len = hits["total"]["value"]
@@ -207,6 +234,8 @@ class DocumentCollection:
         if len(hits["hits"]) > 0:
             self._after = hits["hits"][-1]["sort"]
             self._items.extend(hits["hits"])
+
+        return len(hits["hits"])
 
     def _init_query(self, doc_type: str, query: Dict = None) -> Dict:
         """Initialize base filter for document collection

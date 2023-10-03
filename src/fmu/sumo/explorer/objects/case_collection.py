@@ -85,6 +85,10 @@ class CaseCollection(DocumentCollection):
         doc = super().__getitem__(index)
         return Case(self._sumo, doc, self._pit)
 
+    async def getitem_async(self, index: int) -> Case:
+        doc = await super().getitem_async(index)
+        return Case(self._sumo, doc)
+
     def filter(
         self,
         uuid: Union[str, List[str]] = None,

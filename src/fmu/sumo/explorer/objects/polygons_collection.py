@@ -29,6 +29,10 @@ class PolygonsCollection(ChildCollection):
         doc = super().__getitem__(index)
         return Polygons(self._sumo, doc)
 
+    async def getitem_async(self, index: int) -> Polygons:
+        doc = await super().getitem_async(index)
+        return Polygons(self._sumo, doc)
+
     def filter(
         self,
         name: Union[str, List[str], bool] = None,

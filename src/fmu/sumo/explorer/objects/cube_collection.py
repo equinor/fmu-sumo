@@ -1,5 +1,5 @@
 """Module containing class for collection of cubes """
-from typing import Union, List, Dict, Tuple
+from typing import Any, Coroutine, Union, List, Dict, Tuple
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._child_collection import ChildCollection
 from fmu.sumo.explorer.objects.cube import Cube
@@ -35,6 +35,10 @@ class CubeCollection(ChildCollection):
 
     def __getitem__(self, index) -> Cube:
         doc = super().__getitem__(index)
+        return Cube(self._sumo, doc)
+
+    async def getitem_async(self, index: int) -> Cube:
+        doc = await super().getitem_async(index)
         return Cube(self._sumo, doc)
 
     @property
@@ -129,7 +133,7 @@ class CubeCollection(ChildCollection):
         time: TimeFilter = None,
         uuid: Union[str, List[str], bool] = None,
         is_observation: bool = None,
-        is_prediction: bool = None
+        is_prediction: bool = None,
     ) -> "CubeCollection":
         """Filter cubes
 
@@ -156,7 +160,7 @@ class CubeCollection(ChildCollection):
             time=time,
             uuid=uuid,
             is_observation=is_observation,
-            is_prediction=is_prediction
+            is_prediction=is_prediction,
         )
 
         return CubeCollection(self._sumo, self._case_uuid, query, self._pit)

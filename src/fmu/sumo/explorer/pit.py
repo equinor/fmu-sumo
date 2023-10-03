@@ -21,10 +21,13 @@ class Pit:
         res = self._sumo.post("/pit", params={"keep-alive": keep_alive})
         return res.json()["id"]
 
-    def get_pit_object(self) -> Dict:
+    def get_pit_object(self, pit_id: str = None) -> Dict:
         """Get the pit object
 
         Returns:
             Dict: dict with id and info about how long to keep alive
         """
-        return {"id": self._pit_id, "keep_alive": self._keep_alive}
+        return {
+            "id": pit_id if pit_id is not None else self._pit_id,
+            "keep_alive": self._keep_alive,
+        }

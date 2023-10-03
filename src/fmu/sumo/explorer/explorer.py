@@ -114,7 +114,7 @@ class Explorer:
             Case: case object
         """
         metadata = self._utils.get_object(uuid, _CASE_FIELDS)
-        return Case(self._sumo, metadata)
+        return Case(self._sumo, metadata, self._pit)
 
     async def get_case_by_uuid_async(self, uuid: str) -> Case:
         """Get case object by uuid
@@ -126,7 +126,7 @@ class Explorer:
             Case: case object
         """
         metadata = await self._utils.get_object_async(uuid, _CASE_FIELDS)
-        return Case(self._sumo, metadata)
+        return Case(self._sumo, metadata, self._pit)
 
     def get_surface_by_uuid(self, uuid: str) -> Surface:
         """Get surface object by uuid

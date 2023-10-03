@@ -29,6 +29,10 @@ class TableCollection(ChildCollection):
         doc = super().__getitem__(index)
         return Table(self._sumo, doc)
 
+    async def getitem_async(self, index: int) -> Table:
+        doc = await super().getitem_async(index)
+        return Table(self._sumo, doc)
+
     @property
     def columns(self) -> List[str]:
         """List of unique column names"""

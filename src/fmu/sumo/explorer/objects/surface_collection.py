@@ -41,6 +41,10 @@ class SurfaceCollection(ChildCollection):
         doc = super().__getitem__(index)
         return Surface(self._sumo, doc)
 
+    async def getitem_async(self, index: int) -> Surface:
+        doc = await super().getitem_async(index)
+        return Surface(self._sumo, doc)
+
     @property
     def timestamps(self) -> List[str]:
         """List of unique timestamps in SurfaceCollection"""
@@ -141,7 +145,9 @@ class SurfaceCollection(ChildCollection):
 
     async def _aggregate_async(self, operation: str) -> xtgeo.RegularSurface:
         if operation not in self._aggregation_cache:
-            objects = await self._utils.get_objects_async(500, self._query, ["_id"])
+            objects = await self._utils.get_objects_async(
+                500, self._query, ["_id"]
+            )
             object_ids = list(map(lambda obj: obj["_id"], objects))
 
             res = await self._sumo.post_async(

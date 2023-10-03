@@ -1,5 +1,5 @@
 """Module containing class for colection of dictionaries """
-from typing import Union, List, Dict
+from typing import Any, Coroutine, Union, List, Dict
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._child_collection import ChildCollection
 from fmu.sumo.explorer.pit import Pit
@@ -27,6 +27,10 @@ class DictionaryCollection(ChildCollection):
 
     def __getitem__(self, index) -> Dictionary:
         doc = super().__getitem__(index)
+        return Dictionary(self._sumo, doc)
+
+    async def getitem_async(self, index: int) -> Dictionary:
+        doc = await super().getitem_async(index)
         return Dictionary(self._sumo, doc)
 
     def filter(
