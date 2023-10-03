@@ -1,5 +1,5 @@
 """Module containing class for colection of dictionaries """
-from typing import Any, Coroutine, Union, List, Dict
+from typing import Union, List, Dict
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._child_collection import ChildCollection
 from fmu.sumo.explorer.pit import Pit

@@ -1,5 +1,5 @@
 """Module containing class for collection of cubes """
-from typing import Any, Coroutine, Union, List, Dict, Tuple
+from typing import Union, List, Dict, Tuple
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._child_collection import ChildCollection
 from fmu.sumo.explorer.objects.cube import Cube
