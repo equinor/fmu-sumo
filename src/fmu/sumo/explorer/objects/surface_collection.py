@@ -133,7 +133,7 @@ class SurfaceCollection(ChildCollection):
             object_ids = list(map(lambda obj: obj["_id"], objects))
 
             res = self._sumo.post(
-                "/aggregate",
+                "/surface/aggregate",
                 json={"operation": [operation], "object_ids": object_ids},
             )
 
@@ -151,7 +151,7 @@ class SurfaceCollection(ChildCollection):
             object_ids = list(map(lambda obj: obj["_id"], objects))
 
             res = await self._sumo.post_async(
-                "/aggregate",
+                "/surface/aggregate",
                 json={"operation": [operation], "object_ids": object_ids},
             )
 
