@@ -35,7 +35,7 @@ class Cube(Child):
             self._url = res.get("baseuri") + self.uuid
             self._sas = res.get("auth")
         except Exception:
-            self._url = res.content.decode("UTF-8")
+            self._url = res.text
 
     async def _populate_url_async(self):
         res = await self._sumo.get_async(
@@ -46,7 +46,7 @@ class Cube(Child):
             self._url = res.get("baseuri") + self.uuid
             self._sas = res.get("auth")
         except Exception:
-            self._url = res.content.decode("UTF-8")
+            self._url = res.text
 
     @property
     def url(self) -> str:
