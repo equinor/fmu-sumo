@@ -79,7 +79,7 @@ class Explorer:
         Returns:
           dict: Dictionary of user permissions
         """
-        res = self._sumo.get("/userpermissions")
+        res = self._sumo.get("/userpermissions").json()
 
         if asset is not None:
             if asset not in res:
@@ -97,6 +97,7 @@ class Explorer:
           dict: Dictionary of user permissions
         """
         res = await self._sumo.get_async("/userpermissions")
+        res = res.json()
 
         if asset is not None:
             if asset not in res:

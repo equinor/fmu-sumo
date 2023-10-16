@@ -78,7 +78,7 @@ class Child(Document):
         """Object blob"""
         if self._blob is None:
             res = self._sumo.get(f"/objects('{self.uuid}')/blob")
-            self._blob = BytesIO(res)
+            self._blob = BytesIO(res.content)
 
         return self._blob
 
@@ -87,6 +87,6 @@ class Child(Document):
         """Object blob"""
         if self._blob is None:
             res = await self._sumo.get_async(f"/objects('{self.uuid}')/blob")
-            self._blob = BytesIO(res)
+            self._blob = BytesIO(res.content)
 
         return self._blob

@@ -25,7 +25,7 @@ class Dictionary(Child):
         """Object blob"""
         if self._blob is None:
             res = self._sumo.get(f"/objects('{self.uuid}')/blob")
-            self._blob = res
+            self._blob = res.content
 
         return self._blob
 
