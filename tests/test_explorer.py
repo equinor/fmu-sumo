@@ -66,9 +66,9 @@ def fixture_test_case(explorer: Explorer, case_name: str) -> Case:
 
 
 @pytest.fixture(name="sumo_client")
-def fixture_sumo_client():
+def fixture_sumo_client(token: str):
     """Returns SumoClient for dev env"""
-    return SumoClient("dev")
+    return SumoClient("dev", token=token)
 
 
 @pytest.fixture(name="utils")
