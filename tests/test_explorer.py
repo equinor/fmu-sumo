@@ -46,7 +46,7 @@ def fixture_seismic_case_uuid() -> str:
     """Returns seismic case uuid"""
     return "c616019d-d344-4094-b2ee-dd4d6d336217"
 
-@pytest.fixture(token, name="explorer")
+@pytest.fixture(token=token, name="explorer")
 def fixture_explorer(token: str) -> Explorer:
     """Returns explorer"""
     return Explorer("dev", token=token)
