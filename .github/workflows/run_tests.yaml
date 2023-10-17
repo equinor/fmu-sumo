@@ -35,8 +35,8 @@ jobs:
 
       - name: Install fmu-sumo
         run: >
-          pip install --upgrade pip &&
-          pip install .
+          python -m pip install --upgrade pip &&
+          python -m pip install .
       - name: Run tests
         shell: bash
         run: |
