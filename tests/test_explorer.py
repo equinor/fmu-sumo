@@ -50,6 +50,8 @@ def fixture_seismic_case_uuid() -> str:
 def fixture_explorer(token: str) -> Explorer:
     """Returns explorer"""
     print("TKN:", token)
+    print("TKN2:", len(token))
+    print("TKN3:", token[0:9])
     return Explorer("dev", token=token)
 
 
