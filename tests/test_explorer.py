@@ -49,12 +49,7 @@ def fixture_seismic_case_uuid() -> str:
 @pytest.fixture(name="explorer")
 def fixture_explorer(token: str) -> Explorer:
     """Returns explorer"""
-    print("TKN:", token)
-    print("TKN2:", len(token))
-    print("TKN3:", token[0:9])
-    sumo = Explorer("dev", token=token)
-    print(sumo.cases[0].name)
-    return sumo
+    return Explorer("dev", token=token)
 
 
 @pytest.fixture(name="test_case")
