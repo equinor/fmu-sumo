@@ -52,7 +52,9 @@ def fixture_explorer(token: str) -> Explorer:
     print("TKN:", token)
     print("TKN2:", len(token))
     print("TKN3:", token[0:9])
-    return Explorer("dev", token=token)
+    sumo = Explorer("dev", token=token)
+    print(sumo.cases[0].name)
+    return sumo
 
 
 @pytest.fixture(name="test_case")
