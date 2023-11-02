@@ -166,10 +166,7 @@ class ChildCollection(DocumentCollection):
             "fmu.context.stage.keyword": stage,
             "data.spec.columns.keyword": column,
             "_id": uuid,
-            "data.stratigraphic.keyword": stratigraphic,
-            "data.vertical_domain.keyword": vertical_domain,
-            "data.is_observation.keyword": is_observation,
-            "data.is_prediction.keyword": is_prediction
+            "data.vertical_domain.keyword": vertical_domain
         }
 
         for prop, value in prop_map.items():
@@ -182,6 +179,15 @@ class ChildCollection(DocumentCollection):
                 else:
                     term = "terms" if isinstance(value, list) else "term"
                     must.append({term: {prop: value}})
+
+        bool_prop_map = {
+            "data.stratigraphic": stratigraphic,
+            "data.is_observation": is_observation,
+            "data.is_prediction": is_prediction
+        }
+        for prop, value in bool_prop_map.items():
+            if value is not None:
+                must.append({"term": {prop: value}})
 
         query = {"bool": {}}
 

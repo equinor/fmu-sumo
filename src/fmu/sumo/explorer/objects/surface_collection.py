@@ -173,6 +173,8 @@ class SurfaceCollection(ChildCollection):
         stage: Union[str, List[str], bool] = None,
         time: TimeFilter = None,
         uuid: Union[str, List[str], bool] = None,
+        is_observation: bool = None,
+        is_prediction: bool = None
     ) -> "SurfaceCollection":
         """Filter surfaces
 
@@ -216,7 +218,7 @@ class SurfaceCollection(ChildCollection):
 
             Get all aggregated surfaces::
 
-                surfs = case.surfacse.filter(
+                surfs = case.surfaces.filter(
                     aggregation=True
                 )
 
@@ -239,6 +241,8 @@ class SurfaceCollection(ChildCollection):
             uuid=uuid,
             stratigraphic=stratigraphic,
             vertical_domain=vertical_domain,
+            is_observation=is_observation,
+            is_prediction=is_prediction
         )
 
         return SurfaceCollection(self._sumo, self._case_uuid, query, self._pit)

@@ -28,10 +28,10 @@ cases.users
 cases.fields
 
 # Apply filters
-cases = cases.filter(status=["keep", "offical"], user="peesv", field="Drogon")
+cases = cases.filter(status=["keep", "offical"], user="peesv", field="DROGON")
 
 for case in cases:
-    print(case.id)
+    print(case.uuid)
     print(case.name)
 
 # select case
@@ -44,7 +44,7 @@ Get objects within a case through `case.[CONTEXT].[OBJECT_TYPE]`.
 ##### Realized data
 ```python
 # All realized surface objects in case
-surfs = case.realization.surfaces
+surfs = case.surfaces
 
 # Get filter values
 surfs.names
@@ -52,13 +52,13 @@ surfs.tagnames
 surfs.iterations
 
 # Apply filters
-surfs = surfs.filter(name="surface_name", tagname="surface_tagname", iteration=0)
+surfs = surfs.filter(name="surface_name", tagname="surface_tagname", iteration="iter-0")
 
 # Get surface
 surf = surfs[0]
 
 # Metadata
-surf.id
+surf.uuid
 surf.name
 surf.tagname
 surf.iteration
@@ -68,6 +68,7 @@ surf.realization
 surf.blob
 
 # Get xtgeo.RegularSurface
+%matplotlib inline
 reg = surf.to_regular_surface()
 reg.quickplot()
 ```
@@ -75,16 +76,16 @@ reg.quickplot()
 ##### Aggregated data
 ```python
 # All aggregated surfaces in case
-surfs = case.aggregation.surfaces
+surfs = case.surfaces.filter(aggregation=True)
 
 # Get filter values
 surfs.names
 surfs.tagnames
 surfs.iterations
-surfs.operations
+surfs.aggregations
 
 # Apply filters
-surfs = surfs.filter(name="surface_name", tagname="surface_tagname", iteration=0, operation="mean")
+surfs = surfs.filter(name="surface_name", tagname="surface_tagname", iteration="iter-0", aggregation="mean")
 
 # Get surface
 surf = surfs[0]
@@ -94,7 +95,7 @@ surf = surfs[0]
 ##### Observed data
 ```python
 # All observed surfaces in case
-surfs = case.observation.surfaces
+surfs = case.surfaces.filter(is_observation=True)
 
 # Get filter values
 surfs.names
