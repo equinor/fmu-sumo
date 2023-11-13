@@ -1,13 +1,53 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+version_file = "src/fmu/sumo/explorer/_version.py"
+
 [tool.isort]
 profile = "black"
 
-[build-system]
-requires = [
-  "pip>=19.1.1",
-  "setuptools>=28",
-  "setuptools_scm>=3.2.0",
-  "wheel",
-]
-
 [tool.black]
 line-length = 79
+
+[project]
+name = "fmu-sumo-explorer"
+description = "Python package for interacting with Sumo in an FMU setting"
+requires-python = ">=3.8"
+dynamic = ["version"]
+license = { file = "LICENSE" }
+readme = { file = "README.md", content-type = "text/markdown" }
+authors = [{ name = "Equinor" }]
+classifiers = ["Programming Language :: Python"]
+dependencies = [
+  "pandas>=1.1.3",
+  "sumo-wrapper-python",
+  "xtgeo",
+  "pyarrow; python_version > '3.6.1'",
+  "OpenVDS; sys_platform != 'darwin'",
+]
+# "PyYAML>=5.4",
+# "azure-core",
+# "fmu-dataio",
+
+[project.urls]
+Repository = "https://github.com/equinor/fmu-sumo"
+
+[project.optional-dependencies]
+dev = ["black", "flake8", "pytest"]
+docs = [
+  "sphinx==6.2.1",
+  "sphinx-rtd-theme",
+  "autoapi",
+  "sphinx-autodoc-typehints",
+  "sphinxcontrib-apidoc",
+]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+include-package-data = true
+platforms = ["any"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
