@@ -27,9 +27,6 @@ dependencies = [
   "pyarrow; python_version > '3.6.1'",
   "OpenVDS; sys_platform != 'darwin'",
 ]
-# "PyYAML>=5.4",
-# "azure-core",
-# "fmu-dataio",
 
 [project.urls]
 Repository = "https://github.com/equinor/fmu-sumo"

@@ -34,8 +34,6 @@ autodoc_mock_imports = [
     "sumo",
     "xtgeo",
     "pandas",
-    "yaml",
-    "azure",
 ]
 
 os.environ[
