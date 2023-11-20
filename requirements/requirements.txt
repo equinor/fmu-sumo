@@ -1,9 +1,0 @@
-PyYAML>=5.4
-pandas>=1.1.3
-deprecation
-sumo-wrapper-python
-xtgeo
-azure-core
-pyarrow; python_version > "3.6.1"
-OpenVDS; sys_platform != 'darwin'
-fmu-dataio
