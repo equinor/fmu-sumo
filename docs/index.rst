@@ -12,9 +12,10 @@ For documentation of Sumo in the FMU context, see the `Sumo front-end for FMU <h
 
 ``fmu-sumo`` is a Python library for interaction with Sumo in the FMU context. It contains
 multiple modules:
-- **Explorer** (This module) for *reading* data from Sumo in the FMU context.
-- **`Uploader <https://github.com/equinor/fmu-sumo-uploader>`_** for *writing* data to Sumo during FMU runs.
-- **`Sim2sumo <https://github.com/equinor/fmu-sumo-sim2sumo>`_** for making reservoir simulator (Eclipse, OPM) results available through Sumo.
+
+* **Explorer** (This module) for *reading* data from Sumo in the FMU context.
+* `Uploader <https://github.com/equinor/fmu-sumo-uploader>`_ for *writing* data to Sumo during FMU runs.
+* `Sim2sumo <https://github.com/equinor/fmu-sumo-sim2sumo>`_ for making reservoir simulator (Eclipse, OPM) results available through Sumo.
 
 .. toctree::
     :maxdepth: 2
