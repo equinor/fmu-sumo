@@ -12,7 +12,7 @@ profile = "black"
 line-length = 79
 
 [project]
-name = "fmu-sumo-explorer"
+name = "fmu-sumo"
 description = "Python package for interacting with Sumo in an FMU setting"
 requires-python = ">=3.8"
 dynamic = ["version"]
