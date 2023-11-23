@@ -33,6 +33,7 @@ Repository = "https://github.com/equinor/fmu-sumo"
 
 [project.optional-dependencies]
 dev = ["black", "flake8", "pytest"]
+test = ["pytest", "pytest-timeout"]
 docs = [
   "sphinx==6.2.1",
   "sphinx-rtd-theme",
