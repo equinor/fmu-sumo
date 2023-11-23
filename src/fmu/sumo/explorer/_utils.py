@@ -3,6 +3,33 @@ from typing import List, Dict
 import json
 from sumo.wrapper import SumoClient
 
+def _build_bucket_query(query, field):
+    return {
+        "size": 0,
+        "query": query,
+        "aggs": {
+            f"{field}": {
+                "composite": {
+                    "size": 1000,
+                    "sources": [
+                        {
+                            f"{field}": {
+                                "terms": {
+                                    "field": field
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    }
+
+def _set_after_key(query, field, after_key):
+    if after_key is not None:
+        query["aggs"][field]["composite"]["after"] = after_key
+        pass
+    return query
 
 class Utils:
     """A class with utility functions for communicating with Sumo API"""
@@ -26,19 +53,22 @@ class Utils:
         Returns:
             A List of unique values for a given field
         """
-        query = {
-            "size": 0,
-            "aggs": {f"{field}": {"terms": {"field": field, "size": 2000}}},
-            "query": query,
-        }
 
-        if sort is not None:
-            query["sort"] = sort
+        query = _build_bucket_query(query, field)
+        all_buckets = []
+        after_key = None
+        while True:
+            query = _set_after_key(query, field, after_key)
+            res = self._sumo.post("/search", json=query).json()
+            buckets = res["aggregations"][field]["buckets"]
+            if len(buckets) == 0:
+                break
+            after_key = res["aggregations"][field]["after_key"]
+            buckets = [{"key": bucket["key"][field], "doc_count": bucket["doc_count"]} for bucket in buckets]
+            all_buckets = all_buckets + buckets
+            pass
 
-        res = self._sumo.post("/search", json=query)
-        buckets = res.json()["aggregations"][field]["buckets"]
-
-        return buckets
+        return all_buckets
 
     async def get_buckets_async(
         self,
@@ -56,19 +86,23 @@ class Utils:
         Returns:
             A List of unique values for a given field
         """
-        query = {
-            "size": 0,
-            "aggs": {f"{field}": {"terms": {"field": field, "size": 2000}}},
-            "query": query,
-        }
 
-        if sort is not None:
-            query["sort"] = sort
+        query = _build_bucket_query(query, field)
+        all_buckets = []
+        after_key = None
+        while True:
+            query = _set_after_key(query, field, after_key)
+            res = await self._sumo.post_async("/search", json=query)
+            res = res.json()
+            buckets = res["aggregations"][field]["buckets"]
+            if len(buckets) == 0:
+                break
+            after_key = res["aggregations"][field]["after_key"]
+            buckets = [{"key": bucket["key"][field], "doc_count": bucket["doc_count"]} for bucket in buckets]
+            all_buckets = all_buckets + buckets
+            pass
 
-        res = await self._sumo.post_async("/search", json=query)
-        buckets = res.json()["aggregations"][field]["buckets"]
-
-        return buckets
+        return all_buckets
 
     def get_objects(
         self,
