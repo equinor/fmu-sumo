@@ -4,6 +4,7 @@
 # fmu-sumo
 This package is intended for interaction with Sumo within the FMU (Fast Model Update(TM)) ecosystem.
 
+Want to contribute? Read our [contributing](./CONTRIBUTING.md) guidelines
 
 ## Explorer
 
