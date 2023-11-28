@@ -5,14 +5,16 @@ from fmu.sumo.explorer.objects._document_collection import DocumentCollection
 from fmu.sumo.explorer.objects.case import Case
 from fmu.sumo.explorer.pit import Pit
 
-_CASE_FIELDS = [
-    "_id",
-    "fmu.case.name",
-    "fmu.case.user.id",
-    "_sumo.status",
-    "access.asset",
-    "masterdata.smda.field",
-]
+_CASE_FIELDS = {
+    "include": [
+        "_id",
+        "fmu.case.name",
+        "fmu.case.user.id",
+        "_sumo.status",
+        "access.asset",
+        "masterdata.smda.field",
+    ]
+}
 
 
 class CaseCollection(DocumentCollection):
