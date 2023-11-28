@@ -6,14 +6,8 @@ from fmu.sumo.explorer.objects.case import Case
 from fmu.sumo.explorer.pit import Pit
 
 _CASE_FIELDS = {
-    "include": [
-        "_id",
-        "fmu.case.name",
-        "fmu.case.user.id",
-        "_sumo.status",
-        "access.asset",
-        "masterdata.smda.field",
-    ]
+    "include": [],
+    "exclude": []
 }
 
 

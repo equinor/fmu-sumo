@@ -6,30 +6,10 @@ from fmu.sumo.explorer.timefilter import TimeFilter
 from fmu.sumo.explorer.pit import Pit
 
 _CHILD_FIELDS = {
-    "include": [
-        "_id",
-        "data.name",
-        "data.content",
-        "data.tagname",
-        "data.time",
-        "data.format",
-        "data.bbox",
-        "data.spec",
-        "data.stratigraphic",
-        "data.vertical_domain",
-        "fmu.case.name",
-        "fmu.case.user.id",
-        "fmu.realization.id",
-        "fmu.iteration.name",
-        "fmu.context.stage",
-        "fmu.aggregation.operation",
-        "_sumo.status",
-        "access.asset",
-        "masterdata.smda.field",
-        "file.checksum_md5",
-        "file.relative_path",
-        "data.is_observation",
-        "data.is_prediction"
+    "include": [],
+    "exclude": [
+        "data.spec.columns",
+        "fmu.realization.parameters"
     ]
 }
 
