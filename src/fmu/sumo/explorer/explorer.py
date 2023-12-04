@@ -114,8 +114,11 @@ class Explorer:
         Returns:
             Case: case object
         """
-        metadata = self._utils.get_object(uuid, _CASE_FIELDS)
-        return Case(self._sumo, metadata, self._pit)
+        cases = self.cases.filter(uuid=uuid)
+        if len(cases) == 0:
+            raise Exception(f"Document not found: {uuid}")
+
+        return cases[0]
 
     async def get_case_by_uuid_async(self, uuid: str) -> Case:
         """Get case object by uuid
@@ -126,8 +129,11 @@ class Explorer:
         Returns:
             Case: case object
         """
-        metadata = await self._utils.get_object_async(uuid, _CASE_FIELDS)
-        return Case(self._sumo, metadata, self._pit)
+        cases = self.cases.filter(uuid=uuid)
+        if await cases.length_async() == 0:
+            raise Exception(f"Document not found: {uuid}")
+
+        return await cases.getitem_async(0)
 
     def get_surface_by_uuid(self, uuid: str) -> Surface:
         """Get surface object by uuid
