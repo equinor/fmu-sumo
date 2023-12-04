@@ -245,10 +245,10 @@ class DocumentCollection:
 
         return len(hits["hits"])
 
-    def _postprocess_batch(self, hits):
+    def _postprocess_batch(self, hits, pit):
         return
 
-    async def _postprocess_batch_async(self, hits):
+    async def _postprocess_batch_async(self, hits, pit):
         return
 
     def _init_query(self, doc_type: str, query: Dict = None) -> Dict:
