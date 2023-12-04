@@ -179,11 +179,15 @@ class DocumentCollection:
         if self._after is not None:
             query["search_after"] = self._after
 
+        pit = None
         if self._pit is not None:
-            query["pit"] = self._pit.get_pit_object(self._new_pit_id)
+            pit = self._pit.get_pit_object(self._new_pit_id)
+            query["pit"] = pit
 
         res = self._sumo.post("/search", json=query).json()
         hits = res["hits"]
+
+        self._postprocess_batch(hits["hits"], pit)
 
         if self._pit is not None:
             self._new_pit_id = res["pit_id"]
@@ -218,12 +222,16 @@ class DocumentCollection:
         if self._after is not None:
             query["search_after"] = self._after
 
+        pit = None
         if self._pit is not None:
-            query["pit"] = self._pit.get_pit_object(self._new_pit_id)
+            pit = self._pit.get_pit_object(self._new_pit_id)
+            query["pit"] = pit
 
         res = await self._sumo.post_async("/search", json=query)
         data = res.json()
         hits = data["hits"]
+
+        self._postprocess_batch_async(hits["hits"], pit)
 
         if self._pit is not None:
             self._new_pit_id = data["pit_id"]
@@ -236,6 +244,12 @@ class DocumentCollection:
             self._items.extend(hits["hits"])
 
         return len(hits["hits"])
+
+    def _postprocess_batch(self, hits):
+        return
+
+    async def _postprocess_batch_async(self, hits):
+        return
 
     def _init_query(self, doc_type: str, query: Dict = None) -> Dict:
         """Initialize base filter for document collection

@@ -10,6 +10,76 @@ _CASE_FIELDS = {
     "exclude": []
 }
 
+def _make_summary_query(ids, pit):
+    query = {
+        "query": {
+            "terms": {
+                "fmu.case.uuid.keyword": ids
+            }
+        },
+        "aggs": {
+            "cases": {
+                "terms": {
+                    "field": "fmu.case.uuid.keyword",
+                    "size": 1000
+                },
+                "aggs": {
+                    "iteration_uuids": {
+                        "terms": {
+                            "field": "fmu.iteration.uuid.keyword",
+                            "size": 100
+                        }
+                    },
+                    "iteration_names": {
+                        "terms": {
+                            "field": "fmu.iteration.name.keyword",
+                            "size": 100
+                        }
+                    },
+                    "data_types": {
+                        "terms": {
+                            "field": "class.keyword",
+                            "size": 100
+                        }
+                    },
+                    "iterations": {
+                        "terms": {
+                            "field": "fmu.iteration.uuid.keyword",
+                            "size": 100
+                        },
+                        "aggs": {
+                            "iteration_name": {
+                                "terms": {
+                                    "field": "fmu.iteration.name.keyword",
+                                    "size": 100
+                                }
+                            },
+                            "numreal": {
+                                "cardinality": {
+                                    "field": "fmu.realization.id"
+                                }
+                            },
+                            "maxreal": {
+                                "max": {
+                                    "field": "fmu.realization.id"
+                                }
+                            },
+                            "minreal": {
+                                "min": {
+                                    "field": "fmu.realization.id"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "size": 0
+    }
+    if pit:
+        query["pit"] = pit
+    return query
+
 
 class CaseCollection(DocumentCollection):
     """A class for representing a collection of cases in Sumo"""
@@ -22,6 +92,7 @@ class CaseCollection(DocumentCollection):
             pit (Pit): point in time
         """
         super().__init__("case", sumo, query, _CASE_FIELDS, pit)
+        self._summaries = {}
 
     @property
     def names(self) -> List[str]:
@@ -79,11 +150,62 @@ class CaseCollection(DocumentCollection):
 
     def __getitem__(self, index: int) -> Case:
         doc = super().__getitem__(index)
-        return Case(self._sumo, doc, self._pit)
+        uuid = doc["_id"]
+        summary = self._summaries[uuid]
+        return Case(self._sumo, doc, summary, self._pit)
 
     async def getitem_async(self, index: int) -> Case:
         doc = await super().getitem_async(index)
-        return Case(self._sumo, doc)
+        uuid = doc["_id"]
+        summary = self._summaries[uuid]
+        return Case(self._sumo, doc, summary, self._pit)
+
+    def _postprocess_batch(self, hits, pit):
+        ids = [hit["_id"] for hit in hits]
+        query = _make_summary_query(ids, pit)
+        res = self._sumo.post("/search", json=query)
+        data = res.json()
+        aggs = data["aggregations"]
+        self._insert_summaries(aggs)
+        return
+
+    async def _postprocess_batch_async(self, hits, pit):
+        ids = [hit["_id"] for hit in hits]
+        query = _make_summary_query(ids, pit)
+        res = await self._sumo.post_async("/search", json=query)
+        data = res.json()
+        aggs = data["aggregations"]
+        self._insert_summaries(aggs)
+        return
+
+    def _insert_summaries(self, aggs):
+        def extract_bucket_keys(bucket, name):
+            return [b["key"] for b in bucket[name]["buckets"]]
+        for bucket in aggs["cases"]["buckets"]:
+            caseid = bucket["key"]
+            iteration_names = extract_bucket_keys(bucket, "iteration_names")
+            iteration_uuids = extract_bucket_keys(bucket, "iteration_uuids")
+            data_types = extract_bucket_keys(bucket, "data_types")
+            iterations = {}
+            for ibucket in bucket["iterations"]["buckets"]:
+                iterid = ibucket["key"]
+                itername = extract_bucket_keys(ibucket, "iteration_name")
+                minreal = ibucket["minreal"]["value"]
+                maxreal = ibucket["maxreal"]["value"]
+                numreal = ibucket["numreal"]["value"]
+                iterations[iterid] = {
+                    "name": itername,
+                    "minreal": minreal,
+                    "maxreal": maxreal,
+                    "numreal": numreal
+                }
+            self._summaries[caseid] = {
+                "iteration_names": iteration_names,
+                "iteration_uuids": iteration_uuids,
+                "data_types": data_types,
+                "iterations": iterations
+            }
+        return
 
     def filter(
         self,
