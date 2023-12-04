@@ -231,7 +231,7 @@ class DocumentCollection:
         data = res.json()
         hits = data["hits"]
 
-        self._postprocess_batch_async(hits["hits"], pit)
+        await self._postprocess_batch_async(hits["hits"], pit)
 
         if self._pit is not None:
             self._new_pit_id = data["pit_id"]
