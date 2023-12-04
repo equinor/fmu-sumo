@@ -10,7 +10,7 @@ _CASE_FIELDS = {
     "exclude": []
 }
 
-def _make_summary_query(ids, pit):
+def _make_overview_query(ids, pit):
     query = {
         "query": {
             "terms": {
@@ -92,7 +92,7 @@ class CaseCollection(DocumentCollection):
             pit (Pit): point in time
         """
         super().__init__("case", sumo, query, _CASE_FIELDS, pit)
-        self._summaries = {}
+        self._overviews = {}
 
     @property
     def names(self) -> List[str]:
@@ -151,34 +151,34 @@ class CaseCollection(DocumentCollection):
     def __getitem__(self, index: int) -> Case:
         doc = super().__getitem__(index)
         uuid = doc["_id"]
-        summary = self._summaries[uuid]
-        return Case(self._sumo, doc, summary, self._pit)
+        overview = self._overviews[uuid]
+        return Case(self._sumo, doc, overview, self._pit)
 
     async def getitem_async(self, index: int) -> Case:
         doc = await super().getitem_async(index)
         uuid = doc["_id"]
-        summary = self._summaries[uuid]
-        return Case(self._sumo, doc, summary, self._pit)
+        overview = self._overviews[uuid]
+        return Case(self._sumo, doc, overview, self._pit)
 
     def _postprocess_batch(self, hits, pit):
         ids = [hit["_id"] for hit in hits]
-        query = _make_summary_query(ids, pit)
+        query = _make_overview_query(ids, pit)
         res = self._sumo.post("/search", json=query)
         data = res.json()
         aggs = data["aggregations"]
-        self._insert_summaries(aggs)
+        self._insert_overviews(aggs)
         return
 
     async def _postprocess_batch_async(self, hits, pit):
         ids = [hit["_id"] for hit in hits]
-        query = _make_summary_query(ids, pit)
+        query = _make_overview_query(ids, pit)
         res = await self._sumo.post_async("/search", json=query)
         data = res.json()
         aggs = data["aggregations"]
-        self._insert_summaries(aggs)
+        self._insert_overviews(aggs)
         return
 
-    def _insert_summaries(self, aggs):
+    def _insert_overviews(self, aggs):
         def extract_bucket_keys(bucket, name):
             return [b["key"] for b in bucket[name]["buckets"]]
         for bucket in aggs["cases"]["buckets"]:
@@ -199,7 +199,7 @@ class CaseCollection(DocumentCollection):
                     "maxreal": maxreal,
                     "numreal": numreal
                 }
-            self._summaries[caseid] = {
+            self._overviews[caseid] = {
                 "iteration_names": iteration_names,
                 "iteration_uuids": iteration_uuids,
                 "data_types": data_types,

@@ -16,10 +16,10 @@ from fmu.sumo.explorer.pit import Pit
 class Case(Document):
     """Class for representing a case in Sumo"""
 
-    def __init__(self, sumo: SumoClient, metadata: Dict, summary: Dict,
+    def __init__(self, sumo: SumoClient, metadata: Dict, overview: Dict,
                  pit: Pit = None):
         super().__init__(metadata)
-        self._summary = summary
+        self._overview = overview
         self._pit = pit
         self._sumo = sumo
         self._utils = Utils(sumo)
@@ -31,9 +31,9 @@ class Case(Document):
         return self._get_property(["fmu", "case", "name"])
 
     @property
-    def summary(self):
-        """Summary of case contents."""
-        return self._summary
+    def overview(self):
+        """Overview of case contents."""
+        return self._overview
 
     @property
     def status(self) -> str:
