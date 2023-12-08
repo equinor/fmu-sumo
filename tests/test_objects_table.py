@@ -10,17 +10,22 @@ import pyarrow as pa
 from fmu.sumo.explorer import Explorer, AggregatedTable
 import pytest
 
+# Fixed test case ("Drogon_AHM_2023-02-22") in Sumo/DEV
+TESTCASE_UUID = "10f41041-2c17-4374-a735-bb0de62e29dc"
 
 @pytest.fixture(name="explorer")
 def fixture_explorer(token: str) -> Explorer:
     """Returns explorer"""
     return Explorer("dev", token=token)
 
+@pytest.fixture(name="case")
+def fixture_case(explorer: Explorer):
+    """Return fixed testcase."""
+    return explorer.get_case_by_uuid(TESTCASE_UUID)
 
 @pytest.fixture(name="table")
-def fixture_table(token: str, explorer: Explorer):
+def fixture_table(case):
     """Get one table for further testing."""
-    case = explorer.cases.filter(name="drogon_ahm-2023-02-22")[0]
     return case.tables[0]
     
 ### Table
@@ -53,10 +58,8 @@ def test_table_to_arrow(table):
 
 ### Aggregated Table
 
-def test_aggregated_summary_arrow(explorer: Explorer):
+def test_aggregated_summary_arrow(case):
     """Test usage of Aggregated class with default type"""
-
-    case = explorer.cases.filter(name="drogon_ahm-2023-02-22")[0]
 
     table = AggregatedTable(case, "summary", "eclipse", "iter-0")
 
@@ -71,12 +74,8 @@ def test_aggregated_summary_arrow(explorer: Explorer):
         )
 
 
-def test_aggregated_summary_arrow_with_deprecated_function_name(
-    explorer: Explorer,
-):
+def test_aggregated_summary_arrow_with_deprecated_function_name(case):
     """Test usage of Aggregated class with default type with deprecated function name"""
-
-    case = explorer.cases.filter(name="drogon_ahm-2023-02-22")[0]
 
     table = AggregatedTable(case, "summary", "eclipse", "iter-0")
 
@@ -95,15 +94,13 @@ def test_aggregated_summary_arrow_with_deprecated_function_name(
         )
 
 
-def test_aggregated_summary_pandas(explorer: Explorer):
+def test_aggregated_summary_pandas(case):
     """Test usage of Aggregated class with item_type=pandas"""
-    case = explorer.cases.filter(name="drogon_ahm-2023-02-22")[0]
     table = AggregatedTable(case, "summary", "eclipse", "iter-0")
     assert isinstance(table["FOPT"].to_pandas(), pd.DataFrame)
 
 
-def test_get_fmu_iteration_parameters(explorer: Explorer):
+def test_get_fmu_iteration_parameters(case):
     """Test getting the metadata of of an object"""
-    case = explorer.cases.filter(name="drogon_ahm-2023-02-22")[0]
     table = AggregatedTable(case, "summary", "eclipse", "iter-0")
     assert isinstance(table.parameters, dict)
