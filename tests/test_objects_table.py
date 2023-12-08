@@ -1,4 +1,10 @@
-"""Testing of Aggregated table class"""
+"""Test table objects.
+
+  * Table
+  * AggregatedTable
+  * TableCollection
+
+"""
 import pandas as pd
 import pyarrow as pa
 from fmu.sumo.explorer import Explorer, AggregatedTable
@@ -11,12 +17,37 @@ def fixture_explorer(token: str) -> Explorer:
     return Explorer("dev", token=token)
 
 
-# @pytest.fixture(name="case")
-# def case_fixture():
-#     """Init of case"""
-#     exp = Explorer("dev")
-#     case = exp.cases.filter(name="drogon_ahm-2023-02-22")[0]
-#     return case
+@pytest.fixture(name="table")
+def fixture_table(token: str, explorer: Explorer):
+    """Get one table for further testing."""
+    case = explorer.cases.filter(name="drogon_ahm-2023-02-22")[0]
+    return case.tables[0]
+    
+
+def test_table_dataframe(table):
+    """Test the dataframe property."""
+    with pytest.warns(DeprecationWarning, match=".dataframe is deprecated"):
+        df = table.dataframe
+    assert isinstance(df, pd.DataFrame)
+
+
+def test_table_to_pandas(table):
+    """Test the to_pandas property."""
+    df = table.to_pandas
+    assert isinstance(df, pd.DataFrame)
+
+
+def test_arrowtable(table):
+    """Test the arrowtable property."""
+    with pytest.warns(DeprecationWarning, match=".arrowtable is deprecated"):
+        arrow = table.arrowtable
+    assert isinstance(arrow, pa.Table)
+
+
+def test_table_to_arrow(table):
+    """Test the to_arrow() method"""
+    arrow = table.to_arrow()
+    assert isinstance(arrow, pa.Table)
 
 
 def test_aggregated_summary_arrow(explorer: Explorer):
