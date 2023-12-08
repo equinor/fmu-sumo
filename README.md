@@ -2,110 +2,61 @@
 
 
 # fmu-sumo
-This package is intended for interaction with Sumo within the FMU (Fast Model Update(TM)) ecosystem.
+`fmu.sumo` is a Python package intended for interaction with FMU results stored in Sumo.<br />
+`fmu.sumo.explorer` is a Python API for consuming FMU results from Sumo.
 
-Want to contribute? Read our [contributing](./CONTRIBUTING.md) guidelines
+_Note! Access to Sumo is required. For Equinor users, apply through `AccessIT``._
 
-## Explorer
+## Installation
+```
+$ pip install fmu-sumo
+```
+... or for the latest development version:
+```
+$ git clone git@github.com:equinor/fmu-sumo.git
+$ cd fmu-sumo
+$ pip install .
+```
+:warning: OpenVDS does not publish builds for MacOS. You can still use the Explorer without OpenVDS, but some Cube methods will not work.
 
-> :warning: OpenVDS does not publish builds for MacOS. You can still use the Explorer without OpenVDS, but some Cube methods will not work.
+#### For development
 
-Explore and retrieve data from Sumo.
+```
+$ git clone <your fork>
+$ cd fmu-sumo
+$ pip install .[dev]
+```
 
+#### Run tests
+```
+$ pytest tests/
+```
+
+## Documentation and guidelines
+:link: [fmu-sumo documentation](https://fmu-sumo.readthedocs.io/en/latest/)
+
+## Example usage
 ```python
 from fmu.sumo.explorer import Explorer
 
+# Connect
 sumo = Explorer()
-```
-
-#### Example: Find cases
-```python
-# List of all available cases
-cases = sumo.cases
-
-# Get filter values
-cases.statuses
-cases.users
-cases.fields
 
 # Apply filters
 cases = cases.filter(status=["keep", "offical"], user="peesv", field="DROGON")
 
 for case in cases:
-    print(case.uuid)
-    print(case.name)
+    print(f"{case.name} ({case.uuid})")
 
-# select case
+# Select case
 case = cases[0]
+
+# Alternatively, get specific case via case.uuid
+case = sumo.get_case_by_uuid(<uuid>)
 ```
 
-#### Example: Retrieve case objects
-Get objects within a case through `case.[CONTEXT].[OBJECT_TYPE]`.
+## Contribute
+[Contribution guidelines](./CONTRIBUTING.md)
 
-##### Realized data
-```python
-# All realized surface objects in case
-surfs = case.surfaces
-
-# Get filter values
-surfs.names
-surfs.tagnames
-surfs.iterations
-
-# Apply filters
-surfs = surfs.filter(name="surface_name", tagname="surface_tagname", iteration="iter-0")
-
-# Get surface
-surf = surfs[0]
-
-# Metadata
-surf.uuid
-surf.name
-surf.tagname
-surf.iteration
-surf.realization
-
-# Binary
-surf.blob
-
-# Get xtgeo.RegularSurface
-%matplotlib inline
-reg = surf.to_regular_surface()
-reg.quickplot()
-```
-
-##### Aggregated data
-```python
-# All aggregated surfaces in case
-surfs = case.surfaces.filter(aggregation=True)
-
-# Get filter values
-surfs.names
-surfs.tagnames
-surfs.iterations
-surfs.aggregations
-
-# Apply filters
-surfs = surfs.filter(name="surface_name", tagname="surface_tagname", iteration="iter-0", aggregation="mean")
-
-# Get surface
-surf = surfs[0]
-
-```
-
-##### Observed data
-```python
-# All observed surfaces in case
-surfs = case.surfaces.filter(is_observation=True)
-
-# Get filter values
-surfs.names
-surfs.tagnames
-
-# Apply filters
-surfs = surfs.filter(name="surface_name", tagname="surface_tagname")
-
-# Get surfaces
-surf = surfs[0]
-```
-
+## License
+Apache 2.0
