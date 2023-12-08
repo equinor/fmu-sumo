@@ -35,9 +35,9 @@ class Table(Child):
             DeprecationWarning,
             stacklevel=2,
         )
-        return self.to_pandas
+        return self.to_pandas()
 
-    @property
+
     def to_pandas(self) -> pd.DataFrame:
         """Return object as a pandas DataFrame
 
@@ -106,9 +106,6 @@ class Table(Child):
         self._logger.debug("Read blob as %s to return pandas", worked)
         return self._dataframe
 
-    @to_pandas.setter
-    def to_pandas(self, frame: pd.DataFrame):
-        self._dataframe = frame
 
     @property
     def arrowtable(self) -> pa.Table:

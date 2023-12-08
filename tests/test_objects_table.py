@@ -23,6 +23,7 @@ def fixture_table(token: str, explorer: Explorer):
     case = explorer.cases.filter(name="drogon_ahm-2023-02-22")[0]
     return case.tables[0]
     
+### Table
 
 def test_table_dataframe(table):
     """Test the dataframe property."""
@@ -32,8 +33,8 @@ def test_table_dataframe(table):
 
 
 def test_table_to_pandas(table):
-    """Test the to_pandas property."""
-    df = table.to_pandas
+    """Test the to_pandas method."""
+    df = table.to_pandas()
     assert isinstance(df, pd.DataFrame)
 
 
@@ -49,6 +50,8 @@ def test_table_to_arrow(table):
     arrow = table.to_arrow()
     assert isinstance(arrow, pa.Table)
 
+
+### Aggregated Table
 
 def test_aggregated_summary_arrow(explorer: Explorer):
     """Test usage of Aggregated class with default type"""
@@ -96,18 +99,7 @@ def test_aggregated_summary_pandas(explorer: Explorer):
     """Test usage of Aggregated class with item_type=pandas"""
     case = explorer.cases.filter(name="drogon_ahm-2023-02-22")[0]
     table = AggregatedTable(case, "summary", "eclipse", "iter-0")
-    assert isinstance(table["FOPT"].to_pandas, pd.DataFrame)
-
-
-def test_aggregated_summary_pandas_with_deprecated_function_name(
-    explorer: Explorer,
-):
-    """Test usage of Aggregated class with item_type=pandas with deprecated function name"""
-    case = explorer.cases.filter(name="drogon_ahm-2023-02-22")[0]
-    table = AggregatedTable(case, "summary", "eclipse", "iter-0")
-    with pytest.warns(match=".dataframe is deprecated, renamed to .to_pandas()"):
-        mydata = table["FOPT"].dataframe
-    assert isinstance(mydata, pd.DataFrame)
+    assert isinstance(table["FOPT"].to_pandas(), pd.DataFrame)
 
 
 def test_get_fmu_iteration_parameters(explorer: Explorer):
