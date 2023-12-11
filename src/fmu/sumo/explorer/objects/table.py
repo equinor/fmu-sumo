@@ -94,21 +94,6 @@ class Table(Child):
         return self._dataframe
 
 
-    @property
-    def arrowtable(self) -> pa.Table:
-        """Return object as an arrow Table
-
-        Returns:
-            pa.Table: _description_
-        """
-        warn(
-            ".arrowtable is deprecated, renamed to .to_arrow",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
-        return self.to_arrow()
-
     def to_arrow(self) -> pa.Table:
         """Return object as an arrow Table
 
