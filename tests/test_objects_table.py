@@ -30,13 +30,6 @@ def fixture_table(case):
     
 ### Table
 
-def test_table_dataframe(table):
-    """Test the dataframe property."""
-    with pytest.warns(DeprecationWarning, match=".dataframe is deprecated"):
-        df = table.dataframe
-    assert isinstance(df, pd.DataFrame)
-
-
 def test_table_to_pandas(table):
     """Test the to_pandas method."""
     df = table.to_pandas()
