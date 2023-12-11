@@ -17,20 +17,6 @@ class Polygons(Child):
         """
         super().__init__(sumo, metadata)
 
-    def to_dataframe(self) -> pd.DataFrame:
-        """Get polygons object as a DataFrame
-
-        Returns:
-            DataFrame: A DataFrame object
-        """
-        warn(
-            ".to_dataframe() is deprecated, renamed to .to_pandas() ",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
-        return self.to_pandas()
-
     def to_pandas(self) -> pd.DataFrame:
         """Get polygons object as a DataFrame
 
