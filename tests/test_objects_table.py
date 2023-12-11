@@ -35,14 +35,6 @@ def test_table_to_pandas(table):
     df = table.to_pandas()
     assert isinstance(df, pd.DataFrame)
 
-
-def test_arrowtable(table):
-    """Test the arrowtable property."""
-    with pytest.warns(DeprecationWarning, match=".arrowtable is deprecated"):
-        arrow = table.arrowtable
-    assert isinstance(arrow, pa.Table)
-
-
 def test_table_to_arrow(table):
     """Test the to_arrow() method"""
     arrow = table.to_arrow()
@@ -60,26 +52,6 @@ def test_aggregated_summary_arrow(case):
     column = table["FOPT"]
 
     assert isinstance(column.to_arrow(), pa.Table)
-    with pytest.raises(IndexError) as e_info:
-        table = table["banana"]
-        assert (
-            e_info.value.args[0] == "Column: 'banana' does not exist try again"
-        )
-
-
-def test_aggregated_summary_arrow_with_deprecated_function_name(case):
-    """Test usage of Aggregated class with default type with deprecated function name"""
-
-    table = AggregatedTable(case, "summary", "eclipse", "iter-0")
-
-    assert len(table.columns) == 972 + 2
-    column = table["FOPT"]
-
-    with pytest.warns(
-        DeprecationWarning,
-        match=".arrowtable is deprecated, renamed to .to_arrow()",
-    ):
-        assert isinstance(column.arrowtable, pa.Table)
     with pytest.raises(IndexError) as e_info:
         table = table["banana"]
         assert (
