@@ -1,0 +1,49 @@
+name: Test access to Sumo with DROGON-READ login
+
+on:
+  schedule:
+    - cron: "24 4 * * *"
+  workflow_dispatch:
+
+jobs:
+  build_pywheels:
+    name: PY ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: ["3.11"]
+        os: [ubuntu-latest]
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Azure Login
+        uses: Azure/login@v1
+        with:
+          client-id: 121279f7-331a-45fd-9a5f-62d9026694a7
+          tenant-id: 3aa4a235-b6e2-48d5-9195-7fcf05b459b0
+          allow-no-subscriptions: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install fmu-sumo
+        run: >
+          python -m pip install --upgrade pip &&
+          python -m pip install .[test]
+      - name: Run tests
+        shell: bash
+        run: |
+          az --version
+          az account list
+          pip list | grep -i sumo
+          access_token=$(az account get-access-token --scope api://88d2b022-3539-4dda-9e66-853801334a86/.default --query accessToken --output tsv)
+          export ACCESS_TOKEN=$access_token
+
+          pytest -s --timeout=300 tests/test_access/tst_access_drogon_read_login.py
+
