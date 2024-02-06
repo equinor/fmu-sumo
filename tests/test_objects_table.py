@@ -25,8 +25,9 @@ def fixture_case(explorer: Explorer):
 
 @pytest.fixture(name="table")
 def fixture_table(case):
-    """Get one table for further testing."""
-    return case.tables[0]
+    """Get one reasonably sized table for further testing."""
+    return case.tables.filter(realization=0, iteration="iter-0", name="simgrid", tagname="vol")[0]
+    # return case.tables.filter(realization=0, iteration="iter-0", name="Valysar Fm.", tagname="PHIT_Average")[0]
     
 ### Table
 
