@@ -39,3 +39,5 @@ Relevant App Registrations:
 * sumo-test-runner-drogon-read DROGON-READ
 * sumo-test-runner-drogon-write DROGON-WRITE
 * sumo-test-runner-drogon-manage DROGON-MANAGE
+
+See Azure AD/Entra ID 'API permissions' blade for each of these App Registrations. 
