@@ -37,7 +37,6 @@ def test_admin_access(explorer: Explorer):
             f"/admin/make-shared-access-key?user=noreply%40equinor.com&roles=DROGON-READ&duration=111"
         )
         print("Execution should never reach this line")
-        assert True == False
 
 
 def test_get_userpermissions(explorer: Explorer):
@@ -74,7 +73,7 @@ def test_write(explorer: Explorer):
         print("About to write a case which should raise exception")
         explorer._sumo.post(f"/objects", json=case.metadata)
         print("Execution should never reach this line")
-        assert True == False
+
 
 def test_read_restricted_classification_data(explorer: Explorer):
     """Test if can read restriced data aka 'access:classification: restricted'"""
@@ -86,13 +85,105 @@ def test_read_restricted_classification_data(explorer: Explorer):
     # A default Drogon iteration contains 2 restricted objects,
     # so in normal situations there should be some restricted objects,
     # but never for this DROGON-READ user
-    response = explorer._sumo.get("/search?%24query=access.classification%3Arestricted")
+    response = explorer._sumo.get(
+        "/search?%24query=access.classification%3Arestricted"
+    )
     assert response.status_code == 200
     response_json = json.loads(response.text)
     hits = response_json.get("hits").get("total").get("value")
     print("Hits on restricted:", hits)
     assert hits == 0
 
-# TODO: aggregate bulk operation should fail 
 
-# TODO: FAST aggregate operation should succeed
+def test_aggregations_fast(explorer: Explorer):
+    """Test a fast aggregation method"""
+    print("Running test:", inspect.currentframe().f_code.co_name)
+    cases = explorer.cases
+    print("Number of cases: ", len(cases))
+    assert len(cases) > 0
+    case = cases[0]
+    case_uuid = case.metadata.get("fmu").get("case").get("uuid")
+    surface_uuid = cases[0].surfaces[0].uuid
+    print("using object_id of first surface:", surface_uuid)
+    body = {
+        "operations": ["min"],
+        "object_ids": [surface_uuid],
+        "class": "surface",
+        "iteration_name": case.iterations[0].get("name"),
+    }
+    print("About to trigger fast-aggregation on case", case_uuid)
+    print("using body", body)
+    # A READ role user CAN trigger FAST aggregation
+    response = explorer._sumo.post(f"/aggregations", json=body)
+    print(response.status_code)
+    assert response.status_code in [200, 201, 202]
+    print(len(response.text))
+
+
+def test_aggregate_bulk(explorer: Explorer):
+    """Test a bulk aggregation method"""
+    print("Running test:", inspect.currentframe().f_code.co_name)
+    cases = explorer.cases
+    print("Number of cases: ", len(cases))
+    assert len(cases) > 0
+    case = cases[0]
+    case_uuid = case.metadata.get("fmu").get("case").get("uuid")
+    body = {
+        "operations": ["min"],
+        "case_uuid": case_uuid,
+        "class": "surface",
+        "iteration_name": case.iterations[0].get("name"),
+    }
+    print("About to trigger bulk aggregation on case", case_uuid)
+    print("using body", body, " this should raise exception")
+    # A READ role user CANNOT trigger BULK aggregation
+    with pytest.raises(Exception, match="403*"):
+        response = explorer._sumo.post(f"/aggregations", json=body)
+        print("Execution should never reach this line")
+        print("Unexpected status: ", response.status_code)
+        print("Unexpected response: ", response.text)
+
+
+def test_get_access_log(explorer: Explorer):
+    """Test to get the access log method"""
+    print("Running test:", inspect.currentframe().f_code.co_name)
+    print("About to get access log")
+    response = explorer._sumo.get("/access-log")
+    print(response.status_code)
+    print(len(response.text))
+    # Currently all authenticated users have access
+    assert response.status_code == 200
+
+
+def test_get_key(explorer: Explorer):
+    """Test to get key method"""
+    print("Running test:", inspect.currentframe().f_code.co_name)
+    print("About to get key, which should raise exception ")
+    with pytest.raises(Exception, match="403*"):
+        response = explorer._sumo.get("/key")
+        print("Execution should never reach this line")
+        print("Unexpected status: ", response.status_code)
+        print("Unexpected response: ", response.text)
+
+
+def test_get_purge(explorer: Explorer):
+    """Test to get purge method"""
+    print("Running test:", inspect.currentframe().f_code.co_name)
+    print("About to get purge, which should raise exception ")
+    with pytest.raises(Exception, match="403*"):
+        response = explorer._sumo.get("/purge")
+        print("Execution should never reach this line")
+        print("Unexpected status: ", response.status_code)
+        print("Unexpected response: ", response.text)
+
+
+def test_get_message_log_truncate(explorer: Explorer):
+    """Test to get msg log truncate method"""
+    print("Running test:", inspect.currentframe().f_code.co_name)
+    print("About to get msg log truncate, which should raise exception ")
+    with pytest.raises(Exception, match="403*"):
+        response = explorer._sumo.get("/message-log/truncate?cutoff=99")
+        print("Execution should never reach this line")
+        print("Unexpected status: ", response.status_code)
+        print("Unexpected response: ", response.text)
+

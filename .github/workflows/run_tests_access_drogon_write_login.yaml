@@ -1,6 +1,8 @@
 name: Test access to Sumo with DROGON-WRITE login
 
 on:
+  pull_request:
+    branches: [main]
   schedule:
     - cron: "34 4 * * *"
   workflow_dispatch:

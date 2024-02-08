@@ -1,4 +1,4 @@
-# Testing access to SUMO
+# Testing access to SUMO: read, write, manage, no access
 
 Tests in this folder shall be run inside Github Actions as specific 
 users with specific access. Each test file is tailored for a specific 
@@ -11,10 +11,10 @@ outside Github Actions.
 In addition, the file names use the non-standard 'tst' over 'test' to avoid being picked 
 up by a call to pytest. 
 
-Print statements are used to ensure the Github Actions run provide 
+Print statements are used to ensure the Github Actions run prints 
 information that can be used for debugging. 
 
-Use allow-no-subscriptions flag to avoid having to give the App Registrations access to some resource inside the subscription itself. Example: 
+Using allow-no-subscriptions flag to avoid having to give the App Registrations access to some resource inside the subscription itself. Example: 
 ```
       - name: Azure Login
         uses: Azure/login@v1
@@ -39,3 +39,7 @@ Relevant App Registrations:
 * sumo-test-runner-drogon-read DROGON-READ
 * sumo-test-runner-drogon-write DROGON-WRITE
 * sumo-test-runner-drogon-manage DROGON-MANAGE
+
+The Azure Entra ID 'App Registrations' blade named 'API permissions' is where the access is 
+given. 
+

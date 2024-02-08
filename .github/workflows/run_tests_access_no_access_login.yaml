@@ -1,9 +1,11 @@
 name: Test access to Sumo with NO-ACCESS login
 
 on:
+  pull_request:
+    branches: [main]
   schedule:
     - cron: "54 4 * * *"
-    workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
   build_pywheels:

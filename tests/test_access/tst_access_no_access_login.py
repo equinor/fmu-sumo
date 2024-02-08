@@ -37,7 +37,6 @@ def test_admin_access(explorer: Explorer):
             f"/admin/make-shared-access-key?user=noreply%40equinor.com&roles=DROGON-READ&duration=111"
         )
         print("Execution should never reach this line")
-        assert True == False
 
 
 def test_get_userpermissions(explorer: Explorer):
@@ -76,7 +75,6 @@ def test_write(explorer: Explorer):
             print("Execution should never reach this line")
             print("Unexpected status: ", response.status_code)
             print("Unexpected response: ", response.text)
-            assert True == False
 
 
 def test_read_restricted_classification_data(explorer: Explorer):
@@ -84,7 +82,7 @@ def test_read_restricted_classification_data(explorer: Explorer):
     print("Running test:", inspect.currentframe().f_code.co_name)
     cases = explorer.cases
     print("Number of cases: ", len(cases))
-    assert len(cases) > 0
+    assert len(cases) == 0
 
     # A default Drogon iteration contains 2 restricted objects,
     # so in normal situations there should be some restricted objects
@@ -99,6 +97,85 @@ def test_read_restricted_classification_data(explorer: Explorer):
     assert hits == 0
 
 
-# TODO: aggregate bulk operation should fail
+def test_get_access_log(explorer: Explorer):
+    """Test to get the access log method"""
+    print("Running test:", inspect.currentframe().f_code.co_name)
+    print("About to get access log")
+    response = explorer._sumo.get("/access-log")
+    print(response.status_code)
+    print(len(response.text))
+    # Currently all authenticated users have access
+    assert response.status_code == 200
 
-# TODO: FAST aggregate operation should succeed
+
+def test_get_key(explorer: Explorer):
+    """Test to get key method"""
+    print("Running test:", inspect.currentframe().f_code.co_name)
+    print("About to get key, which should raise exception ")
+    with pytest.raises(Exception, match="403*"):
+        response = explorer._sumo.get("/key")
+        print("Execution should never reach this line")
+        print("Unexpected status: ", response.status_code)
+        print("Unexpected response: ", response.text)
+
+
+def test_get_purge(explorer: Explorer):
+    """Test to get purge method"""
+    print("Running test:", inspect.currentframe().f_code.co_name)
+    print("About to get purge, which should raise exception ")
+    with pytest.raises(Exception, match="403*"):
+        response = explorer._sumo.get("/purge")
+        print("Execution should never reach this line")
+        print("Unexpected status: ", response.status_code)
+        print("Unexpected response: ", response.text)
+
+
+def test_get_message_log_truncate(explorer: Explorer):
+    """Test to get msg log truncate method"""
+    print("Running test:", inspect.currentframe().f_code.co_name)
+    print("About to get msg log truncate, which should raise exception ")
+    with pytest.raises(Exception, match="403*"):
+        response = explorer._sumo.get("/message-log/truncate?cutoff=99")
+        print("Execution should never reach this line")
+        print("Unexpected status: ", response.status_code)
+        print("Unexpected response: ", response.text)
+
+
+def test_aggregate_bulk(explorer: Explorer):
+    """Test a bulk aggregation method"""
+    print("Running test:", inspect.currentframe().f_code.co_name)
+    # Fixed test case ("Drogon_AHM_2023-02-22") in Sumo/DEV
+    TESTCASE_UUID = "10f41041-2c17-4374-a735-bb0de62e29dc"
+    print("About to trigger bulk aggregation on case", TESTCASE_UUID)
+    body = {
+        "operations": ["min"],
+        "case_uuid": TESTCASE_UUID,
+        "class": "surface",
+        "iteration_name": "iter-0",
+    }    
+    with pytest.raises(Exception, match="40*"):
+        response = explorer._sumo.post(f"/aggregations", json=body)
+        print("Execution should never reach this line")
+        print("Unexpected status: ", response.status_code)
+        print("Unexpected response: ", response.text)
+
+
+def test_aggregations_fast(explorer: Explorer):
+    """Test a fast aggregation method"""
+    print("Running test:", inspect.currentframe().f_code.co_name)
+    # Fixed test case ("Drogon_AHM_2023-02-22") in Sumo/DEV
+    TESTCASE_UUID = "10f41041-2c17-4374-a735-bb0de62e29dc"
+    print("About to trigger fast-aggregation on case", TESTCASE_UUID)
+    SURFACE_UUID = "ae6cf480-12ba-77ca-848e-92e707556b63"
+    print("using object_id of first surface:", SURFACE_UUID)
+    body = {
+        "operations": ["min"],
+        "object_ids": [SURFACE_UUID],
+        "class": "surface",
+        "iteration_name": "iter-0",
+    }
+    with pytest.raises(Exception, match="40*"):
+        response = explorer._sumo.post(f"/aggregations", json=body)
+        print("Execution should never reach this line")
+        print("Unexpected status: ", response.status_code)
+        print("Unexpected response: ", response.text)
