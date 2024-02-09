@@ -1,4 +1,4 @@
-name: Test access to Sumo with DROGON-WRITE login
+name: Test access DROGON-WRITE login
 
 on:
   pull_request:

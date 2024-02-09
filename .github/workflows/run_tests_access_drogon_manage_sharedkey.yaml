@@ -1,4 +1,4 @@
-name: Test access to Sumo with DROGON-MANAGE shared-key
+name: Test access DROGON-MANAGE shared-key
 
 on:
   pull_request:

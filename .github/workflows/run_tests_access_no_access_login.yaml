@@ -1,4 +1,4 @@
-name: Test access to Sumo with NO-ACCESS login
+name: Test access NO-ACCESS login
 
 on:
   pull_request:

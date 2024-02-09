@@ -1,4 +1,4 @@
-name: Test access to Sumo with DROGON-MANAGE login
+name: Test access DROGON-MANAGE login
 
 on:
   pull_request:
