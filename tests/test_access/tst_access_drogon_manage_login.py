@@ -181,3 +181,4 @@ def test_get_message_log_truncate(explorer: Explorer):
         print("Execution should never reach this line")
         print("Unexpected status: ", response.status_code)
         print("Unexpected response: ", response.text)
+

@@ -43,3 +43,20 @@ Relevant App Registrations:
 The Azure Entra ID 'App Registrations' blade named 'API permissions' is where the access is 
 given. 
 
+## Test access using shared-key
+
+Shared key authentication is also tested. The shared keys are manually created with the /admin/make-shared-access-key, then manually put into Github Actions Secrets. Note that these secrets must be replaced when they expire after a year. 
+
+It is not possible to run a 'no-access' test with shared key. 
+
+Example /admin/make-shared-access-key in Swagger:
+
+* user: autotest@equinor.com
+* roles: one of DROGON-READ, DROGON-WRITE, DROGON-MANAGE
+* duration: 365
+
+Then paste the response body into the corresponding secret in Github, Settings, Secrets and variables, Actions, edit repository secret. 
+
+Relevant files:
+
+.github\workflows\*_sharedkey.yaml
