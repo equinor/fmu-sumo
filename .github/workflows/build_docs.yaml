@@ -1,5 +1,6 @@
-# build and test some end points
-name: Build and deploy docs for fmu-sumo
+# build documentation
+# Deploy of doc is configured from ReadTheDocs
+name: Build docs for fmu-sumo
 
 on:
   pull_request:
