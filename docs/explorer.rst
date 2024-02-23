@@ -3,6 +3,30 @@ Sumo Explorer
 
 The ``fmu.sumo.explorer`` is a python package for reading data from Sumo in the FMU context.
 
+Note! Access to Sumo is required. For Equinor users, apply through ``AccessIT``.
+
+Installation
+-------------
+
+.. code-block:: console
+
+    pip install fmu-sumo
+
+or for the latest development version:
+
+.. code-block:: console
+
+    git clone git@github.com:equinor/fmu-sumo.git
+    cd fmu-sumo
+    pip install .[dev]
+
+Run tests
+---------
+
+.. code-block:: console
+
+    pytest tests/
+
 
 Api Reference 
 -------------
