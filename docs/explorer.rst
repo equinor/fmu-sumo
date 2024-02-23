@@ -364,9 +364,6 @@ For how large result-sets should you use the `keep_alive` parameter? As of
 early 2024, the `Explorer` uses 500 objects pagination, so you should use 
 the `keep_alive` parameter for all result-sets larger than 500 objects. 
 
-The 'snapshot' is associated to the Explorer object, so you should use a single Explorer 
-object through the full session, if possible. 
-
 The 'snapshot' works in exactly the same way for async and sync methods. 
 
 Here is example code iterating over a large result-set using the `keep_alive` 
