@@ -396,7 +396,6 @@ parameter:
 
     asyncio.run(main())
 
-
 Time filtering
 ^^^^^^^^^^^^^^
 The `TimeFilter` class lets us construct time filters to be used in the `SurfaceCollection.filter` method:
