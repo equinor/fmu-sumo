@@ -343,6 +343,60 @@ If we know the `uuid` of the surface we want to work with we can get it directly
     print(surface.name)
 
 
+Pagination: Iterating over large resultsets
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you want to iterate/paginate over large number of results you _must_ use the 
+`keep_alive` parameter to avoid errors and get an exact and complete list of
+objects. The `keep_alive` parameter creates a 'snapshot' in the backend, 
+which ensures consistent results for you, but at the same time using some
+resources on the server-side. To avoid server-side problems, the `keep_alive` 
+parameter should be as short as possible, but still large enough for you 
+(or your users) to iterate over the data-set. If you are not sure what to 
+use, start with 15m, i.e. 15 minutes. This means that you expect that there 
+will be a maximum of 15 minutes between each time fmu-sumo calls the back-end, 
+so not the complete time period of a user session. 
+
+The 'snapshot' will of course not reflect any updates to data performed 
+simultaneously by you or anyone else. 
+
+For how large result-sets should you use the `keep_alive` parameter? As of
+early 2024, the `Explorer` uses 500 objects pagination, so you should use 
+the `keep_alive` parameter for all result-sets larger than 500 objects. 
+
+The 'snapshot' is associated to the Explorer object, so you should use a single Explorer 
+object through the full session, if possible. 
+
+The 'snapshot' works in exactly the same way for async and sync methods. 
+
+Here is example code iterating over a large result-set using the `keep_alive` 
+parameter:
+
+.. code-block:: python 
+
+    import asyncio
+
+    from fmu.sumo.explorer import Explorer
+    from fmu.sumo.explorer.objects import SurfaceCollection
+
+    explorer = Explorer(env="prod", keep_alive="15m")
+    case = explorer.get_case_by_uuid("dec73fae-bb11-41f2-be37-73ba005c4967")
+
+    surface_collection: SurfaceCollection = case.surfaces.filter(
+        iteration="iter-1",
+    )
+
+
+    async def main():
+        count = await surface_collection.length_async()
+        for i in range(count):
+            print(f"Working on {i} of {count-1}")
+            surf = await surface_collection.getitem_async(i)
+            # Do something with surf
+
+    asyncio.run(main())
+
+
 Time filtering
 ^^^^^^^^^^^^^^
 The `TimeFilter` class lets us construct time filters to be used in the `SurfaceCollection.filter` method:
