@@ -101,7 +101,10 @@ def test_aggregations_bulk(explorer: Explorer):
     cases = explorer.cases
     print("Number of cases: ", len(cases))
     assert len(cases) > 0
-    case = cases[0]
+    for c in cases:
+        if len(c.iterations) > 0 and len(c.surfaces) > 40:
+            case = c
+            break
     case_uuid = case.metadata.get("fmu").get("case").get("uuid")
     print("About to trigger aggregation on case", case_uuid)
     body = {
@@ -121,10 +124,13 @@ def test_aggregations_fast(explorer: Explorer):
     cases = explorer.cases
     print("Number of cases: ", len(cases))
     assert len(cases) > 0
-    case = cases[0]
+    for c in cases:
+        if len(c.iterations) > 0 and len(c.surfaces) > 40:
+            case = c
+            break
     case_uuid = case.metadata.get("fmu").get("case").get("uuid")
     print("About to trigger fast-aggregation on case", case_uuid)
-    surface_uuid = cases[0].surfaces[0].uuid
+    surface_uuid = case.surfaces[0].uuid
     print("using object_id of first surface:", surface_uuid)
     body = {
         "operations": ["min"],
