@@ -20,17 +20,17 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v2
         with:
           client-id: 121279f7-331a-45fd-9a5f-62d9026694a7
           tenant-id: 3aa4a235-b6e2-48d5-9195-7fcf05b459b0
           allow-no-subscriptions: true
 
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 

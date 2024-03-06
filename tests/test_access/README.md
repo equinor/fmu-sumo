@@ -17,7 +17,7 @@ information that can be used for debugging.
 Using allow-no-subscriptions flag to avoid having to give the App Registrations access to some resource inside the subscription itself. Example: 
 ```
       - name: Azure Login
-        uses: Azure/login@v1
+        uses: Azure/login@v2
         with:
           client-id: <relevant App Registration id here>
           tenant-id: 3aa4a235-b6e2-48d5-9195-7fcf05b459b0
