@@ -42,15 +42,17 @@ class DictionaryCollection(ChildCollection):
         aggregation: Union[str, List[str], bool] = None,
         stage: Union[str, List[str], bool] = None,
         uuid: Union[str, List[str], bool] = None,
+        content: Union[str, List[str], bool] = None,
     ) -> "DictionaryCollection":
         """Filter dictionaries
 
         Args:
-            name (Union[str, List[str], bool]): polygon name
-            tagname (Union[str, List[str], bool]): polygon tagname
+            name (Union[str, List[str], bool]): dictionary name
+            tagname (Union[str, List[str], bool]): dictionary tagname
             iteration (Union[int, List[int], bool]): iteration id
             realization Union[int, List[int], bool]: realization id
-            uuid (Union[str, List[str], bool]): polygons object uuid
+            uuid (Union[str, List[str], bool]): dictionary object uuid
+            content (Union[str, List[str], bool]): dictionary content
 
         Returns:
             DictionaryCollection: A filtered DictionaryCollection
@@ -63,6 +65,7 @@ class DictionaryCollection(ChildCollection):
             aggregation=aggregation,
             stage=stage,
             uuid=uuid,
+            content=content
         )
 
         return DictionaryCollection(

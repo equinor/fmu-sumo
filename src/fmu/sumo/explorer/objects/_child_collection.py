@@ -107,6 +107,16 @@ class ChildCollection(DocumentCollection):
     async def vertical_domain_async(self) -> List[str]:
         """List of unqiue object vertical domain"""
         return await self._get_field_values_async("data.vertical_domain")
+   
+    @property
+    def contents(self) -> List[str]:
+        """List of unique contents"""
+        return self._get_field_values("data.content.keyword")
+
+    @property
+    async def contents_async(self) -> List[str]:
+        """List of unique contents"""
+        return self._get_field_values_async("data.content.keyword")
 
     def _init_query(self, doc_type: str, query: Dict = None) -> Dict:
         new_query = super()._init_query(doc_type, query)
@@ -133,6 +143,7 @@ class ChildCollection(DocumentCollection):
         uuid: Union[str, List[str], bool] = None,
         stratigraphic: Union[str, List[str], bool] = None,
         vertical_domain: Union[str, List[str], bool] = None,
+        content: Union[str, List[str], bool] = None,
         is_observation: bool = None,
         is_prediction: bool = None
     ):
@@ -148,7 +159,8 @@ class ChildCollection(DocumentCollection):
             "fmu.context.stage.keyword": stage,
             "data.spec.columns.keyword": column,
             "_id": uuid,
-            "data.vertical_domain.keyword": vertical_domain
+            "data.vertical_domain.keyword": vertical_domain,
+            "data.content.keyword": content
         }
 
         for prop, value in prop_map.items():

@@ -134,6 +134,7 @@ class CubeCollection(ChildCollection):
         uuid: Union[str, List[str], bool] = None,
         is_observation: bool = None,
         is_prediction: bool = None,
+        content: Union[str, List[str], bool] = None,
     ) -> "CubeCollection":
         """Filter cubes
 
@@ -147,6 +148,7 @@ class CubeCollection(ChildCollection):
             uuid (Union[str, List[str], bool]): cube object uuid
             is_observation (bool): cube is_observation
             is_prediction (bool): cube is_prediction
+            content (Union[str, List[str], bool]): cube content
 
         Returns:
             CubeCollection: A filtered CubeCollection
@@ -161,6 +163,7 @@ class CubeCollection(ChildCollection):
             uuid=uuid,
             is_observation=is_observation,
             is_prediction=is_prediction,
+            content=content
         )
 
         return CubeCollection(self._sumo, self._case_uuid, query, self._pit)

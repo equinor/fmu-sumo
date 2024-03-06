@@ -53,6 +53,7 @@ class TableCollection(ChildCollection):
         stage: Union[str, List[str], bool] = None,
         column: Union[str, List[str], bool] = None,
         uuid: Union[str, List[str], bool] = None,
+        content: Union[str, List[str], bool] = None,
     ) -> "TableCollection":
         """Filter tables
 
@@ -64,6 +65,7 @@ class TableCollection(ChildCollection):
             aggregation (Union[str, List[str], bool]): aggregation operation
             stage (Union[str, List[str], bool]): context/stage
             uuid (Union[str, List[str], bool]): table object uuid
+            content (Union[str, List[str], bool): table content
 
         Returns:
             TableCollection: A filtered TableCollection
@@ -78,5 +80,6 @@ class TableCollection(ChildCollection):
             stage=stage,
             column=column,
             uuid=uuid,
+            content=content
         )
         return TableCollection(self._sumo, self._case_uuid, query, self._pit)
