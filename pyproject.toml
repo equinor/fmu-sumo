@@ -28,7 +28,7 @@ dependencies = [
   "sumo-wrapper-python",
   "xtgeo",
   "pyarrow; python_version > '3.6.1'",
-  "OpenVDS; sys_platform != 'darwin'",
+  "OpenVDS; sys_platform != 'darwin' and python_version < '3.12'",
 ]
 
 [project.urls]

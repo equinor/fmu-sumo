@@ -1,6 +1,9 @@
 """Tests explorer"""
+
+from platform import python_version
 import sys
-if not sys.platform.startswith('darwin'):
+
+if not sys.platform.startswith("darwin") and sys.version_info < (3, 12):
     import openvds
 import logging
 import json
@@ -41,10 +44,12 @@ def fixture_case_uuid() -> str:
     """Returns case uuid"""
     return "2c2f47cf-c7ab-4112-87f9-b4797ec51cb6"
 
+
 @pytest.fixture(name="seismic_case_uuid")
 def fixture_seismic_case_uuid() -> str:
     """Returns seismic case uuid"""
     return "c616019d-d344-4094-b2ee-dd4d6d336217"
+
 
 @pytest.fixture(name="explorer")
 def fixture_explorer(token: str) -> Explorer:
@@ -269,7 +274,11 @@ def test_get_case_by_uuid(explorer: Explorer, case_uuid: str, case_name: str):
     assert case.uuid == case_uuid
     assert case.name == case_name
 
-@pytest.mark.skipif(sys.platform.startswith('darwin'), reason="do not run OpenVDS SEGYImport on mac os")
+
+@pytest.mark.skipif(
+    sys.platform.startswith("darwin") or sys.version_info > (3, 11),
+    reason="do not run OpenVDS SEGYImport on mac os or python 3.12",
+)
 def test_seismic_case_by_uuid(explorer: Explorer, seismic_case_uuid: str):
     """Test that explorer returns openvds compatible cubes for seismic case"""
     case = explorer.get_case_by_uuid(seismic_case_uuid)
@@ -286,9 +295,10 @@ def test_seismic_case_by_uuid(explorer: Explorer, seismic_case_uuid: str):
     channel_list = []
     for i in range(channel_count):
         channel_list.append(layout.getChannelName(i))
-    assert 'Amplitude' in channel_list
-    assert 'Trace' in channel_list
-    assert 'SEGYTraceHeader' in channel_list
+    assert "Amplitude" in channel_list
+    assert "Trace" in channel_list
+    assert "SEGYTraceHeader" in channel_list
+
 
 def test_utils_extend_query_object(utils: Utils):
     """Test extension of query"""

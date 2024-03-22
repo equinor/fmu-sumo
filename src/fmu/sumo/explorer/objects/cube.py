@@ -6,13 +6,10 @@ from fmu.sumo.explorer.objects._child import Child
 import sys
 import warnings
 
-if sys.platform == "darwin":
-    try:
-        import openvds
-    except ImportError:
-        warnings.warn("OpenVDS is missing. Some Cube methods will not work.")
-else:
+try:
     import openvds
+except ImportError:
+    warnings.warn("OpenVDS is missing. Some Cube methods will not work.")
 
 
 class Cube(Child):
