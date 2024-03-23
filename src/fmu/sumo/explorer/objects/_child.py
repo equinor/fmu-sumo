@@ -1,4 +1,5 @@
 """module containing class for child object"""
+
 from typing import Dict
 from io import BytesIO
 from sumo.wrapper import SumoClient
@@ -22,6 +23,11 @@ class Child(Document):
     def name(self) -> str:
         """Object name"""
         return self._get_property(["data", "name"])
+
+    @property
+    def content(self) -> str:
+        """Content"""
+        return self._get_property(["data", "content"])
 
     @property
     def tagname(self) -> str:

@@ -235,6 +235,13 @@ def test_case_surfaces_filter(test_case: Case):
         assert surf.iteration == "iter-0"
         assert surf.name == "Valysar Fm."
 
+    # filter on content
+    non_valid_content_surfs = real_surfs.filter(content="___not_valid")
+    assert len(non_valid_content_surfs) == 0
+
+    real_surfs = real_surfs.filter(content="depth")
+    assert len(real_surfs) == 56
+
     # filter on tagname
     real_surfs = real_surfs.filter(tagname="FACIES_Fraction_Channel")
     assert len(real_surfs) == 4

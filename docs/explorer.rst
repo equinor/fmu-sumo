@@ -223,6 +223,12 @@ The `SurfaceCollection` object has a filter method and properties for getting fi
 
     surfaces = case.surfaces.filter(iteration="iter-0")
 
+    contents = surfaces.contents
+    
+    surfaces = surfaces.filter(
+        content=contents[0]
+        )
+
     names = surfaces.names 
 
     surfaces = surfaces.filter(
@@ -243,6 +249,7 @@ The `SurfaceCollection.filter` method takes the following parameters:
 
 * uuid
 * name 
+* content 
 * tagname 
 * iteration 
 * realization 
@@ -280,6 +287,7 @@ We can get list of filter values for the following properties:
 
 * names
 * tagnames 
+* contents 
 * iterations 
 * realizations
 * aggregations 
@@ -304,6 +312,7 @@ Once we have a `Surface` object we can get surface metadata using properties:
 
     print(surfaces.uuid)
     print(surfaces.name)
+    print(surface.content)
     print(surfaces.tagname)
     print(surface.stratigraphic)
     print(surface.vertical_domain)
@@ -482,6 +491,7 @@ The `SurfaceCollection` class can be used to do on-demand surface aggregations.
 
     surfaces = case.surfaces.filter(
         stage="realization",
+        content="depth",
         iteration="iter-0",
         name="Valysar Fm.",
         tagname="FACIES_Fraction_Channel"
