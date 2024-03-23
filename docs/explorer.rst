@@ -34,8 +34,8 @@ Api Reference
 - `API reference <apiref/fmu.sumo.explorer.html>`_
 
 .. warning::
-    OpenVDS does not publish builds for MacOS. You can still use the Explorer without OpenVDS,
-    but some Cube methods will not work.
+    OpenVDS does not publish builds for MacOS nor for Python version 3.12. You can still use the 
+    Explorer without OpenVDS, but some Cube methods will not work.
 
 Usage and examples
 ------------------
