@@ -195,7 +195,7 @@ def test_get_cases_combinations(explorer: Explorer):
 
 
 def test_case_surfaces_type(test_case: Case):
-    """Test that Case.surfaces property is of rype SurfaceCollection"""
+    """Test that Case.surfaces property is of type SurfaceCollection"""
     assert isinstance(test_case.surfaces, SurfaceCollection)
 
 
@@ -228,6 +228,9 @@ def test_case_surfaces_filter(test_case: Case):
         assert surf.iteration == "iter-0"
 
     # filter on name
+    non_valid_name_surfs = real_surfs.filter(name="___not_valid")
+    assert len(non_valid_name_surfs) == 0
+
     real_surfs = real_surfs.filter(name="Valysar Fm.")
     assert len(real_surfs) == 56
 
@@ -236,6 +239,9 @@ def test_case_surfaces_filter(test_case: Case):
         assert surf.name == "Valysar Fm."
 
     # filter on tagname
+    non_valid_tagname_surfs = real_surfs.filter(tagname="___not_valid")
+    assert len(non_valid_tagname_surfs) == 0
+
     real_surfs = real_surfs.filter(tagname="FACIES_Fraction_Channel")
     assert len(real_surfs) == 4
 
@@ -243,6 +249,13 @@ def test_case_surfaces_filter(test_case: Case):
         assert surf.iteration == "iter-0"
         assert surf.name == "Valysar Fm."
         assert surf.tagname == "FACIES_Fraction_Channel"
+
+    # filter on data format
+    non_valid_format_surfs = real_surfs.filter(dataformat="___not_valid")
+    assert len(non_valid_format_surfs) == 0
+
+    real_surfs = real_surfs.filter(dataformat="irap_binary")
+    assert len(real_surfs) == 4
 
     # filter on realization
     real_surfs = real_surfs.filter(realization=0)

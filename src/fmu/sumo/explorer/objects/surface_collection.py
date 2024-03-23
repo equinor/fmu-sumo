@@ -166,6 +166,7 @@ class SurfaceCollection(ChildCollection):
         self,
         name: Union[str, List[str], bool] = None,
         tagname: Union[str, List[str], bool] = None,
+        dataformat: Union[str, List[str], bool] = None,
         stratigraphic: Union[str, List[str], bool] = None,
         vertical_domain: Union[str, List[str], bool] = None,
         iteration: Union[str, List[str], bool] = None,
@@ -185,6 +186,7 @@ class SurfaceCollection(ChildCollection):
         Args:
             name (Union[str, List[str], bool]): surface name
             tagname (Union[str, List[str], bool]): surface tagname
+            dataformat (Union[str, List[str], bool]): surface data format
             iteration (Union[int, List[int], bool]): iteration id
             realization Union[int, List[int], bool]: realization id
             aggregation (Union[str, List[str], bool]): aggregation operation
@@ -236,6 +238,7 @@ class SurfaceCollection(ChildCollection):
         query = super()._add_filter(
             name=name,
             tagname=tagname,
+            dataformat=dataformat,
             iteration=iteration,
             realization=realization,
             aggregation=aggregation,
