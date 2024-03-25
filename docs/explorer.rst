@@ -249,6 +249,7 @@ The `SurfaceCollection.filter` method takes the following parameters:
 
 * uuid
 * name 
+* tagname 
 * content 
 * dataformat
 * iteration 
@@ -287,6 +288,7 @@ We can get list of filter values for the following properties:
 
 * names
 * contents 
+* tagnames 
 * dataformats
 * iterations 
 * realizations
