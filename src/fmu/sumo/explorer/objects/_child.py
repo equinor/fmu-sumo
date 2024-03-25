@@ -25,6 +25,11 @@ class Child(Document):
         return self._get_property(["data", "name"])
 
     @property
+    def content(self) -> str:
+        """Content"""
+        return self._get_property(["data", "content"])
+
+    @property
     def tagname(self) -> str:
         """Object tagname"""
         return self._get_property(["data", "tagname"])
