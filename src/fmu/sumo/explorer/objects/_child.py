@@ -72,6 +72,12 @@ class Child(Document):
     @property
     def format(self) -> str:
         """Object file format"""
+        # (Legacy) alias for `dataformat`. Deprecate at some point?
+        return self.dataformat
+
+    @property
+    def dataformat(self) -> str:
+        """Object file format"""
         return self._get_property(["data", "format"])
 
     @property

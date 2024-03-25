@@ -34,8 +34,8 @@ Api Reference
 - `API reference <apiref/fmu.sumo.explorer.html>`_
 
 .. warning::
-    OpenVDS does not publish builds for MacOS. You can still use the Explorer without OpenVDS,
-    but some Cube methods will not work.
+    OpenVDS does not publish builds for MacOS nor for Python version 3.12. You can still use the 
+    Explorer without OpenVDS, but some Cube methods will not work.
 
 Usage and examples
 ------------------
@@ -250,7 +250,7 @@ The `SurfaceCollection.filter` method takes the following parameters:
 * uuid
 * name 
 * content 
-* tagname 
+* dataformat
 * iteration 
 * realization 
 * aggregation
@@ -286,8 +286,8 @@ Example: get aggregated surfaces
 We can get list of filter values for the following properties:
 
 * names
-* tagnames 
 * contents 
+* dataformats
 * iterations 
 * realizations
 * aggregations 
@@ -310,10 +310,11 @@ Once we have a `Surface` object we can get surface metadata using properties:
 
     surface = case.surfaces[0]
 
-    print(surfaces.uuid)
-    print(surfaces.name)
     print(surface.content)
-    print(surfaces.tagname)
+    print(surface.uuid)
+    print(surface.name)
+    print(surface.tagname)
+    print(surface.dataformat)
     print(surface.stratigraphic)
     print(surface.vertical_domain)
 

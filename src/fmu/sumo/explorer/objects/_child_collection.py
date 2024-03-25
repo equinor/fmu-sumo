@@ -1,4 +1,5 @@
 """Module containing class for collection of children"""
+
 from typing import List, Dict, Union
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._document_collection import DocumentCollection
@@ -7,10 +8,7 @@ from fmu.sumo.explorer.pit import Pit
 
 _CHILD_FIELDS = {
     "include": [],
-    "exclude": [
-        "data.spec.columns",
-        "fmu.realization.parameters"
-    ]
+    "exclude": ["data.spec.columns", "fmu.realization.parameters"],
 }
 
 
@@ -49,6 +47,16 @@ class ChildCollection(DocumentCollection):
         return await self._get_field_values_async("data.tagname.keyword")
 
     @property
+    def dataformats(self) -> List[str]:
+        """List of unique data.format values"""
+        return self._get_field_values("data.format.keyword")
+
+    @property
+    async def dataformats_async(self) -> List[str]:
+        """List of unique data.format values"""
+        return await self._get_field_values_async("data.format.keyword")
+
+    @property
     def iterations(self) -> List[int]:
         """List of unique object iteration names"""
         return self._get_field_values("fmu.iteration.name.keyword")
@@ -76,7 +84,9 @@ class ChildCollection(DocumentCollection):
     @property
     async def aggregations_async(self) -> List[str]:
         """List of unique object aggregation operations"""
-        return await self._get_field_values_async("fmu.aggregation.operation.keyword")
+        return await self._get_field_values_async(
+            "fmu.aggregation.operation.keyword"
+        )
 
     @property
     def stages(self) -> List[str]:
@@ -107,7 +117,7 @@ class ChildCollection(DocumentCollection):
     async def vertical_domain_async(self) -> List[str]:
         """List of unqiue object vertical domain"""
         return await self._get_field_values_async("data.vertical_domain")
-   
+
     @property
     def contents(self) -> List[str]:
         """List of unique contents"""
@@ -134,6 +144,7 @@ class ChildCollection(DocumentCollection):
         self,
         name: Union[str, List[str], bool] = None,
         tagname: Union[str, List[str], bool] = None,
+        dataformat: Union[str, List[str], bool] = None,
         iteration: Union[str, List[str], bool] = None,
         realization: Union[int, List[int], bool] = None,
         aggregation: Union[str, List[str], bool] = None,
@@ -145,7 +156,7 @@ class ChildCollection(DocumentCollection):
         vertical_domain: Union[str, List[str], bool] = None,
         content: Union[str, List[str], bool] = None,
         is_observation: bool = None,
-        is_prediction: bool = None
+        is_prediction: bool = None,
     ):
         must = []
         must_not = []
@@ -153,6 +164,7 @@ class ChildCollection(DocumentCollection):
         prop_map = {
             "data.name.keyword": name,
             "data.tagname.keyword": tagname,
+            "data.format": dataformat,
             "fmu.iteration.name.keyword": iteration,
             "fmu.realization.id": realization,
             "fmu.aggregation.operation.keyword": aggregation,
@@ -160,7 +172,7 @@ class ChildCollection(DocumentCollection):
             "data.spec.columns.keyword": column,
             "_id": uuid,
             "data.vertical_domain.keyword": vertical_domain,
-            "data.content.keyword": content
+            "data.content.keyword": content,
         }
 
         for prop, value in prop_map.items():
@@ -177,7 +189,7 @@ class ChildCollection(DocumentCollection):
         bool_prop_map = {
             "data.stratigraphic": stratigraphic,
             "data.is_observation": is_observation,
-            "data.is_prediction": is_prediction
+            "data.is_prediction": is_prediction,
         }
         for prop, value in bool_prop_map.items():
             if value is not None:
