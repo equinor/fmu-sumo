@@ -103,26 +103,34 @@ def test_aggregations_fast(explorer: Explorer):
     assert len(cases) > 0
     case = None
     for c in cases:
-        if len(c.get_realizations()) > 1 and len(c.surfaces) > 40:
+        if (len(c.get_realizations()) > 1 and 
+            len(c.surfaces) > 40 and
+            len(c.iterations) == 1 and
+            len(c.surfaces.filter(name="Therys Fm.", tagname="FACIES_Fraction_Calcite")) > 2):
             case = c
             break
     assert case
     case_uuid = case.metadata.get("fmu").get("case").get("uuid")
-    surface_uuid = case.surfaces[0].uuid
-    print("using object_id of first surface:", surface_uuid)
+    surface1 = case.surfaces.filter(name="Therys Fm.", realization=0, tagname="FACIES_Fraction_Calcite")
+    surface2 = case.surfaces.filter(name="Therys Fm.", realization=1, tagname="FACIES_Fraction_Calcite")
+    print ("Len filtered: ", len(surface1))
+    print ("Len filtered: ", len(surface2))
+    assert len(surface1) == 1
+    assert len(surface2) == 1
+    surface_uuids = [surface1[0].uuid, surface2[0].uuid]
     body = {
         "operations": ["min"],
-        "object_ids": [surface_uuid],
+        "object_ids": surface_uuids,
         "class": "surface",
         "iteration_name": case.iterations[0].get("name"),
     }
     print("About to trigger fast-aggregation on case", case_uuid)
     print("using body", body)
-    # A READ role user CAN trigger FAST aggregation
+    # A READ role user shall be allowed to use FAST aggregation (but not bulk aggr)
     response = explorer._sumo.post(f"/aggregations", json=body)
-    print(response.status_code)
+    print("Response status code:", response.status_code)
     assert response.status_code in [200, 201, 202]
-    print(len(response.text))
+    print("Length of returned aggregate object:", len(response.text))
 
 
 def test_aggregate_bulk(explorer: Explorer):
