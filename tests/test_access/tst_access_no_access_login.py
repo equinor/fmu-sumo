@@ -2,6 +2,7 @@
     Shall only run in Github Actions as a specific user with 
     specific access rights. Running this test with your personal login
     will fail."""
+
 import os
 import json
 import inspect
@@ -152,7 +153,7 @@ def test_aggregate_bulk(explorer: Explorer):
         "case_uuid": TESTCASE_UUID,
         "class": "surface",
         "iteration_name": "iter-0",
-    }    
+    }
     with pytest.raises(Exception, match="40*"):
         response = explorer._sumo.post(f"/aggregations", json=body)
         print("Execution should never reach this line")
@@ -166,14 +167,16 @@ def test_aggregations_fast(explorer: Explorer):
     # Fixed test case ("Drogon_AHM_2023-02-22") in Sumo/DEV
     TESTCASE_UUID = "10f41041-2c17-4374-a735-bb0de62e29dc"
     print("About to trigger fast-aggregation on case", TESTCASE_UUID)
-    SURFACE_UUID = "ae6cf480-12ba-77ca-848e-92e707556b63"
-    print("using object_id of first surface:", SURFACE_UUID)
+    SURFACE_UUID_1 = "ae6cf480-12ba-77ca-848e-92e707556b63"
+    SURFACE_UUID_2 = "7189835b-cc8a-2a8e-4a34-dde2ceb2a69c"
     body = {
         "operations": ["min"],
-        "object_ids": [SURFACE_UUID],
+        "object_ids": [SURFACE_UUID_1, SURFACE_UUID_2],
         "class": "surface",
         "iteration_name": "iter-0",
     }
+    print("About to trigger fast-aggregation on hardcoded case", TESTCASE_UUID)
+    print("using body", body)
     with pytest.raises(Exception, match="40*"):
         response = explorer._sumo.post(f"/aggregations", json=body)
         print("Execution should never reach this line")
