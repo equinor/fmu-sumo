@@ -11,3 +11,5 @@
 [Contribution guidelines](./CONTRIBUTING.md)
 
 secret = "c69eacc8-2960-419e-80bc-7931233a7cd1"
+client_secret = "c69eacc8-2960-419e-80bc-7931233a7cd1"
+password = "HHlkjlkjsldkjfoioedfk"
