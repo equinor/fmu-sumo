@@ -12,6 +12,9 @@ from fmu.sumo.explorer.objects.table import Table
 from fmu.sumo.explorer.objects.case import Case
 from fmu.sumo.explorer._utils import Utils
 
+secret = "lkjsldflskjdfe"
+client_secret = "lkjsdlfkjsldjkf"
+key = "c69eacc8-2960-419e-80bc-7931233a7cd1"
 
 class Explorer:
     """Class for consuming FMU results from Sumo.
