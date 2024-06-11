@@ -84,15 +84,17 @@ def _make_overview_query(ids, pit):
 class CaseCollection(DocumentCollection):
     """A class for representing a collection of cases in Sumo"""
 
-    def __init__(self, sumo: SumoClient, query: Dict = None, pit: Pit = None):
+    def __init__(self, sumo: SumoClient, query: Dict = None, pit: Pit = None, has = None):
         """
         Args:
             sumo (SumoClient): connection to Sumo
             query (dict): elastic query object
             pit (Pit): point in time
+            has (dict): query for specific child objects
         """
         super().__init__("case", sumo, query, _CASE_FIELDS, pit)
         self._overviews = {}
+        self._has = has
 
     @property
     def names(self) -> List[str]:
@@ -103,6 +105,16 @@ class CaseCollection(DocumentCollection):
     async def names_async(self) -> List[str]:
         """List of unique case names"""
         return await self._get_field_values_async("fmu.case.name.keyword")
+
+    @property
+    def uuids(self) -> List[str]:
+        """List of unique case uuids"""
+        return self._get_field_values("fmu.case.uuid.keyword")
+
+    @property
+    async def uuids_async(self) -> List[str]:
+        """List of unique case uuids"""
+        return await self._get_field_values_async("fmu.case.uuid.keyword")
 
     @property
     def statuses(self) -> List[str]:
@@ -160,6 +172,34 @@ class CaseCollection(DocumentCollection):
         overview = self._overviews[uuid]
         return Case(self._sumo, doc, overview, self._pit)
 
+    def _next_batch(self) -> List[Dict]:
+        """Get next batch of documents
+
+        Returns:
+            The next batch of documents
+        """
+        if self._has is not None:
+            uuids = self.uuids
+            query = { "bool": { "must": [ {"terms": { "fmu.case.uuid.keyword": uuids}}, self._has]}}
+            nuuids = [ x["key"] for x in self._utils.get_buckets("fmu.case.uuid.keyword", query)]
+            self._query = {"ids": {"values": nuuids}}
+            self._has = None
+        return super()._next_batch()
+
+    async def _next_batch_async(self) -> List[Dict]:
+        """Get next batch of documents
+
+        Returns:
+            The next batch of documents
+        """
+        if self._has is not None:
+            uuids = await self.uuids_async
+            query = { "bool": { "must": [ {"terms": { "fmu.case.uuid.keyword": uuids}}, self._has]}}
+            nuuids = [ x["key"] for x in self._utils.get_buckets("fmu.case.uuid.keyword", query)]
+            self._query = {"ids": {"values": nuuids}}
+            self._has = None
+        return await super()._next_batch_async()
+
     def _postprocess_batch(self, hits, pit):
         ids = [hit["_id"] for hit in hits]
         query = _make_overview_query(ids, pit)
@@ -215,6 +255,7 @@ class CaseCollection(DocumentCollection):
         user: Union[int, List[int]] = None,
         asset: Union[int, List[int]] = None,
         field: Union[str, List[str]] = None,
+        has: Dict = None,
     ) -> "CaseCollection":
         """Filter cases
 
@@ -241,4 +282,5 @@ class CaseCollection(DocumentCollection):
         )
 
         query = super()._add_filter({"bool": {"must": must}})
-        return CaseCollection(self._sumo, query, self._pit)
+
+        return CaseCollection(self._sumo, query, self._pit, has = has)
