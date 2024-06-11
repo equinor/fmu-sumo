@@ -103,3 +103,6 @@ src/fmu/sumo/version.py
 testing.ipynb
 # files generated during testing
 *.csv
+
+# emacs backup files
+*~
