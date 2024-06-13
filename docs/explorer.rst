@@ -195,9 +195,9 @@ Finding cases with specific data types
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 There is also a filter that searches for cases where there are objects
 that match specific criteria. For example, if we define
-``4d-seismic`` as objects that have `data.content=seismic`,
-`data.time.t0.label=base` and `data.time.t1.label=monitor`, we can use
-the `has` filter to find cases that have ``4d-seismic`` data:
+``4d-seismic`` as objects that have ``data.content=seismic``,
+``data.time.t0.label=base`` and ``data.time.t1.label=monitor``, we can use
+the ``has`` filter to find cases that have ``4d-seismic`` data:
 
 .. code-block::
 
@@ -208,9 +208,9 @@ the `has` filter to find cases that have ``4d-seismic`` data:
    cases = exp.cases.filter(asset="Heidrun", has=Filters.seismic4d)
 
 In this case, we have a predefined filter for ``4d-seismic``, exposed
-thorugh `fmu.sumo.explorer.Filters`. There is no magic involved; any
+thorugh ``fmu.sumo.explorer.Filters``. There is no magic involved; any
 user can create their own filters, and either use them directly or ask
-for them to be added to `fmu.sumo.explorer.Filters`.
+for them to be added to ``fmu.sumo.explorer.Filters``.
 
 It is also possible to chain filters. The previous example could also
 be handled by
