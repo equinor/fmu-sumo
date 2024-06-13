@@ -191,6 +191,37 @@ You can also use a case `uuid` to get a `Case` object:
     my_case = sumo.get_case_by_uuid("1234567")
 
 
+Finding cases with specific data types
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+There is also a filter that searches for cases where there are objects
+that match specific criteria. For example, if we define
+``4d-seismic`` as objects that have ``data.content=seismic`,
+`data.time.t0.label=base` and `data.time.t1.label=monitor`, we can use
+the `has` filter to find cases that have ``4d-seismic`` data:
+
+.. code-block::
+
+   from fmu.sumo.explorer import Explorer, Filters
+
+   exp = Explorer(env="prod")
+
+   cases = exp.cases.filter(asset="Heidrun", has=Filters.seismic4d)
+
+In this case, we have a predefined filter for ``4d-seismic``, exposed
+thorugh `fmu.sumo.explorer.Filters`. There is no magic involved; any
+user can create their own filters, and either use them directly or ask
+for them to be added to `fmu.sumo.explorer.Filters`.
+
+It is also possible to chain filters. The previous example could also
+be handled by
+
+.. code-block::
+   cases = exp.cases.filter(asset="Heidrun",
+                            has={"term":{"data.content.keyword": "seismic"}})\
+     .filter(has={"term":{"data.time.t0.label.keyword":"base"}})\
+     .filter(has={"term":{"data.time.t1.label.keyword":"monitor"}})
+
+
 Browsing data in a case
 ^^^^^^^^^^^^^^^^^^^^^^^
 The `Case` object has properties for accessing different data types:
