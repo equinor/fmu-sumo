@@ -195,7 +195,7 @@ Finding cases with specific data types
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 There is also a filter that searches for cases where there are objects
 that match specific criteria. For example, if we define
-``4d-seismic`` as objects that have ``data.content=seismic`,
+``4d-seismic`` as objects that have `data.content=seismic`,
 `data.time.t0.label=base` and `data.time.t1.label=monitor`, we can use
 the `has` filter to find cases that have ``4d-seismic`` data:
 
