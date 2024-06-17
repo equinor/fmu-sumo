@@ -9,10 +9,3 @@
 
 ## Contribute
 [Contribution guidelines](./CONTRIBUTING.md)
-
-
-Yo!
-
-2
-
-no
