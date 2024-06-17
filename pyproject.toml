@@ -25,6 +25,7 @@ classifiers = [
 ]
 dependencies = [
   "pandas>=1.1.3",
+  "tenacity<8.4.0",
   "sumo-wrapper-python",
   "xtgeo",
   "pyarrow; python_version > '3.6.1'",
