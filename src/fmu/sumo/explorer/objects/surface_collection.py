@@ -2,7 +2,7 @@
 
 from typing import Union, List, Dict, Tuple
 from io import BytesIO
-import xtgeo
+from xtgeo import RegularSurface, surface_from_file
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._child_collection import ChildCollection
 from fmu.sumo.explorer.objects.surface import Surface
@@ -128,7 +128,7 @@ class SurfaceCollection(ChildCollection):
 
         return intervals
 
-    def _aggregate(self, operation: str) -> xtgeo.RegularSurface:
+    def _aggregate(self, operation: str) -> RegularSurface:
         if operation not in self._aggregation_cache:
             objects = self._utils.get_objects(500, self._query, ["_id"])
             object_ids = list(map(lambda obj: obj["_id"], objects))
@@ -138,13 +138,13 @@ class SurfaceCollection(ChildCollection):
                 json={"operation": [operation], "object_ids": object_ids},
             )
 
-            self._aggregation_cache[operation] = xtgeo.surface_from_file(
+            self._aggregation_cache[operation] = surface_from_file(
                 BytesIO(res.content)
             )
 
         return self._aggregation_cache[operation]
 
-    async def _aggregate_async(self, operation: str) -> xtgeo.RegularSurface:
+    async def _aggregate_async(self, operation: str) -> RegularSurface:
         if operation not in self._aggregation_cache:
             objects = await self._utils.get_objects_async(
                 500, self._query, ["_id"]
@@ -156,7 +156,7 @@ class SurfaceCollection(ChildCollection):
                 json={"operation": [operation], "object_ids": object_ids},
             )
 
-            self._aggregation_cache[operation] = xtgeo.surface_from_file(
+            self._aggregation_cache[operation] = surface_from_file(
                 BytesIO(res.content)
             )
 
@@ -254,58 +254,58 @@ class SurfaceCollection(ChildCollection):
 
         return SurfaceCollection(self._sumo, self._case_uuid, query, self._pit)
 
-    def mean(self) -> xtgeo.RegularSurface:
+    def mean(self) -> RegularSurface:
         """Perform a mean aggregation"""
         return self._aggregate("mean")
 
-    async def mean_async(self) -> xtgeo.RegularSurface:
+    async def mean_async(self) -> RegularSurface:
         """Perform a mean aggregation"""
         return await self._aggregate_async("mean")
 
-    def min(self) -> xtgeo.RegularSurface:
+    def min(self) -> RegularSurface:
         """Perform a minimum aggregation"""
         return self._aggregate("min")
 
-    async def min_async(self) -> xtgeo.RegularSurface:
+    async def min_async(self) -> RegularSurface:
         """Perform a minimum aggregation"""
         return await self._aggregate_async("min")
 
-    def max(self) -> xtgeo.RegularSurface:
+    def max(self) -> RegularSurface:
         """Perform a maximum aggregation"""
         return self._aggregate("max")
 
-    async def max_async(self) -> xtgeo.RegularSurface:
+    async def max_async(self) -> RegularSurface:
         """Perform a maximum aggregation"""
         return await self._aggregate_async("max")
 
-    def std(self) -> xtgeo.RegularSurface:
+    def std(self) -> RegularSurface:
         """Perform a standard deviation aggregation"""
         return self._aggregate("std")
 
-    async def std_async(self) -> xtgeo.RegularSurface:
+    async def std_async(self) -> RegularSurface:
         """Perform a standard deviation aggregation"""
         return await self._aggregate_async("std")
 
-    def p10(self) -> xtgeo.RegularSurface:
+    def p10(self) -> RegularSurface:
         """Perform a percentile aggregation"""
         return self._aggregate("p10")
 
-    async def p10_async(self) -> xtgeo.RegularSurface:
+    async def p10_async(self) -> RegularSurface:
         """Perform a percentile aggregation"""
         return await self._aggregate_async("p10")
 
-    def p50(self) -> xtgeo.RegularSurface:
+    def p50(self) -> RegularSurface:
         """Perform a percentile aggregation"""
         return self._aggregate("p50")
 
-    async def p50_async(self) -> xtgeo.RegularSurface:
+    async def p50_async(self) -> RegularSurface:
         """Perform a percentile aggregation"""
         return await self._aggregate_async("p50")
 
-    def p90(self) -> xtgeo.RegularSurface:
+    def p90(self) -> RegularSurface:
         """Perform a percentile aggregation"""
         return self._aggregate("p90")
 
-    async def p90_async(self) -> xtgeo.RegularSurface:
+    async def p90_async(self) -> RegularSurface:
         """Perform a percentile aggregation"""
         return await self._aggregate_async("p90")
