@@ -48,7 +48,7 @@ copy the secret.
 * Login as the App Registration:
 
 ```
-az login --service-principal -t <Tenant-ID> -u <Client-ID> -p <Client-secret> --allow-no-subscriptions
+az login --service-principal -t 3aa4a235-b6e2-48d5-9195-7fcf05b459b0 -u <Client-ID> -p <Client-secret> --allow-no-subscriptions
 ```
 
 * Get a token and set it in the environment where sumo-wrapper-python will pick it up:

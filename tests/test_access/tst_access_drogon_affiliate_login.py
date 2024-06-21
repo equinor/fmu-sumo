@@ -58,10 +58,14 @@ def test_get_cases(explorer: Explorer):
     print("Number of cases: ", len(cases))
     for case in cases:
         assert case.field.lower() == "drogon"
-    # We have set up 1 case in KEEP in Drogon DEV with affiliate-access
-    assert len(cases) == 1
-    # We have set up 2 children objects for this affiliate user to access
-    case = cases[0]
+    assert len(cases) >= 1
+
+    # We have set up 1 case in KEEP in Drogon DEV 
+    # with affiliate-access and it has 2 children 
+    # objects with affiliate access
+    filtered_cases = cases.filter(uuid="2c2f47cf-c7ab-4112-87f9-b4797ec51cb6")
+    assert len(filtered_cases) == 1
+    case = filtered_cases[0]
     assert case.uuid == "2c2f47cf-c7ab-4112-87f9-b4797ec51cb6"
     assert len(case.surfaces) == 1
     assert len(case.polygons) == 1
@@ -70,6 +74,12 @@ def test_get_cases(explorer: Explorer):
     assert len(case.dictionaries) == 0
     assert case.polygons[0].uuid == "a5f38286-5cf6-d85c-9b3c-03c72b5947d5"
     assert case.surfaces[0].uuid == "5f73b0c1-3bdc-2d0e-1a1d-271331615999"
+
+    # Many Drogon cases might have been shared now, who knows. 
+    # Ensure that all returned cases have correct metadata:
+    for case in cases:
+        affiliate_roles = case._metadata.get("access").get("affiliate_roles")
+        assert "DROGON-AFFILIATE" in affiliate_roles
 
 
 def test_get_object(explorer: Explorer):
@@ -128,7 +138,35 @@ def test_get_object(explorer: Explorer):
         print("Unexpected status: ", response.status_code)
         print("Unexpected response: ", response.text)
 
-    assert len(cases) == 1
+    # The exact number of shared Drogon cases cannot be known
+    assert len(cases) >= 1
+
+def test_delete(explorer: Explorer):
+    """Test a delete method"""
+    print("Running test:", inspect.currentframe().f_code.co_name)
+    cases = explorer.cases
+    print("Number of cases: ", len(cases))
+
+    for case in cases:
+        if case.uuid == "392c3c70-dd1a-41b5-ac49-0e369a0ac4eb":
+            print("Found my case")
+            surface_uuid = case.surfaces[0].uuid
+            print("Surface:", surface_uuid)
+
+            res = explorer._sumo.get(f"/objects('{surface_uuid}')")
+            print("Get Result should be OK:", res.json())
+
+            with pytest.raises(Exception, match="403*"):
+                res = explorer._sumo.delete(f"/objects('{surface_uuid}')")
+                print("Execution should never reach this line")
+                print("Unexpected status: ", res.status_code)
+                print("Unexpected response: ", res.text)
+
+            with pytest.raises(Exception, match="403*"):
+                res = explorer._sumo.delete(f"/objects('{case.uuid}')")
+                print("Execution should never reach this line")
+                print("Unexpected status: ", res.status_code)
+                print("Unexpected response: ", res.text)
 
 
 def test_write(explorer: Explorer):
@@ -163,7 +201,7 @@ def test_read_restricted_classification_data(explorer: Explorer):
     response_json = json.loads(response.text)
     hits = response_json.get("hits").get("total").get("value")
     print("Hits on restricted:", hits)
-    assert hits == 1
+    assert hits >= 1
 
 def test_aggregate_bulk(explorer: Explorer):
     """Test a bulk aggregation method"""
