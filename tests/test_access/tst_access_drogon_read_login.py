@@ -75,6 +75,23 @@ def test_write(explorer: Explorer):
         print("Execution should never reach this line")
 
 
+def test_delete(explorer: Explorer):
+    """Test a delete method"""
+    print("Running test:", inspect.currentframe().f_code.co_name)
+
+    with pytest.raises(Exception, match="403*"):
+        res = explorer._sumo.delete(f"/objects('dcff880f-b35b-3598-08bc-2a408c85d204')")
+        print("Execution should never reach this line")
+        print("Unexpected status: ", res.status_code)
+        print("Unexpected response: ", res.text)
+
+    with pytest.raises(Exception, match="403*"):
+        res = explorer._sumo.delete(f"/objects('392c3c70-dd1a-41b5-ac49-0e369a0ac4eb')")
+        print("Execution should never reach this line")
+        print("Unexpected status: ", res.status_code)
+        print("Unexpected response: ", res.text)
+
+
 def test_read_restricted_classification_data(explorer: Explorer):
     """Test if can read restriced data aka 'access:classification: restricted'"""
     print("Running test:", inspect.currentframe().f_code.co_name)
