@@ -1,7 +1,7 @@
 """Module containing class for collection of cases"""
 from typing import Union, List, Dict
 from sumo.wrapper import SumoClient
-from fmu.sumo.explorer.objects._document_collection import DocumentCollection
+from fmu.sumo.explorer.objects._search_context import SearchContext
 from fmu.sumo.explorer.objects.case import Case
 from fmu.sumo.explorer.pit import Pit
 
@@ -81,7 +81,7 @@ def _make_overview_query(ids, pit):
     return query
 
 
-class CaseCollection(DocumentCollection):
+class CaseCollection(SearchContext):
     """A class for representing a collection of cases in Sumo"""
 
     def __init__(self, sumo: SumoClient, query: Dict = None, pit: Pit = None, has = None):

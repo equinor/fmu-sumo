@@ -2,7 +2,7 @@
 
 from typing import List, Dict, Union
 from sumo.wrapper import SumoClient
-from fmu.sumo.explorer.objects._document_collection import DocumentCollection
+from fmu.sumo.explorer.objects._search_context import SearchContext
 from fmu.sumo.explorer.timefilter import TimeFilter
 from fmu.sumo.explorer.pit import Pit
 
@@ -12,7 +12,7 @@ _CHILD_FIELDS = {
 }
 
 
-class ChildCollection(DocumentCollection):
+class ChildCollection(SearchContext):
     """Class for representing a collection of child objects in Sumo"""
 
     def __init__(

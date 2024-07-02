@@ -1,36 +1,90 @@
 import json
-from typing import List, Dict, Union
+from typing import List, Dict
 from sumo.wrapper import SumoClient
-from fmu.sumo.explorer.timefilter import TimeFilter
+# from fmu.sumo.explorer.objects import (Case, Cube, Dictionary, Polygons, Surface, Table)
+import fmu.sumo.explorer.objects as objects
+
+def _gen_filter_gen(attr):
+    def _fn(value):
+        if value is None:
+            return None, None
+        elif value is True:
+            return {"exists": {"field": attr}}, None
+        elif value is False:
+            return None, {"exists": {"field": attr}}
+        elif isinstance(value, list):
+            return {"terms": {attr: value}}, None
+        else:
+            return {"term": {attr: value}}, None
+
+    return _fn
 
 
-def extend_query_object(self, old: Dict, new: Dict) -> Dict:
-    """Extend query object
+def _gen_filter_name():
+    def _fn(value):
+        if value is None:
+            return None, None
+        else:
+            return {
+                "bool": {
+                    "minimum_should_match": 1,
+                    "should": [
+                        {"term": {"data.name.keyword": value}},
+                        {
+                            "bool": {
+                                "must": [
+                                    {"term": {"class.keyword": "case"}},
+                                    {"term": {"fmu.case.name.keyword": value}},
+                                ]
+                            }
+                        },
+                    ],
+                }
+            }, None
 
-    Args:
-        old (Dict): old query object
-        new (Dict): new query object
+    return _fn
 
-    Returns:
-        Dict: Extended query object
-    """
-    extended = json.loads(json.dumps(old))
-    if new is not None:
-        for key in new:
-            if key in extended:
-                if isinstance(new[key], dict):
-                    extended[key] = self.extend_query_object(
-                        extended[key], new[key]
-                    )
-                elif isinstance(new[key], list):
-                    for val in new[key]:
-                        if val not in extended[key]:
-                            extended[key].append(val)
-                else:
-                    extended[key] = new[key]
-            else:
-                extended[key] = new[key]
-    return extended
+
+def _gen_filter_time():
+    def _fn(value):
+        if value is None:
+            return None, None
+        else:
+            return value._get_query()
+
+    return _fn
+
+def _gen_filter_bool(attr):
+    def _fn(value):
+        if value is None:
+            return None, None
+        else:
+            return {"term": {attr: value}}
+
+    return _fn
+
+filters = {
+    "cls": _gen_filter_gen("class.keyword"),
+    "time": _gen_filter_time(),
+    "name": _gen_filter_name(),
+    "uuid": _gen_filter_gen("fmu.case.uuid.keyword"),
+    "tagname": _gen_filter_gen("data.tagname.keyword"),
+    "dataformat": _gen_filter_gen("data.format.keyword"),
+    "iteration": _gen_filter_gen("fmu.iteration.name.keyword"),
+    "realization": _gen_filter_gen("fmu.realization.id"),
+    "aggregation": _gen_filter_gen("fmu.aggregation.operation.keyword"),
+    "stage": _gen_filter_gen("fmu.context.stage.keyword"),
+    "column": _gen_filter_gen("data.spec.columns.keyword"),
+    "vertical_domain": _gen_filter_gen("data.vertical_domain.keyword"),
+    "content": _gen_filter_gen("data.content.keyword"),
+    "status": _gen_filter_gen("_sumo.status.keyword"),
+    "user": _gen_filter_gen("fmu.user.keyword"),
+    "asset": _gen_filter_gen("access.asset.name.keyword"),
+    "field": _gen_filter_gen("masterdata.smda.field.keyword"),
+    "stratigraphic": _gen_filter_bool("data.stratigraphic"),
+    "is_observation": _gen_filter_bool("data.is_observation"),
+    "is_prediction": _gen_filter_bool("data.is_prediction"),
+}
 
 
 def _build_bucket_query(query, field):
@@ -40,7 +94,7 @@ def _build_bucket_query(query, field):
         "aggs": {
             f"{field}": {
                 "composite": {
-                    "size": 1000,
+                    "size": 10000,
                     "sources": [{f"{field}": {"terms": {"field": field}}}],
                 }
             }
@@ -51,6 +105,13 @@ def _build_bucket_query(query, field):
 def _set_after_key(query, field, after_key):
     if after_key is not None:
         query["aggs"][field]["composite"]["after"] = after_key
+        pass
+    return query
+
+
+def _set_search_after(query, after):
+    if after is not None:
+        query["search_after"] = after
         pass
     return query
 
@@ -73,16 +134,16 @@ class Pit:
             pass
         return False
 
-    def __aenter__(self):
-        res = self._sumo.post_async(
+    async def __aenter__(self):
+        res = await self._sumo.post_async(
             "/pit", params={"keep-alive": self._keepalive}
         )
         self._id = res.json()["id"]
         return self
 
-    def __aexit__(self, exc_type, exc_value, traceback):
+    async def __aexit__(self, exc_type, exc_value, traceback):
         if self._id is not None:
-            self._sumo.delete_async("/pit", params={"id": self._id})
+            await self._sumo.delete_async("/pit", params={"id": self._id})
             pass
         return False
 
@@ -97,12 +158,234 @@ class Pit:
 
 class SearchContext:
     def __init__(
-        self, sumo: SumoClient, query: Dict = None, select: List[str] = None
+        self,
+        sumo: SumoClient,
+        must: List = [],
+        must_not: List = [],
+        select: List[str] = None,
     ):
         self._sumo = sumo
+        self._must = must[:]
+        self._must_not = must_not[:]
         self._select = select
         self._field_values = {}
+        self._hits = None
         return
+
+    @property
+    def _query(self):
+        return {"bool": {"must": self._must, "must_not": self._must_not}}
+
+    def _to_sumo(self, obj):
+        cls = obj["_source"]["class"]
+        constructor = {"case": objects.Case,
+                       "cube": objects.Cube,
+                       "dictionary": objects.Dictionary,
+                       "polygons": objects.Polygons,
+                       "surface": objects.Surface,
+                       "table": objects.Table}.get(cls)
+        assert(constructor is not None)
+        return constructor(self._sumo, obj)
+
+    def __len__(self):
+        query = {"query": self._query, "size": 0, "track_total_hits": True}
+        res = self._sumo.post("/search", json=query).json()
+        return res["hits"]["total"]["value"]
+
+    async def length_async(self):
+        query = {"query": self._query, "size": 0, "track_total_hits": True}
+        res = (await self._sumo.post_async("/search", json=query)).json()
+        return res["hits"]["total"]["value"]
+
+    def __search_all(self, query, size=1000, select=False):
+        all_hits = []
+        query = {
+            "query": query,
+            "size": size,
+            "_source": select,
+            "sort": {"_doc": {"order": "asc"}},
+        }
+        after = None
+        with Pit(self._sumo, "1m") as pit:
+            while True:
+                query = pit.stamp_query(_set_search_after(query, after))
+                res = self._sumo.post("/search", json=query).json()
+                pit.update_from_result(res)
+                hits = res["hits"]["hits"]
+                if len(hits) == 0:
+                    break
+                after = hits[-1]["sort"]
+                all_hits = all_hits + [hit["_id"] for hit in hits]
+                pass
+            pass
+        return all_hits
+
+    def _search_all(self):
+        return self.__search_all(query=self._query, size=1000, select=False)
+
+    async def __search_all_async(self, query, size=1000, select=False):
+        all_hits = []
+        query = {
+            "query": query,
+            "size": size,
+            "_source": select,
+            "sort": {"_doc": {"order": "asc"}},
+        }
+        after = None
+        with Pit(self._sumo, "1m") as pit:
+            while True:
+                query = pit.stamp_query(_set_search_after(query, after))
+                res = (await self._sumo.post("/search", json=query)).json()
+                pit.update_from_result(res)
+                hits = res["hits"]["hits"]
+                if len(hits) == 0:
+                    break
+                after = hits[-1]["sort"]
+                all_hits = all_hits + [hit["_id"] for hit in hits]
+                pass
+            pass
+        return all_hits
+
+    async def _search_all_async(self):
+        return await __search_all_async(
+            query=self._query, size=1000, select=False
+        )
+
+    @property
+    def uuids(self):
+        if self._hits is None:
+            self._hits = self._search_all()
+        return self._hits
+
+    @property
+    async def uuids_async(self):
+        if self._hits is None:
+            self._hits = await self._search_all_async()
+        return self._hits
+
+    def __iter__(self):
+        self._curr_index = 0
+        if self._hits is None:
+            self._hits = self._search_all()
+            pass
+        return
+
+    def __next__(self):
+        if self._curr_index < len(self._hits):
+            uuid = self._hits[self._curr_index]
+            res = self.get_object(uuid)
+            self._curr_index += 1
+            return self._to_sumo(res)
+        else:
+            raise StopIteration
+
+    async def __aiter__(self):
+        self._curr_index = 0
+        if self._hits is None:
+            self._hits = await self._search_all_async()
+            pass
+        return
+
+    async def __anext__(self):
+        if self._curr_index < len(self._hits):
+            uuid = self._hits[self._curr_index]
+            res = await self.get_object_async(uuid)
+            self._curr_index += 1
+            return self._to_sumo(res)
+        else:
+            raise StopIteration
+
+    def __getitem__(self, index):
+        if self._hits is None:
+            self._hits = self._search_all()
+            pass
+        uuid = self._hits[index]
+        obj = self.get_object(uuid)
+        return self._to_sumo(obj)
+
+    async def getitem_async(self, index):
+        if self._hits is None:
+            self._hits = await self._search_all_async()
+            pass
+        uuid = self._hits[index]
+        obj = self.get_object_async(uuid)
+        return self._to_sumo(obj)
+
+    def get_object(self, uuid: str, select: List[str] = None) -> Dict:
+        """Get metadata object by uuid
+
+        Args:
+            uuid (str): uuid of metadata object
+            select (List[str]): list of metadata fields to return
+
+        Returns:
+            Dict: a metadata object
+        """
+
+        query = {
+            "query": {"ids": {"values": [uuid]}},
+            "size": 1,
+        }
+
+        if select is not None:
+            query["_source"] = select
+
+        res = self._sumo.post("/search", json=query)
+        hits = res.json()["hits"]["hits"]
+
+        if len(hits) == 0:
+            raise Exception(f"Document not found: {uuid}")
+
+        return hits[0]
+
+    async def get_object_async(
+        self, uuid: str, select: List[str] = None
+    ) -> Dict:
+        """Get metadata object by uuid
+
+        Args:
+            uuid (str): uuid of metadata object
+            select (List[str]): list of metadata fields to return
+
+        Returns:
+            Dict: a metadata object
+        """
+
+        query = {
+            "query": {"ids": {"values": [uuid]}},
+            "size": 1,
+        }
+
+        if select is not None:
+            query["_source"] = select
+
+        res = await self._sumo.post_async("/search", json=query)
+        hits = res.json()["hits"]["hits"]
+
+        if len(hits) == 0:
+            raise Exception(f"Document not found: {uuid}")
+
+        return hits[0]
+
+    def get_objects(
+        self,
+        uuids: List[str],
+        select: List[str] = None,
+    ) -> List[Dict]:
+        size = 1000 if select is False else 100 if isinstance(select, list) else 10
+        return self.__search_all(
+            {"ids": {"values": uuids}}, size=size, select=select
+        )
+
+    async def get_objects_async(
+        self,
+        uuids: List[str],
+        select: List[str] = None,
+    ) -> List[Dict]:
+        size = 1000 if select is False else 100 if isinstance(select, list) else 10
+        return await self.__search_all_async(
+            {"ids": {"values": uuids}}, size=size, select=select
+        )
 
     def _get_buckets(
         self,
@@ -329,72 +612,116 @@ class SearchContext:
         """List of unique contents"""
         return self._get_field_values_async("data.content.keyword")
 
-    def _add_filter(
-        self,
-        name: Union[str, List[str], bool] = None,
-        tagname: Union[str, List[str], bool] = None,
-        dataformat: Union[str, List[str], bool] = None,
-        iteration: Union[str, List[str], bool] = None,
-        realization: Union[int, List[int], bool] = None,
-        aggregation: Union[str, List[str], bool] = None,
-        stage: Union[str, List[str], bool] = None,
-        column: Union[str, List[str], bool] = None,
-        time: TimeFilter = None,
-        uuid: Union[str, List[str], bool] = None,
-        stratigraphic: Union[str, List[str], bool] = None,
-        vertical_domain: Union[str, List[str], bool] = None,
-        content: Union[str, List[str], bool] = None,
-        is_observation: bool = None,
-        is_prediction: bool = None,
-    ):
-        must = []
-        must_not = []
-
-        prop_map = {
-            "data.name.keyword": name,
-            "data.tagname.keyword": tagname,
-            "data.format": dataformat,
-            "fmu.iteration.name.keyword": iteration,
-            "fmu.realization.id": realization,
-            "fmu.aggregation.operation.keyword": aggregation,
-            "fmu.context.stage.keyword": stage,
-            "data.spec.columns.keyword": column,
-            "_id": uuid,
-            "data.vertical_domain.keyword": vertical_domain,
-            "data.content.keyword": content,
-        }
-
-        for prop, value in prop_map.items():
-            if value is not None:
-                if isinstance(value, bool):
-                    if value:
-                        must.append({"exists": {"field": prop}})
-                    else:
-                        must_not.append({"exists": {"field": prop}})
-                else:
-                    term = "terms" if isinstance(value, list) else "term"
-                    must.append({term: {prop: value}})
-
-        bool_prop_map = {
-            "data.stratigraphic": stratigraphic,
-            "data.is_observation": is_observation,
-            "data.is_prediction": is_prediction,
-        }
-        for prop, value in bool_prop_map.items():
-            if value is not None:
-                must.append({"term": {prop: value}})
-
-        query = {"bool": {}}
-
-        if len(must) > 0:
-            query["bool"]["must"] = must
-
-        if len(must_not) > 0:
-            query["bool"]["must_not"] = must_not
-
-        if time:
-            query = _extend_query_object(query, time._get_query())
-
-        return query
-
+    @property
+    def columns(self) -> List[str]:
+        """List of unique column names"""
+        return self._get_field_values("data.spec.columns.keyword")
     
+    @property
+    async def columns_async(self) -> List[str]:
+        """List of unique column names"""
+        return await self._get_field_values_async("data.spec.columns.keyword")
+    
+    def filter(self, **kwargs) -> "SearchContext":
+        """Filter SearchContext
+
+        Apply additional filters to SearchContext and get a new filtered
+        instance.
+
+        Args:
+            name (Union[str, List[str], bool]): name
+            tagname (Union[str, List[str], bool]): tagname
+            dataformat (Union[str, List[str], bool]): data format
+            iteration (Union[int, List[int], bool]): iteration id
+            realization Union[int, List[int], bool]: realization id
+            aggregation (Union[str, List[str], bool]): aggregation operation
+            stage (Union[str, List[str], bool]): context/stage
+            time (TimeFilter): time filter
+            uuid (Union[str, List[str], bool]): object uuid
+            stratigraphic (Union[str, List[str], bool]): stratigraphic
+            vertical_domain (Union[str, List[str], bool]): vertical_domain
+            content (Union[str, List[str], bool): = content
+
+        Returns:
+            SearchContext: A filtered SearchContext
+
+        Examples:
+
+            Match one value::
+
+                surfs = case.surfaces.filter(
+                    iteration="iter-0"
+                    name="my_surface_name"
+                )
+
+            Match multiple values::
+
+                surfs = case.surfaces.filter(
+                    name=["one_name", "another_name"]
+                )
+
+            Get aggregated surfaces with specific operation::
+
+                surfs = case.surfaces.filter(
+                    aggregation="max"
+                )
+
+            Get all aggregated surfaces::
+
+                surfs = case.surfaces.filter(
+                    aggregation=True
+                )
+
+            Get all non-aggregated surfaces::
+
+                surfs = case.surfaces.filter(
+                    aggregation=False
+                )
+
+        """
+
+        must = self._must[:]
+        must_not = self._must_not[:]
+        for k, v in kwargs.items():
+            f = filters.get(k)
+            if f is None:
+                raise Exception(f"Don't know how to generate filter for {k}")
+                pass
+            _must, _must_not = f(v)
+            if _must:
+                must.append(_must)
+            if _must_not is not None:
+                must_not.append(_must_not)
+
+            return SearchContext(
+                self._sumo, must=must, must_not=must_not, select=self._select
+            )
+
+    def _context_for_class(self, cls):
+        return SearchContext(
+            self._sumo, must=[{"term": {"class.keyword": cls}}]
+        )
+
+    @property
+    def cases(self):
+        return self._context_for_class("case")
+
+    @property
+    def surfaces(self):
+        return self._context_for_class("surface")
+
+    @property
+    def tables(self):
+        return self._context_for_class("table")
+
+    @property
+    def cubes(self):
+        return self._context_for_class("cube")
+
+    @property
+    def polygons(self):
+        return self._context_for_class("polygons")
+
+    @property
+    def dictionaries(self):
+        return self._context_for_class("dictionary")

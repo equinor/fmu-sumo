@@ -2,27 +2,16 @@
 from typing import Dict, List
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._document import Document
-from fmu.sumo.explorer.objects.surface_collection import SurfaceCollection
-from fmu.sumo.explorer.objects.polygons_collection import PolygonsCollection
-from fmu.sumo.explorer.objects.table_collection import TableCollection
-from fmu.sumo.explorer.objects.cube_collection import CubeCollection
-from fmu.sumo.explorer.objects.dictionary_collection import (
-    DictionaryCollection,
-)
-from fmu.sumo.explorer._utils import Utils
-from fmu.sumo.explorer.pit import Pit
-
+from fmu.sumo.explorer.objects._search_context import SearchContext
 
 class Case(Document):
     """Class for representing a case in Sumo"""
 
-    def __init__(self, sumo: SumoClient, metadata: Dict, overview: Dict,
-                 pit: Pit = None):
+    def __init__(self, sumo: SumoClient, metadata: Dict):
         super().__init__(metadata)
-        self._overview = overview
-        self._pit = pit
+        self._overview = None
         self._sumo = sumo
-        self._utils = Utils(sumo)
+        self._sc = SearchContext(self._sumo, [{"term": {"fmu.case.uuid.keyword": self.uuid}}])
         self._iterations = None
 
     @property
@@ -203,26 +192,26 @@ class Case(Document):
         return list(map(lambda b: b["key"], buckets))
 
     @property
-    def surfaces(self) -> SurfaceCollection:
-        """List of case surfaces"""
-        return SurfaceCollection(self._sumo, self._uuid, pit=self._pit)
+    def surfaces(self) -> SearchContext:
+        """Surfaces in case """
+        return self._sc.surfaces
 
     @property
-    def polygons(self) -> PolygonsCollection:
-        """List of case polygons"""
-        return PolygonsCollection(self._sumo, self._uuid, pit=self._pit)
+    def polygons(self) -> SearchContext:
+        """Polygons in case"""
+        return self._sc.polygons
 
     @property
-    def tables(self) -> TableCollection:
-        """List of case tables"""
-        return TableCollection(self._sumo, self._uuid, pit=self._pit)
+    def tables(self) -> SearchContext:
+        """Tables in case """
+        return self._sc.tables
 
     @property
-    def cubes(self) -> CubeCollection:
-        """List of case tables"""
-        return CubeCollection(self._sumo, self._uuid, pit=self._pit)
+    def cubes(self) -> SearchContext:
+        """Cubes in case"""
+        return self._sc.cubes
 
     @property
-    def dictionaries(self) -> DictionaryCollection:
-        """List of case dictionaries"""
-        return DictionaryCollection(self._sumo, self._uuid, pit=self._pit)
+    def dictionaries(self) -> SearchContext:
+        """Dictionaries in case"""
+        return self._sc.dictionaries

@@ -1,6 +1,8 @@
 """Module containing class for exploring results from sumo"""
+import warnings
+
 from sumo.wrapper import SumoClient
-from fmu.sumo.explorer.pit import Pit
+from fmu.sumo.explorer.objects._search_context import SearchContext
 from fmu.sumo.explorer.objects.case_collection import (
     CaseCollection,
     _CASE_FIELDS,
@@ -10,7 +12,6 @@ from fmu.sumo.explorer.objects.surface import Surface
 from fmu.sumo.explorer.objects.polygons import Polygons
 from fmu.sumo.explorer.objects.table import Table
 from fmu.sumo.explorer.objects.case import Case
-from fmu.sumo.explorer._utils import Utils
 
 
 class Explorer:
@@ -62,13 +63,14 @@ class Explorer:
             keep_alive (str): point in time lifespan
         """
         self._sumo = SumoClient(env, token=token, interactive=interactive)
-        self._pit = Pit(self._sumo, keep_alive) if keep_alive else None
-        self._utils = Utils(self._sumo)
+        self._sc = SearchContext(sumo=self._sumo)
+        if keep_alive:
+            warnings.warn("The constructor argument 'keep_alive' to class 'Explorer' has been deprecated.", DeprecationWarning)
 
     @property
     def cases(self):
         """Cases in Sumo"""
-        return CaseCollection(sumo=self._sumo, pit=self._pit)
+        return self._sc.filter(cls="case")
 
     def get_permissions(self, asset: str = None):
         """Get permissions
@@ -105,6 +107,18 @@ class Explorer:
 
         return res
 
+    def _get_object_by_class_and_uuid(self, cls, uuid):
+        objects = self._sc.filter(cls="case", uuid=uuid)
+        if len(objects) == 0:
+            raise Exception(f"Document of type {cls} not found: {uuid}")
+        return objects[0]
+
+    async def _get_object_by_class_and_uuid_async(self, cls, uuid):
+        objects = self._sc.filter(cls="case", uuid=uuid)
+        if await objects.length_async() == 0:
+            raise Exception(f"Document of type {cls} not found: {uuid}")
+        return objects[0]
+
     def get_case_by_uuid(self, uuid: str) -> Case:
         """Get case object by uuid
 
@@ -114,11 +128,7 @@ class Explorer:
         Returns:
             Case: case object
         """
-        cases = self.cases.filter(uuid=uuid)
-        if len(cases) == 0:
-            raise Exception(f"Document not found: {uuid}")
-
-        return cases[0]
+        return _get_object_by_class_and_uuid("case", uuid)
 
     async def get_case_by_uuid_async(self, uuid: str) -> Case:
         """Get case object by uuid
@@ -129,11 +139,7 @@ class Explorer:
         Returns:
             Case: case object
         """
-        cases = self.cases.filter(uuid=uuid)
-        if await cases.length_async() == 0:
-            raise Exception(f"Document not found: {uuid}")
-
-        return await cases.getitem_async(0)
+        return await self._get_object_by_class_and_uuid_async("case", uuid)
 
     def get_surface_by_uuid(self, uuid: str) -> Surface:
         """Get surface object by uuid
@@ -144,7 +150,7 @@ class Explorer:
         Returns:
             Surface: surface object
         """
-        metadata = self._utils.get_object(uuid, _CHILD_FIELDS)
+        metadata = self._sc.get_object(uuid, _CHILD_FIELDS)
         return Surface(self._sumo, metadata)
 
     async def get_surface_by_uuid_async(self, uuid: str) -> Surface:
@@ -156,7 +162,7 @@ class Explorer:
         Returns:
             Surface: surface object
         """
-        metadata = await self._utils.get_object_async(uuid, _CHILD_FIELDS)
+        metadata = await self._sc.get_object_async(uuid, _CHILD_FIELDS)
         return Surface(self._sumo, metadata)
 
     def get_polygons_by_uuid(self, uuid: str) -> Polygons:
@@ -168,7 +174,7 @@ class Explorer:
         Returns:
             Polygons: polygons object
         """
-        metadata = self._utils.get_object(uuid, _CHILD_FIELDS)
+        metadata = self._sc.get_object(uuid, _CHILD_FIELDS)
         return Polygons(self._sumo, metadata)
 
     async def get_polygons_by_uuid_async(self, uuid: str) -> Polygons:
@@ -180,7 +186,7 @@ class Explorer:
         Returns:
             Polygons: polygons object
         """
-        metadata = await self._utils.get_object_async(uuid, _CHILD_FIELDS)
+        metadata = await self._sc.get_object_async(uuid, _CHILD_FIELDS)
         return Polygons(self._sumo, metadata)
 
     def get_table_by_uuid(self, uuid: str) -> Table:
@@ -192,7 +198,7 @@ class Explorer:
         Returns:
             Table: table object
         """
-        metadata = self._utils.get_object(uuid, _CHILD_FIELDS)
+        metadata = self._sc.get_object(uuid, _CHILD_FIELDS)
         return Table(self._sumo, metadata)
 
     async def get_table_by_uuid_async(self, uuid: str) -> Table:
@@ -204,5 +210,5 @@ class Explorer:
         Returns:
             Table: table object
         """
-        metadata = await self._utils.get_object_async(uuid, _CHILD_FIELDS)
+        metadata = await self._sc.get_object_async(uuid, _CHILD_FIELDS)
         return Table(self._sumo, metadata)
