@@ -1,4 +1,5 @@
 """Module containing case class"""
+
 from typing import Dict, List
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._document import Document
@@ -9,6 +10,7 @@ from fmu.sumo.explorer.objects.cube_collection import CubeCollection
 from fmu.sumo.explorer.objects.dictionary_collection import (
     DictionaryCollection,
 )
+from fmu.sumo.explorer.objects._virtual_objects import Iteration
 from fmu.sumo.explorer._utils import Utils
 from fmu.sumo.explorer.pit import Pit
 
@@ -16,8 +18,9 @@ from fmu.sumo.explorer.pit import Pit
 class Case(Document):
     """Class for representing a case in Sumo"""
 
-    def __init__(self, sumo: SumoClient, metadata: Dict, overview: Dict,
-                 pit: Pit = None):
+    def __init__(
+        self, sumo: SumoClient, metadata: Dict, overview: Dict, pit: Pit = None
+    ):
         super().__init__(metadata)
         self._overview = overview
         self._pit = pit
@@ -88,16 +91,18 @@ class Case(Document):
 
             res = self._sumo.post("/search", json=query)
             buckets = res.json()["aggregations"]["uuid"]["buckets"]
-            iterations = []
+            iterations = {}
 
             for bucket in buckets:
-                iterations.append(
-                    {
-                        "uuid": bucket["key"],
-                        "name": bucket["name"]["buckets"][0]["key"],
-                        "realizations": bucket["realizations"]["value"],
-                    }
+                _iteration = Iteration(
+                    sumo=self._sumo,
+                    case=self,
+                    uuid=bucket["key"],
+                    name=bucket["name"]["buckets"][0]["key"],
+                    pit=self._pit,
                 )
+
+                iterations[_iteration.name] = _iteration
 
             self._iterations = iterations
 
@@ -133,16 +138,24 @@ class Case(Document):
 
             res = await self._sumo.post_async("/search", json=query)
             buckets = res.json()["aggregations"]["id"]["buckets"]
-            iterations = []
+            iterations = {}
 
             for bucket in buckets:
-                iterations.append(
-                    {
-                        "id": bucket["key"],
-                        "name": bucket["name"]["buckets"][0]["key"],
-                        "realizations": len(bucket["realizations"]["buckets"]),
-                    }
+                _iteration = Iteration(
+                    sumo=self._sumo,
+                    case=self,
+                    uuid=bucket["key"],
+                    name=bucket["name"]["buckets"][0]["key"],
                 )
+
+                iterations[_iteration.name] = _iteration
+                # iterations.append(
+                #    {
+                #        "id": bucket["key"],
+                #        "name": bucket["name"]["buckets"][0]["key"],
+                #        "realizations": len(bucket["realizations"]["buckets"]),
+                #    }
+                # )
 
             self._iterations = iterations
 
