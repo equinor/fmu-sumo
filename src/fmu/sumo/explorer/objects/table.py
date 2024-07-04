@@ -136,7 +136,7 @@ class Table(Child):
         if self._arrowtable is None:
             if self["data"]["format"] == "parquet":
                 worked = "parquet"
-                self._arrowtable = pq.read_table(self.blob)                
+                self._arrowtable = pq.read_table(await self.blob_async)                
             elif self["data"]["format"] == "arrow":
                 try:
                     worked = "feather"
