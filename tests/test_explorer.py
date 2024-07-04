@@ -13,10 +13,8 @@ import pytest
 from xtgeo import RegularSurface
 from context import (
     Explorer,
-    Utils,
+    SearchContext,
     Case,
-    CaseCollection,
-    SurfaceCollection,
 )
 
 from sumo.wrapper import SumoClient
@@ -69,12 +67,6 @@ def fixture_test_case(explorer: Explorer, case_name: str) -> Case:
 def fixture_sumo_client(token: str):
     """Returns SumoClient for dev env"""
     return SumoClient("dev", token=token)
-
-
-@pytest.fixture(name="utils")
-def fixture_utils(sumo_client: SumoClient):
-    """Returns utils object"""
-    return Utils(sumo_client)
 
 
 def write_json(result_file, results):
@@ -147,12 +139,12 @@ def test_get_cases(explorer: Explorer):
     """Test the get_cases method."""
 
     cases = explorer.cases
-    assert isinstance(cases, CaseCollection)
-    assert isinstance(cases[0], Case)
+    assert isinstance(cases, SearchContext)
+    assert all([x.metadata["class"] == "case" for x in cases])
 
 
 def test_get_cases_fields(explorer: Explorer):
-    """Test CaseCollection.filter method with the field argument.
+    """Test SearchContext.filter method with the field argument.
 
     Shall be case insensitive.
     """
@@ -163,7 +155,7 @@ def test_get_cases_fields(explorer: Explorer):
 
 
 def test_get_cases_status(explorer: Explorer):
-    """Test the CaseCollection.filter method with the status argument."""
+    """Test the SearchContext.filter method with the status argument."""
 
     cases = explorer.cases.filter(status="keep")
     for case in cases:
@@ -171,7 +163,7 @@ def test_get_cases_status(explorer: Explorer):
 
 
 def test_get_cases_user(explorer: Explorer):
-    """Test the CaseCollection.filter method with the user argument."""
+    """Test the SearchContext.filter method with the user argument."""
 
     cases = explorer.cases.filter(user="peesv")
     for case in cases:
@@ -179,7 +171,7 @@ def test_get_cases_user(explorer: Explorer):
 
 
 def test_get_cases_combinations(explorer: Explorer):
-    """Test the CaseCollection.filter method with combined arguments."""
+    """Test the SearchContext.filter method with combined arguments."""
 
     cases = explorer.cases.filter(
         field=["DROGON", "JOHAN SVERDRUP"],
@@ -195,8 +187,11 @@ def test_get_cases_combinations(explorer: Explorer):
 
 
 def test_case_surfaces_type(test_case: Case):
-    """Test that Case.surfaces property is of type SurfaceCollection"""
-    assert isinstance(test_case.surfaces, SurfaceCollection)
+    """Test that all objects in Case.surfaces class surface"""
+    # assert all([x.metadata["class"] == "surface" for x in test_case.surfaces])
+    classes = test_case.surfaces._get_field_values("class.keyword")
+    assert len(classes) == 1
+    assert classes[0] == "surface"
 
 
 def test_case_surfaces_size(test_case: Case):
@@ -224,8 +219,11 @@ def test_case_surfaces_filter(test_case: Case):
     real_surfs = real_surfs.filter(iteration="iter-0")
     assert len(real_surfs) == 212
 
-    for surf in real_surfs:
-        assert surf.iteration == "iter-0"
+
+    # for surf in real_surfs:
+    #     assert surf.iteration == "iter-0"
+    its = real_surfs._get_field_values("fmu.iteration.name.keyword")
+    assert len(its) == 1 and its[0] == "iter-0"
 
     # filter on name
     non_valid_name_surfs = real_surfs.filter(name="___not_valid")
@@ -234,10 +232,14 @@ def test_case_surfaces_filter(test_case: Case):
     real_surfs = real_surfs.filter(name="Valysar Fm.")
     assert len(real_surfs) == 56
 
-    for surf in real_surfs:
-        assert surf.iteration == "iter-0"
-        assert surf.name == "Valysar Fm."
-
+    # for surf in real_surfs:
+    #     assert surf.iteration == "iter-0"
+    #     assert surf.name == "Valysar Fm."
+    its = real_surfs._get_field_values("fmu.iteration.name.keyword")
+    assert len(its) == 1 and its[0] == "iter-0"
+    names = real_surfs._get_field_values("data.name.keyword")
+    assert len(names) == 1 and names[0] == "Valysar Fm."
+    
     # filter on content
     non_valid_content_surfs = real_surfs.filter(content="___not_valid")
     assert len(non_valid_content_surfs) == 0
@@ -252,11 +254,17 @@ def test_case_surfaces_filter(test_case: Case):
     real_surfs = real_surfs.filter(tagname="FACIES_Fraction_Channel")
     assert len(real_surfs) == 4
 
-    for surf in real_surfs:
-        assert surf.iteration == "iter-0"
-        assert surf.name == "Valysar Fm."
-        assert surf.tagname == "FACIES_Fraction_Channel"
-
+    # for surf in real_surfs:
+    #     assert surf.iteration == "iter-0"
+    #     assert surf.name == "Valysar Fm."
+    #     assert surf.tagname == "FACIES_Fraction_Channel"
+    its = real_surfs._get_field_values("fmu.iteration.name.keyword")
+    assert len(its) == 1 and its[0] == "iter-0"
+    names = real_surfs._get_field_values("data.name.keyword")
+    assert len(names) == 1 and names[0] == "Valysar Fm."
+    tagnames = real_surfs._get_field_values("data.tagname.keyword")
+    assert len(tagnames) == 1 and tagnames[0] == "FACIES_Fraction_Channel"
+    
     # filter on data format
     non_valid_format_surfs = real_surfs.filter(dataformat="___not_valid")
     assert len(non_valid_format_surfs) == 0
@@ -320,25 +328,3 @@ def test_seismic_case_by_uuid(explorer: Explorer, seismic_case_uuid: str):
     assert "SEGYTraceHeader" in channel_list
 
 
-def test_utils_extend_query_object(utils: Utils):
-    """Test extension of query"""
-    old = {"bool": {"must": [{"term": {"class.keyword": "surface"}}]}}
-    new = {
-        "bool": {"must": [{"term": {"fmu.aggregation.operation": "mean"}}]},
-        "terms": {"fmu.iteration.name.keyword": ["iter-0", "iter-1"]},
-    }
-    extended = utils.extend_query_object(old, new)
-
-    assert len(extended["bool"]["must"]) == 2
-    assert isinstance(extended["terms"], dict)
-
-    new = {
-        "bool": {
-            "must_not": [{"term": {"key": "value"}}],
-            "must": [{"term": {"key": "value"}}],
-        }
-    }
-
-    extended = utils.extend_query_object(extended, new)
-
-    assert len(extended["bool"]["must"]) == 3
