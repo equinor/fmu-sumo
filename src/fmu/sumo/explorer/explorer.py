@@ -3,16 +3,20 @@ import warnings
 
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._search_context import SearchContext
-from fmu.sumo.explorer.objects.case_collection import (
-    CaseCollection,
-    _CASE_FIELDS,
-)
-from fmu.sumo.explorer.objects._child_collection import _CHILD_FIELDS
 from fmu.sumo.explorer.objects.surface import Surface
 from fmu.sumo.explorer.objects.polygons import Polygons
 from fmu.sumo.explorer.objects.table import Table
 from fmu.sumo.explorer.objects.case import Case
 
+_CASE_FIELDS = {
+    "include": [],
+    "exclude": []
+}
+
+_CHILD_FIELDS = {
+    "include": [],
+    "exclude": ["data.spec.columns", "fmu.realization.parameters"],
+}
 
 class Explorer:
     """Class for consuming FMU results from Sumo.
@@ -108,13 +112,13 @@ class Explorer:
         return res
 
     def _get_object_by_class_and_uuid(self, cls, uuid):
-        objects = self._sc.filter(cls="case", uuid=uuid)
+        objects = self._sc.filter(cls="case", id=uuid)
         if len(objects) == 0:
             raise Exception(f"Document of type {cls} not found: {uuid}")
         return objects[0]
 
     async def _get_object_by_class_and_uuid_async(self, cls, uuid):
-        objects = self._sc.filter(cls="case", uuid=uuid)
+        objects = self._sc.filter(cls="case", id=uuid)
         if await objects.length_async() == 0:
             raise Exception(f"Document of type {cls} not found: {uuid}")
         return objects[0]
@@ -128,7 +132,7 @@ class Explorer:
         Returns:
             Case: case object
         """
-        return _get_object_by_class_and_uuid("case", uuid)
+        return self._get_object_by_class_and_uuid("case", uuid)
 
     async def get_case_by_uuid_async(self, uuid: str) -> Case:
         """Get case object by uuid

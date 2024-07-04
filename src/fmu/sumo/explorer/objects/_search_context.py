@@ -1,8 +1,16 @@
 import json
 from typing import List, Dict
 from sumo.wrapper import SumoClient
-# from fmu.sumo.explorer.objects import (Case, Cube, Dictionary, Polygons, Surface, Table)
 import fmu.sumo.explorer.objects as objects
+
+def _gen_filter_id():
+    def _fn(value):
+        if value is None:
+            return None, None
+        else:
+            return {"ids": {"values": value if isinstance(value, list) else [value]}}, None
+    return _fn
+
 
 def _gen_filter_gen(attr):
     def _fn(value):
@@ -64,6 +72,7 @@ def _gen_filter_bool(attr):
     return _fn
 
 filters = {
+    "id": _gen_filter_id(),
     "cls": _gen_filter_gen("class.keyword"),
     "time": _gen_filter_time(),
     "name": _gen_filter_name(),
@@ -268,7 +277,7 @@ class SearchContext:
         if self._hits is None:
             self._hits = self._search_all()
             pass
-        return
+        return self
 
     def __next__(self):
         if self._curr_index < len(self._hits):
@@ -284,7 +293,7 @@ class SearchContext:
         if self._hits is None:
             self._hits = await self._search_all_async()
             pass
-        return
+        return self
 
     async def __anext__(self):
         if self._curr_index < len(self._hits):
@@ -693,14 +702,12 @@ class SearchContext:
             if _must_not is not None:
                 must_not.append(_must_not)
 
-            return SearchContext(
-                self._sumo, must=must, must_not=must_not, select=self._select
-            )
+        return SearchContext(
+            self._sumo, must=must, must_not=must_not, select=self._select
+        )
 
     def _context_for_class(self, cls):
-        return SearchContext(
-            self._sumo, must=[{"term": {"class.keyword": cls}}]
-        )
+        return self.filter(cls=cls)
 
     @property
     def cases(self):
