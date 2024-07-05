@@ -706,6 +706,7 @@ class SearchContext:
             "/search",
             json={
                 "query": self._query,
+                "size": 0,
                 "aggs": self._intervals_aggs,
             },
         )
@@ -719,6 +720,7 @@ class SearchContext:
             "/search",
             json={
                 "query": self._query,
+                "size": 0,
                 "aggs": self._intervals_aggs,
             },
         )
