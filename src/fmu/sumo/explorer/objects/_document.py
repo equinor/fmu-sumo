@@ -3,12 +3,12 @@
 import re
 from typing import List, Dict
 
-_path_split_rx = re.compile("\]\.|\.|\[")
+_path_split_rx = re.compile(r"\]\.|\.|\[")
 
 
 def _splitpath(path):
     parts = _path_split_rx.split(path)
-    return [int(x) if re.match("\d+", x) else x for x in parts]
+    return [int(x) if re.match(r"\d+", x) else x for x in parts]
 
 
 def _makeprop(attribute):
