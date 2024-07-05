@@ -72,7 +72,7 @@ def _gen_filter_time():
         if value is None:
             return None, None
         else:
-            return value._get_query()
+            return value._get_query(), None
 
     return _fn
 
@@ -82,7 +82,7 @@ def _gen_filter_bool(attr):
         if value is None:
             return None, None
         else:
-            return {"term": {attr: value}}
+            return {"term": {attr: value}}, None
 
     return _fn
 
@@ -90,7 +90,7 @@ def _gen_filter_bool(attr):
 def _gen_filter_complex():
     def _fn(value):
         if value is None:
-            return None
+            return None, None
         else:
             return value, None
 
