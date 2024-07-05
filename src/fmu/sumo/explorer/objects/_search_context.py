@@ -5,6 +5,13 @@ from sumo.wrapper import SumoClient
 import fmu.sumo.explorer.objects as objects
 
 
+def _gen_filter_none():
+    def _fn(value):
+        return None, None
+
+    return _fn
+
+
 def _gen_filter_id():
     def _fn(value):
         if value is None:
@@ -113,6 +120,7 @@ filters = {
     "is_observation": _gen_filter_bool("data.is_observation"),
     "is_prediction": _gen_filter_bool("data.is_prediction"),
     "complex": _gen_filter_complex(),
+    "has": _gen_filter_none(),
 }
 
 
@@ -798,9 +806,31 @@ class SearchContext:
             if _must_not is not None:
                 must_not.append(_must_not)
 
-        return SearchContext(
+        sc = SearchContext(
             self._sumo, must=must, must_not=must_not, select=self._select
         )
+
+        if "has" in kwargs:
+            # Get list of cases matched by current filter set
+            uuids = sc._get_field_values("fmu.case.uuid.keyword")
+            # Generate new searchcontext for objects that match the uuids
+            # and also satisfy the "has" filter
+            sc = SearchContext(
+                self._sumo,
+                must=[
+                    {"terms": {"fmu.case.uuid.keyword": uuids}},
+                    kwargs["has"],
+                ],
+                select=self._select,
+            )
+            uuids = sc._get_field_values("fmu.case.uuid.keyword")
+            sc = SearchContext(
+                self._sumo,
+                must=[{"ids": {"values": uuids}}],
+                select=self._select,
+            )
+
+        return sc
 
     def _context_for_class(self, cls):
         return self.filter(cls=cls)
