@@ -42,7 +42,7 @@ class Document:
         return self._metadata
 
     def _get_property(self, path: List[str]):
-        curr = self._metadata.copy()
+        curr = self._metadata
 
         for key in path:
             if key in curr:
