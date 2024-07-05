@@ -1,14 +1,21 @@
 import json
-from typing import List, Dict
+from typing import List, Dict, Tuple
+from datetime import datetime
 from sumo.wrapper import SumoClient
 import fmu.sumo.explorer.objects as objects
+
 
 def _gen_filter_id():
     def _fn(value):
         if value is None:
             return None, None
         else:
-            return {"ids": {"values": value if isinstance(value, list) else [value]}}, None
+            return {
+                "ids": {
+                    "values": value if isinstance(value, list) else [value]
+                }
+            }, None
+
     return _fn
 
 
@@ -62,6 +69,7 @@ def _gen_filter_time():
 
     return _fn
 
+
 def _gen_filter_bool(attr):
     def _fn(value):
         if value is None:
@@ -70,6 +78,17 @@ def _gen_filter_bool(attr):
             return {"term": {attr: value}}
 
     return _fn
+
+
+def _gen_filter_complex():
+    def _fn(value):
+        if value is None:
+            return None
+        else:
+            return value, None
+
+    return _fn
+
 
 filters = {
     "id": _gen_filter_id(),
@@ -93,6 +112,7 @@ filters = {
     "stratigraphic": _gen_filter_bool("data.stratigraphic"),
     "is_observation": _gen_filter_bool("data.is_observation"),
     "is_prediction": _gen_filter_bool("data.is_prediction"),
+    "complex": _gen_filter_complex(),
 }
 
 
@@ -187,13 +207,15 @@ class SearchContext:
 
     def _to_sumo(self, obj):
         cls = obj["_source"]["class"]
-        constructor = {"case": objects.Case,
-                       "cube": objects.Cube,
-                       "dictionary": objects.Dictionary,
-                       "polygons": objects.Polygons,
-                       "surface": objects.Surface,
-                       "table": objects.Table}.get(cls)
-        assert(constructor is not None)
+        constructor = {
+            "case": objects.Case,
+            "cube": objects.Cube,
+            "dictionary": objects.Dictionary,
+            "polygons": objects.Polygons,
+            "surface": objects.Surface,
+            "table": objects.Table,
+        }.get(cls)
+        assert constructor is not None
         return constructor(self._sumo, obj)
 
     def __len__(self):
@@ -381,7 +403,11 @@ class SearchContext:
         uuids: List[str],
         select: List[str] = None,
     ) -> List[Dict]:
-        size = 1000 if select is False else 100 if isinstance(select, list) else 10
+        size = (
+            1000
+            if select is False
+            else 100 if isinstance(select, list) else 10
+        )
         return self.__search_all(
             {"ids": {"values": uuids}}, size=size, select=select
         )
@@ -391,7 +417,11 @@ class SearchContext:
         uuids: List[str],
         select: List[str] = None,
     ) -> List[Dict]:
-        size = 1000 if select is False else 100 if isinstance(select, list) else 10
+        size = (
+            1000
+            if select is False
+            else 100 if isinstance(select, list) else 10
+        )
         return await self.__search_all_async(
             {"ids": {"values": uuids}}, size=size, select=select
         )
@@ -399,13 +429,11 @@ class SearchContext:
     def _get_buckets(
         self,
         field: str,
-        sort: List = None,
     ) -> List[Dict]:
         """Get a List of buckets
 
         Arguments:
             - field (str): a field in the metadata
-            - sort (List or None): sorting options
 
         Returns:
             A List of unique values for a given field
@@ -440,14 +468,11 @@ class SearchContext:
     async def _get_buckets_async(
         self,
         field: str,
-        sort: List = None,
     ) -> List[Dict]:
         """Get a List of buckets
 
         Arguments:
             - field (str): a field in the metadata
-            - sort (List or None): sorting options
-
         Returns:
             A List of unique values for a given field
         """
@@ -479,9 +504,7 @@ class SearchContext:
 
         return all_buckets
 
-    def _get_field_values(
-        self, field: str, key_as_string: bool = False
-    ) -> List:
+    def _get_field_values(self, field: str) -> List:
         """Get List of unique values for a given field
 
         Arguments:
@@ -491,17 +514,14 @@ class SearchContext:
             A List of unique values for the given field
         """
         if field not in self._field_values:
-            key = "key_as_string" if key_as_string is True else "key"
             buckets = self._get_buckets(field)
             self._field_values[field] = list(
-                map(lambda bucket: bucket[key], buckets)
+                map(lambda bucket: bucket["key"], buckets)
             )
 
         return self._field_values[field]
 
-    async def _get_field_values_async(
-        self, field: str, key_as_string: bool = False
-    ) -> List:
+    async def _get_field_values_async(self, field: str) -> List:
         """Get List of unique values for a given field
 
         Arguments:
@@ -511,10 +531,9 @@ class SearchContext:
             A List of unique values for the given field
         """
         if field not in self._field_values:
-            key = "key_as_string" if key_as_string is True else "key"
             buckets = await self._get_buckets_async(field)
             self._field_values[field] = list(
-                map(lambda bucket: bucket[key], buckets)
+                map(lambda bucket: bucket["key"], buckets)
             )
 
         return self._field_values[field]
@@ -625,12 +644,87 @@ class SearchContext:
     def columns(self) -> List[str]:
         """List of unique column names"""
         return self._get_field_values("data.spec.columns.keyword")
-    
+
     @property
     async def columns_async(self) -> List[str]:
         """List of unique column names"""
         return await self._get_field_values_async("data.spec.columns.keyword")
-    
+
+    _timestamp_query = {
+        "bool": {
+            "must": [{"exists": {"field": "data.time.t0"}}],
+            "must_not": [{"exists": {"field": "data.time.t1"}}],
+        }
+    }
+
+    @property
+    def timestamps(self) -> List[str]:
+        """List of unique timestamps in SearchContext"""
+        ts = self.filter(complex=self._timestamp_query)._get_field_values(
+            "data.time.t0.value"
+        )
+        return [datetime.fromtimestamp(t / 1000).isoformat() for t in ts]
+
+    @property
+    async def timestamps_async(self) -> List[str]:
+        """List of unique timestamps in SearchContext"""
+        ts = await self._get_field_values_async(
+            "data.time.t0.value", self._timestamp_query
+        )
+        return [datetime.fromtimestamp(t / 1000).isoformat() for t in ts]
+
+    def _extract_intervals(self, res):
+        buckets = res.json()["aggregations"]["t0"]["buckets"]
+        intervals = []
+
+        for bucket in buckets:
+            t0 = bucket["key_as_string"]
+
+            for t1 in bucket["t1"]["buckets"]:
+                intervals.append((t0, t1["key_as_string"]))
+
+        return intervals
+
+    _intervals_aggs = {
+        "t0": {
+            "terms": {"field": "data.time.t0.value", "size": 50},
+            "aggs": {
+                "t1": {
+                    "terms": {
+                        "field": "data.time.t1.value",
+                        "size": 50,
+                    }
+                }
+            },
+        }
+    }
+
+    @property
+    def intervals(self) -> List[Tuple]:
+        """List of unique intervals in SearchContext"""
+        res = self._sumo.post(
+            "/search",
+            json={
+                "query": self._query,
+                "aggs": self._intervals_aggs,
+            },
+        )
+
+        return self._extract_intervals(res)
+
+    @property
+    async def intervals_async(self) -> List[Tuple]:
+        """List of unique intervals in SearchContext"""
+        res = await self._sumo.post_async(
+            "/search",
+            json={
+                "query": self._query,
+                "aggs": self._intervals_aggs,
+            },
+        )
+
+        return self._extract_intervals(res)
+
     def filter(self, **kwargs) -> "SearchContext":
         """Filter SearchContext
 
