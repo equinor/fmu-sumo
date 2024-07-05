@@ -1,4 +1,5 @@
 """Module containing class for exploring results from sumo"""
+
 import warnings
 
 from sumo.wrapper import SumoClient
@@ -8,15 +9,13 @@ from fmu.sumo.explorer.objects.polygons import Polygons
 from fmu.sumo.explorer.objects.table import Table
 from fmu.sumo.explorer.objects.case import Case
 
-_CASE_FIELDS = {
-    "include": [],
-    "exclude": []
-}
+_CASE_FIELDS = {"include": [], "exclude": []}
 
 _CHILD_FIELDS = {
     "include": [],
     "exclude": ["data.spec.columns", "fmu.realization.parameters"],
 }
+
 
 class Explorer:
     """Class for consuming FMU results from Sumo.
@@ -69,12 +68,18 @@ class Explorer:
         self._sumo = SumoClient(env, token=token, interactive=interactive)
         self._sc = SearchContext(sumo=self._sumo)
         if keep_alive:
-            warnings.warn("The constructor argument 'keep_alive' to class 'Explorer' has been deprecated.", DeprecationWarning)
+            warnings.warn(
+                "The constructor argument 'keep_alive' to class 'Explorer' has been deprecated.",
+                DeprecationWarning,
+            )
 
     @property
     def cases(self):
         """Cases in Sumo"""
         return self._sc.filter(cls="case")
+
+    def filter(self, **kwargs) -> "SearchContext":
+        return self._sc.filter(**kwargs)
 
     def get_permissions(self, asset: str = None):
         """Get permissions
