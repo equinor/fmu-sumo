@@ -9,9 +9,8 @@ _prop_desc = [
     ("name", "fmu.case.name", "Case name"),
     ("status", "_sumo.status", "Case status"),
     ("user", "fmu.case.user.id", "Name of user who uploaded case."),
-    ("asset", "access.asset.name", "Case asset")(
-        "field", "masterdata.smda.field[0].identifier", "Case field"
-    ),
+    ("asset", "access.asset.name", "Case asset"),
+    ("field", "masterdata.smda.field[0].identifier", "Case field"),
 ]
 
 

@@ -1,4 +1,5 @@
 """Module containing class for cube object"""
+
 import json
 from typing import Dict
 from sumo.wrapper import SumoClient
@@ -104,25 +105,3 @@ class Cube(Child):
             url = "azureSAS" + self._url[5:] + "/"
             sas = "Suffix=?" + self._sas
             return openvds.open(url, sas)
-
-    @property
-    def timestamp(self) -> str:
-        """Surface timestmap data"""
-        t0 = self._get_property(["data", "time", "t0", "value"])
-        t1 = self._get_property(["data", "time", "t1", "value"])
-
-        if t0 is not None and t1 is None:
-            return t0
-
-        return None
-
-    @property
-    def interval(self) -> str:
-        """Surface interval data"""
-        t0 = self._get_property(["data", "time", "t0", "value"])
-        t1 = self._get_property(["data", "time", "t1", "value"])
-
-        if t0 is not None and t1 is not None:
-            return (t0, t1)
-
-        return None

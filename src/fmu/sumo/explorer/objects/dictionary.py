@@ -1,4 +1,5 @@
 """Module containing class for dictionary object"""
+
 import json
 from typing import Dict
 from sumo.wrapper import SumoClient
@@ -19,15 +20,6 @@ class Dictionary(Child):
         self._parsed = None
 
         super().__init__(sumo, metadata)
-
-    @property
-    def blob(self) -> bytes:
-        """Object blob"""
-        if self._blob is None:
-            res = self._sumo.get(f"/objects('{self.uuid}')/blob")
-            self._blob = res.content
-
-        return self._blob
 
     def parse(self) -> Dict:
         if self._parsed is None:
