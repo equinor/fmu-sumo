@@ -1,14 +1,19 @@
 """Module containing case class"""
-import re
+
 from typing import Dict, List
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._document import Document
 from fmu.sumo.explorer.objects._search_context import SearchContext
 
-_prop_desc = [("name", "fmu.case.name", "Case name"),
-              ("status", "_sumo.status", "Case status"),
-              ("user", "fmu.case.user.id", "Name of user who uploaded case."),
-              ("asset", "access.asset.name", "Case asset")]
+_prop_desc = [
+    ("name", "fmu.case.name", "Case name"),
+    ("status", "_sumo.status", "Case status"),
+    ("user", "fmu.case.user.id", "Name of user who uploaded case."),
+    ("asset", "access.asset.name", "Case asset")(
+        "field", "masterdata.smda.field[0].identifier", "Case field"
+    ),
+]
+
 
 class Case(Document):
     """Class for representing a case in Sumo"""
@@ -17,19 +22,15 @@ class Case(Document):
         super().__init__(metadata)
         self._overview = None
         self._sumo = sumo
-        self._sc = SearchContext(self._sumo, [{"term": {"fmu.case.uuid.keyword": self.uuid}}])
+        self._sc = SearchContext(
+            self._sumo, [{"term": {"fmu.case.uuid.keyword": self.uuid}}]
+        )
         self._iterations = None
 
     @property
     def overview(self):
         """Overview of case contents."""
         return self._overview
-
-    @property
-    def field(self) -> str:
-        """Case field"""
-        fields = self._get_property(["masterdata", "smda", "field"])
-        return fields[0]["identifier"]
 
     @property
     def iterations(self) -> List[Dict]:
@@ -179,7 +180,7 @@ class Case(Document):
 
     @property
     def surfaces(self) -> SearchContext:
-        """Surfaces in case """
+        """Surfaces in case"""
         return self._sc.surfaces
 
     @property
@@ -189,7 +190,7 @@ class Case(Document):
 
     @property
     def tables(self) -> SearchContext:
-        """Tables in case """
+        """Tables in case"""
         return self._sc.tables
 
     @property
@@ -202,14 +203,5 @@ class Case(Document):
         """Dictionaries in case"""
         return self._sc.dictionaries
 
-_path_split_rx=re.compile("\]\.|\.|\[")
-def _splitpath(path):
-    parts = _path_split_rx.split(path)
-    return [int(x) if re.match("\d+", x) else x for x in parts]
 
-def _makeprop(attribute):
-    path = _splitpath(attribute)
-    return lambda self: self._get_property(path)
-
-for name, attribute, doc in _prop_desc:
-    setattr(Case, name, property(_makeprop(attribute), None, None, doc))
+Case.map_properties(Case, _prop_desc)
