@@ -1,10 +1,27 @@
 """module containing class for child object"""
-
+import re
 from typing import Dict
 from io import BytesIO
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._document import Document
 
+_prop_desc = [("name", "data.name", "Object name"),
+              ("dataname", "data.name", "Object name"),
+              ("classname", "class.name", "Object class name"),
+              ("casename", "fmu.case.name", "Object case name"),
+              ("content", "data.content", "Content"),
+              ("tagname", "data.tagname", "Object tagname"),
+              ("stratigraphic", "data.stratigraphic", "Object stratigraphic"),
+              ("vertical_domain", "data.vertical_domain", "Object vertical domain"),
+              ("context", "fmu.context.stage", "Object context"),
+              ("iteration", "fmu.iteration.name", "Object iteration"),
+              ("realization", "fmu.realization.id", "Object realization"),
+              ("aggregation", "fmu.aggregation.operation", "Object aggregation operation"),
+              ("stage", "fmu.context.stage", "Object stage"),
+              ("format", "data.format", "Object file format"),
+              ("dataformat", "data.format", "Object file format"),
+              ("relative_path", "file.relative_path", "Object relative file path")
+              ]
 
 class Child(Document):
     """Class representing a child object in Sumo"""
@@ -18,72 +35,6 @@ class Child(Document):
         super().__init__(metadata)
         self._sumo = sumo
         self._blob = None
-
-    @property
-    def name(self) -> str:
-        """Object name"""
-        return self._get_property(["data", "name"])
-
-    @property
-    def content(self) -> str:
-        """Content"""
-        return self._get_property(["data", "content"])
-
-    @property
-    def tagname(self) -> str:
-        """Object tagname"""
-        return self._get_property(["data", "tagname"])
-
-    @property
-    def stratigraphic(self) -> str:
-        """Object stratigraphic"""
-        return self._get_property(["data", "stratigraphic"])
-
-    @property
-    def vertical_domain(self) -> str:
-        """Object vertical_domain"""
-        return self._get_property(["data", "vertical_domain"])
-
-    @property
-    def context(self) -> str:
-        """Object context"""
-        return self._get_property(["fmu", "context", "stage"])
-
-    @property
-    def iteration(self) -> int:
-        """Object iteration"""
-        return self._get_property(["fmu", "iteration", "name"])
-
-    @property
-    def realization(self) -> int:
-        """Object realization"""
-        return self._get_property(["fmu", "realization", "id"])
-
-    @property
-    def aggregation(self) -> str:
-        """Object aggregation operation"""
-        return self._get_property(["fmu", "aggregation", "operation"])
-
-    @property
-    def stage(self) -> str:
-        """Object stage"""
-        return self._get_property(["fmu", "context", "stage"])
-
-    @property
-    def format(self) -> str:
-        """Object file format"""
-        # (Legacy) alias for `dataformat`. Deprecate at some point?
-        return self.dataformat
-
-    @property
-    def dataformat(self) -> str:
-        """Object file format"""
-        return self._get_property(["data", "format"])
-
-    @property
-    def relative_path(self) -> str:
-        """Object relative file path"""
-        return self._get_property(["file", "relative_path"])
 
     @property
     def blob(self) -> BytesIO:
@@ -102,3 +53,15 @@ class Child(Document):
             self._blob = BytesIO(res.content)
 
         return self._blob
+
+_path_split_rx=re.compile("\]\.|\.|\[")
+def _splitpath(path):
+    parts = _path_split_rx.split(path)
+    return [int(x) if re.match("\d+", x) else x for x in parts]
+
+def _makeprop(attribute):
+    path = _splitpath(attribute)
+    return lambda self: self._get_property(path)
+
+for name, attribute, doc in _prop_desc:
+    setattr(Child, name, property(_makeprop(attribute), None, None, doc))

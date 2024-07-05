@@ -1,8 +1,14 @@
 """Module containing case class"""
+import re
 from typing import Dict, List
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._document import Document
 from fmu.sumo.explorer.objects._search_context import SearchContext
+
+_prop_desc = [("name", "fmu.case.name", "Case name"),
+              ("status", "_sumo.status", "Case status"),
+              ("user", "fmu.case.user.id", "Name of user who uploaded case."),
+              ("asset", "access.asset.name", "Case asset")]
 
 class Case(Document):
     """Class for representing a case in Sumo"""
@@ -15,29 +21,9 @@ class Case(Document):
         self._iterations = None
 
     @property
-    def name(self) -> str:
-        """Case name"""
-        return self._get_property(["fmu", "case", "name"])
-
-    @property
     def overview(self):
         """Overview of case contents."""
         return self._overview
-
-    @property
-    def status(self) -> str:
-        """Case status"""
-        return self._get_property(["_sumo", "status"])
-
-    @property
-    def user(self) -> str:
-        """Name of user who uploaded the case"""
-        return self._get_property(["fmu", "case", "user", "id"])
-
-    @property
-    def asset(self) -> str:
-        """Case asset"""
-        return self._get_property(["access", "asset", "name"])
 
     @property
     def field(self) -> str:
@@ -215,3 +201,15 @@ class Case(Document):
     def dictionaries(self) -> SearchContext:
         """Dictionaries in case"""
         return self._sc.dictionaries
+
+_path_split_rx=re.compile("\]\.|\.|\[")
+def _splitpath(path):
+    parts = _path_split_rx.split(path)
+    return [int(x) if re.match("\d+", x) else x for x in parts]
+
+def _makeprop(attribute):
+    path = _splitpath(attribute)
+    return lambda self: self._get_property(path)
+
+for name, attribute, doc in _prop_desc:
+    setattr(Case, name, property(_makeprop(attribute), None, None, doc))
