@@ -26,6 +26,8 @@ _prop_desc = [
     ("format", "data.format", "Object file format"),
     ("dataformat", "data.format", "Object file format"),
     ("relative_path", "file.relative_path", "Object relative file path"),
+    ("bbox", "data.bbox", "Object boundary-box data"),
+    ("spec", "data.spec", "Object spec data"),
 ]
 
 
@@ -59,6 +61,28 @@ class Child(Document):
             self._blob = BytesIO(res.content)
 
         return self._blob
+
+    @property
+    def timestamp(self) -> str:
+        """Object timestmap data"""
+        t0 = self._get_property(["data", "time", "t0", "value"])
+        t1 = self._get_property(["data", "time", "t1", "value"])
+
+        if t0 is not None and t1 is None:
+            return t0
+
+        return None
+
+    @property
+    def interval(self) -> str:
+        """Object interval data"""
+        t0 = self._get_property(["data", "time", "t0", "value"])
+        t1 = self._get_property(["data", "time", "t1", "value"])
+
+        if t0 is not None and t1 is not None:
+            return (t0, t1)
+
+        return None
 
 
 Child.map_properties(Child, _prop_desc)
