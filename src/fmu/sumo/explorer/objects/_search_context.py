@@ -3,6 +3,7 @@ from typing import List, Dict, Tuple
 from datetime import datetime
 from sumo.wrapper import SumoClient
 import fmu.sumo.explorer.objects as objects
+from fmu.sumo.explorer.cache import LRUCache
 
 
 def _gen_filter_none():
@@ -207,6 +208,7 @@ class SearchContext:
         self._select = select
         self._field_values = {}
         self._hits = None
+        self._cache = LRUCache(capacity=200)
         return
 
     @property
@@ -254,7 +256,10 @@ class SearchContext:
                 if len(hits) == 0:
                     break
                 after = hits[-1]["sort"]
-                all_hits = all_hits + [hit["_id"] for hit in hits]
+                if select is False:
+                    all_hits = all_hits + [hit["_id"] for hit in hits]
+                else:
+                    all_hits = all_hits + hits
                 pass
             pass
         return all_hits
@@ -280,7 +285,10 @@ class SearchContext:
                 if len(hits) == 0:
                     break
                 after = hits[-1]["sort"]
-                all_hits = all_hits + [hit["_id"] for hit in hits]
+                if select is False:
+                    all_hits = all_hits + [hit["_id"] for hit in hits]
+                else:
+                    all_hits = all_hits + hits
                 pass
             pass
         return all_hits
@@ -312,6 +320,7 @@ class SearchContext:
     def __next__(self):
         if self._curr_index < len(self._hits):
             uuid = self._hits[self._curr_index]
+            self._maybe_prefetch(self._curr_index)
             res = self.get_object(uuid)
             self._curr_index += 1
             return self._to_sumo(res)
@@ -328,6 +337,7 @@ class SearchContext:
     async def __anext__(self):
         if self._curr_index < len(self._hits):
             uuid = self._hits[self._curr_index]
+            await self._maybe_prefetch_async(self._curr_index)
             res = await self.get_object_async(uuid)
             self._curr_index += 1
             return self._to_sumo(res)
@@ -360,22 +370,25 @@ class SearchContext:
         Returns:
             Dict: a metadata object
         """
+        obj = self._cache.get(uuid)
+        if obj is None:
+            query = {
+                "query": {"ids": {"values": [uuid]}},
+                "size": 1,
+            }
 
-        query = {
-            "query": {"ids": {"values": [uuid]}},
-            "size": 1,
-        }
+            if select is not None:
+                query["_source"] = select
 
-        if select is not None:
-            query["_source"] = select
+            res = self._sumo.post("/search", json=query)
+            hits = res.json()["hits"]["hits"]
 
-        res = self._sumo.post("/search", json=query)
-        hits = res.json()["hits"]["hits"]
+            if len(hits) == 0:
+                raise Exception(f"Document not found: {uuid}")
+            obj = hits[0]
+            self._cache.put(uuid, obj)
 
-        if len(hits) == 0:
-            raise Exception(f"Document not found: {uuid}")
-
-        return hits[0]
+        return obj
 
     async def get_object_async(
         self, uuid: str, select: List[str] = None
@@ -390,21 +403,63 @@ class SearchContext:
             Dict: a metadata object
         """
 
-        query = {
-            "query": {"ids": {"values": [uuid]}},
-            "size": 1,
-        }
+        obj = self._cache.get(uuid)
+        if obj is None:
+            query = {
+                "query": {"ids": {"values": [uuid]}},
+                "size": 1,
+            }
 
-        if select is not None:
-            query["_source"] = select
+            if select is not None:
+                query["_source"] = select
 
-        res = await self._sumo.post_async("/search", json=query)
-        hits = res.json()["hits"]["hits"]
+            res = await self._sumo.post_async("/search", json=query)
+            hits = res.json()["hits"]["hits"]
 
+            if len(hits) == 0:
+                raise Exception(f"Document not found: {uuid}")
+            obj = hits[0]
+            self._cache.put(uuid, obj)
+
+        return obj
+
+    def _maybe_prefetch(self, index):
+        uuid = self._hits[index]
+        if self._cache.has(uuid):
+            return
+        uuids = self._hits[index : min(index + 100, len(self._hits))]
+        uuids = [uuid for uuid in uuids if not self._cache.has(uuid)]
+        hits = self.__search_all(
+            {"ids": {"values": uuids}},
+            size=len(uuids),
+            select={
+                "exclude": ["data.spec.columns", "fmu.realization.parameters"],
+            },
+        )
         if len(hits) == 0:
-            raise Exception(f"Document not found: {uuid}")
+            return
+        for hit in hits:
+            self._cache.put(hit["_id"], hit)
+        return
 
-        return hits[0]
+    async def _maybe_prefetch_async(self, index):
+        uuid = self._hits[index]
+        if self._cache.has(uuid):
+            return
+        uuids = self._hits[index : min(index + 100, len(self._hits))]
+        uuids = [uuid for uuid in uuids if not self._cache.has(uuid)]
+        hits = await self.__search_all_async(
+            {"ids": {"values": uuids}},
+            size=len(uuids),
+            select={
+                "exclude": ["data.spec.columns", "fmu.realization.parameters"],
+            },
+        )
+        if len(hits) == 0:
+            return
+        for hit in hits:
+            self._cache.put(hit["_id"], hit)
+        return
 
     def get_objects(
         self,
