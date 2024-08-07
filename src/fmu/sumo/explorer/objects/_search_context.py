@@ -209,6 +209,7 @@ class SearchContext:
         self._field_values = {}
         self._hits = None
         self._cache = LRUCache(capacity=200)
+        self._length = None
         return
 
     @property
@@ -229,16 +230,24 @@ class SearchContext:
         return constructor(self._sumo, obj)
 
     def __len__(self):
-        query = {"query": self._query, "size": 0, "track_total_hits": True}
-        res = self._sumo.post("/search", json=query).json()
-        return res["hits"]["total"]["value"]
+        if self._hits is not None:
+            return len(self._hits)
+        if self._length is None:
+            query = {"query": self._query, "size": 0, "track_total_hits": True}
+            res = self._sumo.post("/search", json=query).json()
+            self._length = res["hits"]["total"]["value"]
+        return self._length
 
     async def length_async(self):
-        query = {"query": self._query, "size": 0, "track_total_hits": True}
-        res = (await self._sumo.post_async("/search", json=query)).json()
-        return res["hits"]["total"]["value"]
+        if self._hits is not None:
+            return len(self._hits)
+        if self._length is None:
+            query = {"query": self._query, "size": 0, "track_total_hits": True}
+            res = (await self._sumo.post_async("/search", json=query)).json()
+            self._length = res["hits"]["total"]["value"]
+        return self._length
 
-    def __search_all(self, query, size=1000, select=False):
+    def __search_all(self, query, size=1000, select=False, maxhits=None):
         all_hits = []
         query = {
             "query": query,
@@ -248,8 +257,9 @@ class SearchContext:
         }
         after = None
         with Pit(self._sumo, "1m") as pit:
-            while True:
+            while maxhits is None or len(all_hits) < maxhits:
                 query = pit.stamp_query(_set_search_after(query, after))
+                query["size"] = size if maxhits is None else min(size, maxhits-len(all_hits))
                 res = self._sumo.post("/search", json=query).json()
                 pit.update_from_result(res)
                 hits = res["hits"]["hits"]
@@ -267,7 +277,7 @@ class SearchContext:
     def _search_all(self):
         return self.__search_all(query=self._query, size=1000, select=False)
 
-    async def __search_all_async(self, query, size=1000, select=False):
+    async def __search_all_async(self, query, size=1000, select=False, maxhits=None):
         all_hits = []
         query = {
             "query": query,
@@ -277,8 +287,9 @@ class SearchContext:
         }
         after = None
         with Pit(self._sumo, "1m") as pit:
-            while True:
+            while maxhits is None or len(all_hits) < maxhits:
                 query = pit.stamp_query(_set_search_after(query, after))
+                query["size"] = size if maxhits is None else min(size, maxhits-len(all_hits))
                 res = (await self._sumo.post("/search", json=query)).json()
                 pit.update_from_result(res)
                 hits = res["hits"]["hits"]
@@ -371,6 +382,7 @@ class SearchContext:
             Dict: a metadata object
         """
         obj = self._cache.get(uuid)
+        assert obj is not None
         if obj is None:
             query = {
                 "query": {"ids": {"values": [uuid]}},
@@ -431,10 +443,10 @@ class SearchContext:
         uuids = [uuid for uuid in uuids if not self._cache.has(uuid)]
         hits = self.__search_all(
             {"ids": {"values": uuids}},
-            size=len(uuids),
             select={
                 "exclude": ["data.spec.columns", "fmu.realization.parameters"],
             },
+            maxhits=len(uuids),
         )
         if len(hits) == 0:
             return
@@ -450,10 +462,10 @@ class SearchContext:
         uuids = [uuid for uuid in uuids if not self._cache.has(uuid)]
         hits = await self.__search_all_async(
             {"ids": {"values": uuids}},
-            size=len(uuids),
             select={
                 "exclude": ["data.spec.columns", "fmu.realization.parameters"],
             },
+            maxhits=len(uuids),
         )
         if len(hits) == 0:
             return
