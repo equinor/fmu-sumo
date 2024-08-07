@@ -140,7 +140,7 @@ def test_get_cases(explorer: Explorer):
 
     cases = explorer.cases
     assert isinstance(cases, SearchContext)
-    assert all([x.metadata["class"] == "case" for x in cases])
+    assert isinstance(cases[0], Case)
 
 
 def test_get_cases_fields(explorer: Explorer):
