@@ -4,11 +4,7 @@ from datetime import datetime
 from sumo.wrapper import SumoClient
 import fmu.sumo.explorer.objects as objects
 from fmu.sumo.explorer.cache import LRUCache
-import logging
 
-logger = logging.getLogger("SearchContext")
-logger.setLevel(logging.INFO)
-logger.addHandler(logging.FileHandler(filename="/Users/RAYW/pytest.log", mode="w"))
 
 def _gen_filter_none():
     def _fn(value):
@@ -246,7 +242,6 @@ class SearchContext:
             return len(self._hits)
         if self._length is None:
             query = {"query": self._query, "size": 0, "track_total_hits": True}
-            logger.info(f"search: query=\n{json.dumps(query, indent=2)}")
             res = self._sumo.post("/search", json=query).json()
             self._length = res["hits"]["total"]["value"]
         return self._length
@@ -260,7 +255,7 @@ class SearchContext:
             self._length = res["hits"]["total"]["value"]
         return self._length
 
-    def __search_all(self, query, size=1000, select=False, maxhits=None):
+    def __search_all(self, query, size=1000, select=False):
         all_hits = []
         query = {
             "query": query,
@@ -280,15 +275,11 @@ class SearchContext:
                 return hits
         after = None
         with Pit(self._sumo, "1m") as pit:
-            while maxhits is None or len(all_hits) < maxhits:
+            while True:
                 query = pit.stamp_query(_set_search_after(query, after))
-                sz = size if maxhits is None else min(size, maxhits-len(all_hits))
-                query["size"] = sz
-                logger.info(f"__search_all: search: query=\n{json.dumps(query, indent=2)}")
                 res = self._sumo.post("/search", json=query).json()
                 pit.update_from_result(res)
                 hits = res["hits"]["hits"]
-                logger.info(f"loop: got {len(hits)} hits.")
                 if len(hits) == 0:
                     break
                 after = hits[-1]["sort"]
@@ -297,8 +288,6 @@ class SearchContext:
                 else:
                     all_hits = all_hits + hits
                     pass
-                if len(hits) < sz:
-                    break
                 pass
             pass
         return all_hits
@@ -306,20 +295,29 @@ class SearchContext:
     def _search_all(self):
         return self.__search_all(query=self._query, size=1000, select=False)
 
-    async def __search_all_async(self, query, size=1000, select=False, maxhits=None):
+    async def __search_all_async(self, query, size=1000, select=False):
         all_hits = []
         query = {
             "query": query,
             "size": size,
             "_source": select,
             "sort": {"_doc": {"order": "asc"}},
+            "track_total_hits": True,
         }
+        # fast path: try searching without Pit
+        res = (await self._sumo.post_async("/search", json=query)).json()
+        total_hits = res["hits"]["total"]["value"]
+        if total_hits <= size:
+            hits = res["hits"]["hits"]
+            if select is False:
+                return [hit["_id"] for hit in hits]
+            else:
+                return hits
         after = None
         with Pit(self._sumo, "1m") as pit:
-            while maxhits is None or len(all_hits) < maxhits:
+            while True:
                 query = pit.stamp_query(_set_search_after(query, after))
-                query["size"] = size if maxhits is None else min(size, maxhits-len(all_hits))
-                res = (await self._sumo.post("/search", json=query)).json()
+                res = (await self._sumo.post_async("/search", json=query)).json()
                 pit.update_from_result(res)
                 hits = res["hits"]["hits"]
                 if len(hits) == 0:
@@ -329,6 +327,7 @@ class SearchContext:
                     all_hits = all_hits + [hit["_id"] for hit in hits]
                 else:
                     all_hits = all_hits + hits
+                    pass
                 pass
             pass
         return all_hits
@@ -420,7 +419,6 @@ class SearchContext:
             if select is not None:
                 query["_source"] = select
 
-            logger.info(f"get_object; search: query=\n{json.dumps(query, indent=2)}")
             res = self._sumo.post("/search", json=query)
             hits = res.json()["hits"]["hits"]
 
@@ -475,7 +473,6 @@ class SearchContext:
             select={
                 "exclude": ["data.spec.columns", "fmu.realization.parameters"],
             },
-            maxhits=len(uuids),
         )
         if len(hits) == 0:
             return
@@ -494,7 +491,6 @@ class SearchContext:
             select={
                 "exclude": ["data.spec.columns", "fmu.realization.parameters"],
             },
-            maxhits=len(uuids),
         )
         if len(hits) == 0:
             return
@@ -567,7 +563,6 @@ class SearchContext:
                 res = self._sumo.post("/search", json=query).json()
                 pit.update_from_result(res)
                 buckets = res["aggregations"][field]["buckets"]
-                logger.info(f"_get_buckets; loop: got {len(buckets)} values.")
                 if len(buckets) == 0:
                     break
                 after_key = res["aggregations"][field]["after_key"]
