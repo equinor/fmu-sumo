@@ -40,30 +40,11 @@ class Explorer:
     ):
         """Initialize the Explorer class
 
-        When iterating over large datasets, use the `keep_alive` argument
-        to create a snapshot of the data to ensure consistency. The
-        argument specifies the lifespan of the snapshot and every
-        request to the Sumo API will extend the lifetime of the snapshot
-        with the specified `keep_alive` value. The argument uses a format
-        of a number followed by a unit indicator. Supported indicators are:
-            - d (day)
-            - h (hour)
-            - m (minute)
-            - s (second)
-            - ms (milisecond)
-            - micros (microsecond)
-            - nanos (nanosecond)
-
-        Examples: 1d, 2h, 15m, 30s
-
-        Every request to Sumo will extend the lifespan of the snapshot
-        by the time specified in `keep_alive`.
-
         Args:
             env (str): Sumo environment
             token (str): authenticate with existing token
             interactive (bool): authenticate using interactive flow (browser)
-            keep_alive (str): point in time lifespan
+            keep_alive (str): point in time lifespan (deprecated and ignored)
         """
         self._sumo = SumoClient(env, token=token, interactive=interactive)
         self._sc = SearchContext(sumo=self._sumo)
