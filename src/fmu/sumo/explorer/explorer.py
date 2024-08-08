@@ -117,16 +117,16 @@ class Explorer:
         return res
 
     def _get_object_by_class_and_uuid(self, cls, uuid):
-        objects = self._sc.filter(cls="case", id=uuid)
-        if len(objects) == 0:
+        obj = self._sc.get_object(uuid)
+        if obj["_source"]["class"] != cls:
             raise Exception(f"Document of type {cls} not found: {uuid}")
-        return objects[0]
+        return self._sc._to_sumo(obj)
 
     async def _get_object_by_class_and_uuid_async(self, cls, uuid):
-        objects = self._sc.filter(cls="case", id=uuid)
-        if await objects.length_async() == 0:
+        obj = self._sc.get_object_async(uuid)
+        if obj["_source"]["class"] != cls:
             raise Exception(f"Document of type {cls} not found: {uuid}")
-        return objects[0]
+        return self._sc._to_sumo(obj)
 
     def get_case_by_uuid(self, uuid: str) -> Case:
         """Get case object by uuid
