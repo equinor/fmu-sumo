@@ -1,6 +1,4 @@
-
 # Filter that matches 4d-seismic objects.
-
 seismic4d = {
     "bool": {
         "must": [
@@ -22,3 +20,19 @@ seismic4d = {
         ]
     }
 }
+
+# Filter that matches aggregations
+aggregations = {"exists": {"field": "fmu.aggregation.operation"}}
+
+# Filter that matches observations
+observations = {
+    "bool": {
+        "must_not": [
+            {"exists": {"field": "fmu.iteration.name.keyword"}},
+            {"exists": {"field": "fmu.realization.id"}},
+        ]
+    }
+}
+
+# Filter that matches realizations
+realizations = {"exists": {"field": "fmu.realization.id"}}
