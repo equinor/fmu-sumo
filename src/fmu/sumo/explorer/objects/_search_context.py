@@ -4,7 +4,11 @@ from datetime import datetime
 from sumo.wrapper import SumoClient
 import fmu.sumo.explorer.objects as objects
 from fmu.sumo.explorer.cache import LRUCache
+import logging
 
+logger = logging.getLogger("SearchContext")
+logger.setLevel(logging.INFO)
+logger.addHandler(logging.FileHandler(filename="/Users/RAYW/pytest.log", mode="w"))
 
 def _gen_filter_none():
     def _fn(value):
@@ -124,15 +128,14 @@ filters = {
     "has": _gen_filter_none(),
 }
 
-
-def _build_bucket_query(query, field):
+def _build_bucket_query(query, field, size):
     return {
         "size": 0,
         "query": query,
         "aggs": {
             f"{field}": {
                 "composite": {
-                    "size": 10000,
+                    "size": size,
                     "sources": [{f"{field}": {"terms": {"field": field}}}],
                 }
             }
@@ -214,7 +217,16 @@ class SearchContext:
 
     @property
     def _query(self):
-        return {"bool": {"must": self._must, "must_not": self._must_not}}
+        if len(self._must_not) == 0:
+            if len(self._must) == 1:
+                return self._must[0]
+            else:
+                return {"bool": {"must": self._must}}
+        else:
+            if len(self._must) == 0:
+                return {"bool": {"must_not": self._must_not}}
+            else:
+                return {"bool": {"must": self._must, "must_not": self._must_not}}
 
     def _to_sumo(self, obj):
         cls = obj["_source"]["class"]
@@ -234,6 +246,7 @@ class SearchContext:
             return len(self._hits)
         if self._length is None:
             query = {"query": self._query, "size": 0, "track_total_hits": True}
+            logger.info(f"search: query=\n{json.dumps(query, indent=2)}")
             res = self._sumo.post("/search", json=query).json()
             self._length = res["hits"]["total"]["value"]
         return self._length
@@ -254,15 +267,28 @@ class SearchContext:
             "size": size,
             "_source": select,
             "sort": {"_doc": {"order": "asc"}},
+            "track_total_hits": True,
         }
+        # fast path: try searching without Pit
+        res = self._sumo.post("/search", json=query).json()
+        total_hits = res["hits"]["total"]["value"]
+        if total_hits <= size:
+            hits = res["hits"]["hits"]
+            if select is False:
+                return [hit["_id"] for hit in hits]
+            else:
+                return hits
         after = None
         with Pit(self._sumo, "1m") as pit:
             while maxhits is None or len(all_hits) < maxhits:
                 query = pit.stamp_query(_set_search_after(query, after))
-                query["size"] = size if maxhits is None else min(size, maxhits-len(all_hits))
+                sz = size if maxhits is None else min(size, maxhits-len(all_hits))
+                query["size"] = sz
+                logger.info(f"__search_all: search: query=\n{json.dumps(query, indent=2)}")
                 res = self._sumo.post("/search", json=query).json()
                 pit.update_from_result(res)
                 hits = res["hits"]["hits"]
+                logger.info(f"loop: got {len(hits)} hits.")
                 if len(hits) == 0:
                     break
                 after = hits[-1]["sort"]
@@ -270,6 +296,9 @@ class SearchContext:
                     all_hits = all_hits + [hit["_id"] for hit in hits]
                 else:
                     all_hits = all_hits + hits
+                    pass
+                if len(hits) < sz:
+                    break
                 pass
             pass
         return all_hits
@@ -382,7 +411,6 @@ class SearchContext:
             Dict: a metadata object
         """
         obj = self._cache.get(uuid)
-        assert obj is not None
         if obj is None:
             query = {
                 "query": {"ids": {"values": [uuid]}},
@@ -392,6 +420,7 @@ class SearchContext:
             if select is not None:
                 query["_source"] = select
 
+            logger.info(f"get_object; search: query=\n{json.dumps(query, indent=2)}")
             res = self._sumo.post("/search", json=query)
             hits = res.json()["hits"]["hits"]
 
@@ -514,10 +543,23 @@ class SearchContext:
             A List of unique values for a given field
         """
 
-        query = _build_bucket_query(self._query, field)
+        buckets_per_batch = 10000
+        query = _build_bucket_query(self._query, field, buckets_per_batch)
+        # fast path: try without Pit
+        res = self._sumo.post("/search", json=query).json()
+        buckets = res["aggregations"][field]["buckets"]
+        if len(buckets) < buckets_per_batch:
+            buckets = [
+                {
+                    "key": bucket["key"][field],
+                    "doc_count": bucket["doc_count"],
+                }
+                    for bucket in buckets
+            ]
+            return buckets
         all_buckets = []
         after_key = None
-        with Pit(self._sumo) as pit:
+        with Pit(self._sumo, "1m") as pit:
             while True:
                 query = pit.stamp_query(
                     _set_after_key(query, field, after_key)
@@ -525,6 +567,7 @@ class SearchContext:
                 res = self._sumo.post("/search", json=query).json()
                 pit.update_from_result(res)
                 buckets = res["aggregations"][field]["buckets"]
+                logger.info(f"_get_buckets; loop: got {len(buckets)} values.")
                 if len(buckets) == 0:
                     break
                 after_key = res["aggregations"][field]["after_key"]
@@ -536,6 +579,8 @@ class SearchContext:
                     for bucket in buckets
                 ]
                 all_buckets = all_buckets + buckets
+                if len(buckets) < buckets_per_batch:
+                    break
                 pass
 
         return all_buckets
@@ -552,10 +597,11 @@ class SearchContext:
             A List of unique values for a given field
         """
 
-        query = _build_bucket_query(self._query, field)
+        buckets_per_batch = 10000
+        query = _build_bucket_query(self._query, field, buckets_per_batch)
         all_buckets = []
         after_key = None
-        async with Pit(self._sumo) as pit:
+        async with Pit(self._sumo, "1m") as pit:
             while True:
                 query = pit.stamp_query(
                     _set_after_key(query, field, after_key)
@@ -575,6 +621,8 @@ class SearchContext:
                     for bucket in buckets
                 ]
                 all_buckets = all_buckets + buckets
+                if len(buckets) < buckets_per_batch:
+                    break
                 pass
 
         return all_buckets
