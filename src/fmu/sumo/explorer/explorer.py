@@ -135,17 +135,19 @@ class Explorer:
 
     def _iteration_query(self, uuid):
         return {
-            "query": {
-                "term": {
-                    "fmu.iteration.uuid.keyword": {
-                        "value": uuid
-                    }
-                }
-            },
+            "query": {"term": {"fmu.iteration.uuid.keyword": {"value": uuid}}},
             "size": 1,
             "_source": {
-                "includes": ["$schema", "source", "version", "access", "masterdata", "fmu.case", "fmu.iteration"],
-            }
+                "includes": [
+                    "$schema",
+                    "source",
+                    "version",
+                    "access",
+                    "masterdata",
+                    "fmu.case",
+                    "fmu.iteration",
+                ],
+            },
         }
 
     def get_iteration_by_uuid(self, uuid: str) -> Iteration:
@@ -156,7 +158,9 @@ class Explorer:
 
         Returns: iteration object
         """
-        res = self._sumo.post("/search", json=self._iteration_query(uuid)).json()
+        res = self._sumo.post(
+            "/search", json=self._iteration_query(uuid)
+        ).json()
         obj = res["hits"]["hits"][0]
         obj["_id"] = uuid
         return Iteration(self._sumo, obj)
@@ -169,25 +173,31 @@ class Explorer:
 
         Returns: iteration object
         """
-        res = (await self._sumo.post("/search", json=self._iteration_query(uuid))).json()
+        res = (
+            await self._sumo.post("/search", json=self._iteration_query(uuid))
+        ).json()
         obj = res["hits"]["hits"][0]
         obj["_id"] = uuid
         return Iteration(self._sumo, obj)
 
-
     def _realization_query(self, uuid):
         return {
             "query": {
-                "term": {
-                    "fmu.realization.uuid.keyword": {
-                        "value": uuid
-                    }
-                }
+                "term": {"fmu.realization.uuid.keyword": {"value": uuid}}
             },
             "size": 1,
             "_source": {
-                "includes": ["$schema", "source", "version", "access", "masterdata", "fmu.case", "fmu.iteration", "fmu.realization"],
-            }
+                "includes": [
+                    "$schema",
+                    "source",
+                    "version",
+                    "access",
+                    "masterdata",
+                    "fmu.case",
+                    "fmu.iteration",
+                    "fmu.realization",
+                ],
+            },
         }
 
     def get_realization_by_uuid(self, uuid: str) -> Realization:
@@ -198,7 +208,9 @@ class Explorer:
 
         Returns: realization object
         """
-        res = self._sumo.post("/search", json=self._realization_query(uuid)).json()
+        res = self._sumo.post(
+            "/search", json=self._realization_query(uuid)
+        ).json()
         obj = res["hits"]["hits"][0]
         obj["_id"] = uuid
         return Realization(self._sumo, obj)
@@ -211,7 +223,11 @@ class Explorer:
 
         Returns: realization object
         """
-        res = (await self._sumo.post("/search", json=self._realization_query(uuid))).json()
+        res = (
+            await self._sumo.post(
+                "/search", json=self._realization_query(uuid)
+            )
+        ).json()
         obj = res["hits"]["hits"][0]
         obj["_id"] = uuid
         return Realization(self._sumo, obj)

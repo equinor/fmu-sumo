@@ -1,4 +1,5 @@
 """Module with classes handling time filtering"""
+
 from enum import Enum
 
 

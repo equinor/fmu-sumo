@@ -1,7 +1,9 @@
 """Module containing utility class"""
+
 from typing import List, Dict
 import json
 from sumo.wrapper import SumoClient
+
 
 def _build_bucket_query(query, field):
     return {
@@ -11,25 +13,19 @@ def _build_bucket_query(query, field):
             f"{field}": {
                 "composite": {
                     "size": 1000,
-                    "sources": [
-                        {
-                            f"{field}": {
-                                "terms": {
-                                    "field": field
-                                }
-                            }
-                        }
-                    ]
+                    "sources": [{f"{field}": {"terms": {"field": field}}}],
                 }
             }
-        }
+        },
     }
+
 
 def _set_after_key(query, field, after_key):
     if after_key is not None:
         query["aggs"][field]["composite"]["after"] = after_key
         pass
     return query
+
 
 class Utils:
     """A class with utility functions for communicating with Sumo API"""
@@ -64,7 +60,10 @@ class Utils:
             if len(buckets) == 0:
                 break
             after_key = res["aggregations"][field]["after_key"]
-            buckets = [{"key": bucket["key"][field], "doc_count": bucket["doc_count"]} for bucket in buckets]
+            buckets = [
+                {"key": bucket["key"][field], "doc_count": bucket["doc_count"]}
+                for bucket in buckets
+            ]
             all_buckets = all_buckets + buckets
             pass
 
@@ -98,7 +97,10 @@ class Utils:
             if len(buckets) == 0:
                 break
             after_key = res["aggregations"][field]["after_key"]
-            buckets = [{"key": bucket["key"][field], "doc_count": bucket["doc_count"]} for bucket in buckets]
+            buckets = [
+                {"key": bucket["key"][field], "doc_count": bucket["doc_count"]}
+                for bucket in buckets
+            ]
             all_buckets = all_buckets + buckets
             pass
 
@@ -181,7 +183,9 @@ class Utils:
 
         return hits[0]
 
-    async def get_object_async(self, uuid: str, select: List[str] = None) -> Dict:
+    async def get_object_async(
+        self, uuid: str, select: List[str] = None
+    ) -> Dict:
         """Get metadata object by uuid
 
         Args:

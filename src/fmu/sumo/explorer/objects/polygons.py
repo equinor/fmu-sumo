@@ -1,4 +1,5 @@
 """Module containing class for polygons object"""
+
 from typing import Dict
 import pandas as pd
 from sumo.wrapper import SumoClient

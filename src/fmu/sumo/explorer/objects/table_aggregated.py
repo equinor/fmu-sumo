@@ -1,4 +1,5 @@
 """module containing class for table"""
+
 from fmu.sumo.explorer.objects.case import Case
 from fmu.sumo.explorer._utils import Utils
 from fmu.sumo.explorer.objects.table import Table

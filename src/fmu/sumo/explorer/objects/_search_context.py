@@ -124,6 +124,7 @@ filters = {
     "has": _gen_filter_none(),
 }
 
+
 def _build_bucket_query(query, field, size):
     return {
         "size": 0,
@@ -222,7 +223,9 @@ class SearchContext:
             if len(self._must) == 0:
                 return {"bool": {"must_not": self._must_not}}
             else:
-                return {"bool": {"must": self._must, "must_not": self._must_not}}
+                return {
+                    "bool": {"must": self._must, "must_not": self._must_not}
+                }
 
     def _to_sumo(self, obj):
         cls = obj["_source"]["class"]
@@ -317,7 +320,9 @@ class SearchContext:
         with Pit(self._sumo, "1m") as pit:
             while True:
                 query = pit.stamp_query(_set_search_after(query, after))
-                res = (await self._sumo.post_async("/search", json=query)).json()
+                res = (
+                    await self._sumo.post_async("/search", json=query)
+                ).json()
                 pit.update_from_result(res)
                 hits = res["hits"]["hits"]
                 if len(hits) == 0:
@@ -550,7 +555,7 @@ class SearchContext:
                     "key": bucket["key"][field],
                     "doc_count": bucket["doc_count"],
                 }
-                    for bucket in buckets
+                for bucket in buckets
             ]
             return buckets
         all_buckets = []
