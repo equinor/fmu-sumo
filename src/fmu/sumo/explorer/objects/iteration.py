@@ -1,0 +1,27 @@
+""" Module for (pseudo) iteration class. """
+from typing import Dict, List
+from sumo.wrapper import SumoClient
+from fmu.sumo.explorer.objects._document import Document
+from fmu.sumo.explorer.objects._search_context import SearchContext
+
+_prop_desc = [
+    ("name", "fmu.iteration.name", "FMU iteration name"),
+    ("casename", "fmu.case.name", "FMU case name"),
+    ("caseuuid", "fmu.case.uuid", "FMU case uuid"),
+    ("user", "fmu.case.user.id", "Name of user who uploaded iteration."),
+    ("asset", "access.asset.name", "Case asset"),
+    ("field", "masterdata.smda.field[0].identifier", "Case field"),
+]
+
+class Iteration(Document):
+    """ Class for representing an iteration in Sumo. """
+    def __init__(self, sumo: SumoClient, metadata: dict):
+        super().__init__(metadata)
+        self._sumo = sumo
+
+    def searchcontext(self):
+        return SearchContext(self._sumo, must=[{"term": {"fmu.iteration.uuid.keyword": self.uuid}}])
+
+Iteration.map_properties(Iteration, _prop_desc)
+    
+        

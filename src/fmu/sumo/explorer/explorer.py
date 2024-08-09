@@ -8,6 +8,8 @@ from fmu.sumo.explorer.objects.surface import Surface
 from fmu.sumo.explorer.objects.polygons import Polygons
 from fmu.sumo.explorer.objects.table import Table
 from fmu.sumo.explorer.objects.case import Case
+from fmu.sumo.explorer.objects.iteration import Iteration
+from fmu.sumo.explorer.objects.realization import Realization
 
 _CASE_FIELDS = {"include": [], "exclude": []}
 
@@ -130,6 +132,89 @@ class Explorer:
             Case: case object
         """
         return await self._get_object_by_class_and_uuid_async("case", uuid)
+
+    def _iteration_query(self, uuid):
+        return {
+            "query": {
+                "term": {
+                    "fmu.iteration.uuid.keyword": {
+                        "value": uuid
+                    }
+                }
+            },
+            "size": 1,
+            "_source": {
+                "includes": ["$schema", "source", "version", "access", "masterdata", "fmu.case", "fmu.iteration"],
+            }
+        }
+
+    def get_iteration_by_uuid(self, uuid: str) -> Iteration:
+        """Get iteration object by uuid
+
+        Args:
+            uuid (str): iteration uuid
+
+        Returns: iteration object
+        """
+        res = self._sumo.post("/search", json=self._iteration_query(uuid)).json()
+        obj = res["hits"]["hits"][0]
+        obj["_id"] = uuid
+        return Iteration(self._sumo, obj)
+
+    async def get_iteration_by_uuid_async(self, uuid: str) -> Iteration:
+        """Get iteration object by uuid
+
+        Args:
+            uuid (str): iteration uuid
+
+        Returns: iteration object
+        """
+        res = (await self._sumo.post("/search", json=self._iteration_query(uuid))).json()
+        obj = res["hits"]["hits"][0]
+        obj["_id"] = uuid
+        return Iteration(self._sumo, obj)
+
+
+    def _realization_query(self, uuid):
+        return {
+            "query": {
+                "term": {
+                    "fmu.realization.uuid.keyword": {
+                        "value": uuid
+                    }
+                }
+            },
+            "size": 1,
+            "_source": {
+                "includes": ["$schema", "source", "version", "access", "masterdata", "fmu.case", "fmu.iteration", "fmu.realization"],
+            }
+        }
+
+    def get_realization_by_uuid(self, uuid: str) -> Realization:
+        """Get realization object by uuid
+
+        Args:
+            uuid (str): realization uuid
+
+        Returns: realization object
+        """
+        res = self._sumo.post("/search", json=self._realization_query(uuid)).json()
+        obj = res["hits"]["hits"][0]
+        obj["_id"] = uuid
+        return Realization(self._sumo, obj)
+
+    async def get_realization_by_uuid_async(self, uuid: str) -> Realization:
+        """Get realization object by uuid
+
+        Args:
+            uuid (str): realization uuid
+
+        Returns: realization object
+        """
+        res = (await self._sumo.post("/search", json=self._realization_query(uuid))).json()
+        obj = res["hits"]["hits"][0]
+        obj["_id"] = uuid
+        return Realization(self._sumo, obj)
 
     def get_surface_by_uuid(self, uuid: str) -> Surface:
         """Get surface object by uuid
