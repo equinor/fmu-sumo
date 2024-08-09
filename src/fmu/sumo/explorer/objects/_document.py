@@ -45,7 +45,7 @@ class Document:
         curr = self._metadata
 
         for key in path:
-            if key in curr:
+            if (isinstance(curr, list) and key < len(curr)) or key in curr:
                 curr = curr[key]
             else:
                 return None
