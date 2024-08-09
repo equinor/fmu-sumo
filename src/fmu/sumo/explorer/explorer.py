@@ -19,7 +19,7 @@ _CHILD_FIELDS = {
 }
 
 
-class Explorer:
+class Explorer(SearchContext):
     """Class for consuming FMU results from Sumo.
     The Sumo Explorer is a Python package for consuming FMU results stored
     in Sumo. It is FMU aware, and creates an abstraction on top of the
@@ -48,21 +48,13 @@ class Explorer:
             interactive (bool): authenticate using interactive flow (browser)
             keep_alive (str): point in time lifespan (deprecated and ignored)
         """
-        self._sumo = SumoClient(env, token=token, interactive=interactive)
-        self._sc = SearchContext(sumo=self._sumo)
+        sumo = SumoClient(env, token=token, interactive=interactive)
+        SearchContext.__init__(self, sumo)
         if keep_alive:
             warnings.warn(
                 "The constructor argument 'keep_alive' to class 'Explorer' has been deprecated.",
                 DeprecationWarning,
             )
-
-    @property
-    def cases(self):
-        """Cases in Sumo"""
-        return self._sc.filter(cls="case")
-
-    def filter(self, **kwargs) -> "SearchContext":
-        return self._sc.filter(**kwargs)
 
     def get_permissions(self, asset: str = None):
         """Get permissions
@@ -100,16 +92,16 @@ class Explorer:
         return res
 
     def _get_object_by_class_and_uuid(self, cls, uuid):
-        obj = self._sc.get_object(uuid)
+        obj = self.get_object(uuid)
         if obj["_source"]["class"] != cls:
             raise Exception(f"Document of type {cls} not found: {uuid}")
-        return self._sc._to_sumo(obj)
+        return self._to_sumo(obj)
 
     async def _get_object_by_class_and_uuid_async(self, cls, uuid):
-        obj = self._sc.get_object_async(uuid)
+        obj = self.get_object_async(uuid)
         if obj["_source"]["class"] != cls:
             raise Exception(f"Document of type {cls} not found: {uuid}")
-        return self._sc._to_sumo(obj)
+        return self._to_sumo(obj)
 
     def get_case_by_uuid(self, uuid: str) -> Case:
         """Get case object by uuid
@@ -241,7 +233,7 @@ class Explorer:
         Returns:
             Surface: surface object
         """
-        metadata = self._sc.get_object(uuid, _CHILD_FIELDS)
+        metadata = self.get_object(uuid, _CHILD_FIELDS)
         return Surface(self._sumo, metadata)
 
     async def get_surface_by_uuid_async(self, uuid: str) -> Surface:
@@ -253,7 +245,7 @@ class Explorer:
         Returns:
             Surface: surface object
         """
-        metadata = await self._sc.get_object_async(uuid, _CHILD_FIELDS)
+        metadata = await self.get_object_async(uuid, _CHILD_FIELDS)
         return Surface(self._sumo, metadata)
 
     def get_polygons_by_uuid(self, uuid: str) -> Polygons:
@@ -265,7 +257,7 @@ class Explorer:
         Returns:
             Polygons: polygons object
         """
-        metadata = self._sc.get_object(uuid, _CHILD_FIELDS)
+        metadata = self.get_object(uuid, _CHILD_FIELDS)
         return Polygons(self._sumo, metadata)
 
     async def get_polygons_by_uuid_async(self, uuid: str) -> Polygons:
@@ -277,7 +269,7 @@ class Explorer:
         Returns:
             Polygons: polygons object
         """
-        metadata = await self._sc.get_object_async(uuid, _CHILD_FIELDS)
+        metadata = await self.get_object_async(uuid, _CHILD_FIELDS)
         return Polygons(self._sumo, metadata)
 
     def get_table_by_uuid(self, uuid: str) -> Table:
@@ -289,7 +281,7 @@ class Explorer:
         Returns:
             Table: table object
         """
-        metadata = self._sc.get_object(uuid, _CHILD_FIELDS)
+        metadata = self.get_object(uuid, _CHILD_FIELDS)
         return Table(self._sumo, metadata)
 
     async def get_table_by_uuid_async(self, uuid: str) -> Table:
@@ -301,5 +293,5 @@ class Explorer:
         Returns:
             Table: table object
         """
-        metadata = await self._sc.get_object_async(uuid, _CHILD_FIELDS)
+        metadata = await self.get_object_async(uuid, _CHILD_FIELDS)
         return Table(self._sumo, metadata)
