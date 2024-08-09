@@ -15,18 +15,12 @@ _prop_desc = [
 ]
 
 
-class Iteration(Document):
+class Iteration(Document, SearchContext):
     """Class for representing an iteration in Sumo."""
 
     def __init__(self, sumo: SumoClient, metadata: dict):
-        super().__init__(metadata)
-        self._sumo = sumo
-
-    def searchcontext(self):
-        return SearchContext(
-            self._sumo,
-            must=[{"term": {"fmu.iteration.uuid.keyword": self.uuid}}],
-        )
+        Document.__init__(self, metadata)
+        SearchContext.__init__(self, sumo, must=[{"term": {"fmu.iteration.uuid.keyword": self.uuid}}])
 
 
 Iteration.map_properties(Iteration, _prop_desc)

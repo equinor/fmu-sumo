@@ -662,6 +662,11 @@ class SearchContext:
         return self._field_values[field]
 
     @property
+    def cases(self):
+        """Cases in Sumo"""
+        return self.filter(cls="case")
+
+    @property
     def names(self) -> List[str]:
         """List of unique object names"""
         return self._get_field_values("data.name.keyword")
