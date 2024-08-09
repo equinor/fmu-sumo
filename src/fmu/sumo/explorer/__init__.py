@@ -1,4 +1,5 @@
 """Top-level package for fmu.sumo.explorer"""
+
 try:
     from ._version import version
 

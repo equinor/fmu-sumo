@@ -1,4 +1,5 @@
 """ Module for (pseudo) realization class. """
+
 from typing import Dict, List
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._document import Document
@@ -14,16 +15,19 @@ _prop_desc = [
     ("field", "masterdata.smda.field[0].identifier", "Case field"),
 ]
 
+
 class Realization(Document):
-    """ Class for representing a realization in Sumo. """
+    """Class for representing a realization in Sumo."""
+
     def __init__(self, sumo: SumoClient, metadata: Dict):
         super().__init__(metadata)
         self._sumo = sumo
 
     def searchcontext(self):
-        return SearchContext(self._sumo, must=[{"term": {"fmu.realization.uuid.keyword": self.uuid}}])
-        
+        return SearchContext(
+            self._sumo,
+            must=[{"term": {"fmu.realization.uuid.keyword": self.uuid}}],
+        )
 
-Realization.map_properties(Realization, _prop_desc)        
-    
-    
+
+Realization.map_properties(Realization, _prop_desc)
