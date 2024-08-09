@@ -678,12 +678,12 @@ class SearchContext:
 
     @property
     def tagnames(self) -> List[str]:
-        """List of unqiue object tagnames"""
+        """List of unique object tagnames"""
         return self._get_field_values("data.tagname.keyword")
 
     @property
     async def tagnames_async(self) -> List[str]:
-        """List of unqiue object tagnames"""
+        """List of unique object tagnames"""
         return await self._get_field_values_async("data.tagname.keyword")
 
     @property
