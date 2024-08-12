@@ -15,6 +15,7 @@ def _gen_filter_none():
 
 def _gen_filter_id():
     """Match against document id(s) (in uuid format)."""
+
     def _fn(value):
         if value is None:
             return None, None
@@ -30,7 +31,8 @@ def _gen_filter_id():
 
 def _gen_filter_gen(attr):
     """Match property against either single value or list of values.
-If the value given is a boolen, tests for existence or not of the property."""
+If the value given is a boolean, tests for existence or not of the property."""
+
     def _fn(value):
         if value is None:
             return None, None
@@ -48,6 +50,7 @@ If the value given is a boolen, tests for existence or not of the property."""
 
 def _gen_filter_name():
     """Match against \"data.name\", or \"case.name\" for case objects."""
+
     def _fn(value):
         if value is None:
             return None, None
@@ -74,6 +77,7 @@ def _gen_filter_name():
 
 def _gen_filter_time():
     """Match against a TimeFilter instance."""
+
     def _fn(value):
         if value is None:
             return None, None
@@ -85,6 +89,7 @@ def _gen_filter_time():
 
 def _gen_filter_bool(attr):
     """Match boolean value."""
+
     def _fn(value):
         if value is None:
             return None, None
@@ -97,6 +102,7 @@ def _gen_filter_bool(attr):
 def _gen_filter_complex():
     """Match against user-supplied query, which is a structured
 Elasticsearch query in dictionary form."""
+
     def _fn(value):
         if value is None:
             return None, None
@@ -104,6 +110,7 @@ Elasticsearch query in dictionary form."""
             return value, None
 
     return _fn
+
 
 _filterspec = {
     "id": [_gen_filter_id, None],
@@ -131,6 +138,7 @@ _filterspec = {
     "has": [_gen_filter_none, None],
 }
 
+
 def _gen_filters(spec):
     res = {}
     for name, desc in spec.items():
@@ -142,7 +150,41 @@ def _gen_filters(spec):
             pass
     return res
 
+
 filters = _gen_filters(_filterspec)
+
+
+_bucket_spec = {
+    "names": ["data.name.keyword", "List of unique object names."],
+    "tagnames": ["data.tagname.keyword", "List of unique object tagnames."],
+    "dataformats": [
+        "data.format.keyword",
+        "List of unique data.format values.",
+    ],
+    "iterations": [
+        "fmu.iteration.name.keyword",
+        "List of unique object iteration names.",
+    ],
+    "realizations": [
+        "fmu.realization.id",
+        "List of unique object realization ids.",
+    ],
+    "aggregations": [
+        "fmu.aggregation.operation.keyword",
+        "List of unique object aggregation operations.",
+    ],
+    "stages": ["fmu.context.stage.keyword", "List of unique stages."],
+    # "stratigraphic": [
+    #     "data.stratigraphic",
+    #     "List of unique object stratigraphic.",
+    # ],
+    "vertical_domains": [
+        "data.vertical_domain",
+        "List of unique object vertical domains.",
+    ],
+    "contents": ["data.content.keyword", "List of unique contents."],
+    "columns": ["data.spec.columns.keyword", "List of unique column names."],
+}
 
 
 def _build_bucket_query(query, field, size):
@@ -686,118 +728,6 @@ class SearchContext:
         """Cases in Sumo"""
         return self.filter(cls="case")
 
-    @property
-    def names(self) -> List[str]:
-        """List of unique object names"""
-        return self._get_field_values("data.name.keyword")
-
-    @property
-    async def names_async(self) -> List[str]:
-        """List of unique object names"""
-        return await self._get_field_values_async("data.name.keyword")
-
-    @property
-    def tagnames(self) -> List[str]:
-        """List of unique object tagnames"""
-        return self._get_field_values("data.tagname.keyword")
-
-    @property
-    async def tagnames_async(self) -> List[str]:
-        """List of unique object tagnames"""
-        return await self._get_field_values_async("data.tagname.keyword")
-
-    @property
-    def dataformats(self) -> List[str]:
-        """List of unique data.format values"""
-        return self._get_field_values("data.format.keyword")
-
-    @property
-    async def dataformats_async(self) -> List[str]:
-        """List of unique data.format values"""
-        return await self._get_field_values_async("data.format.keyword")
-
-    @property
-    def iterations(self) -> List[int]:
-        """List of unique object iteration names"""
-        return self._get_field_values("fmu.iteration.name.keyword")
-
-    @property
-    async def iterations_async(self) -> List[int]:
-        """List of unique object iteration names"""
-        return await self._get_field_values_async("fmu.iteration.name.keyword")
-
-    @property
-    def realizations(self) -> List[int]:
-        """List of unique object realization ids"""
-        return self._get_field_values("fmu.realization.id")
-
-    @property
-    async def realizations_async(self) -> List[int]:
-        """List of unique object realization ids"""
-        return await self._get_field_values_async("fmu.realization.id")
-
-    @property
-    def aggregations(self) -> List[str]:
-        """List of unique object aggregation operations"""
-        return self._get_field_values("fmu.aggregation.operation.keyword")
-
-    @property
-    async def aggregations_async(self) -> List[str]:
-        """List of unique object aggregation operations"""
-        return await self._get_field_values_async(
-            "fmu.aggregation.operation.keyword"
-        )
-
-    @property
-    def stages(self) -> List[str]:
-        """List of unique stages"""
-        return self._get_field_values("fmu.context.stage.keyword")
-
-    @property
-    async def stages_async(self) -> List[str]:
-        """List of unique stages"""
-        return await self._get_field_values_async("fmu.context.stage.keyword")
-
-    @property
-    def stratigraphic(self) -> List[str]:
-        """List of unqiue object stratigraphic"""
-        return self._get_field_values("data.stratigraphic")
-
-    @property
-    async def stratigraphic_async(self) -> List[str]:
-        """List of unqiue object stratigraphic"""
-        return await self._get_field_values_async("data.stratigraphic")
-
-    @property
-    def vertical_domain(self) -> List[str]:
-        """List of unqiue object vertical domain"""
-        return self._get_field_values("data.vertical_domain")
-
-    @property
-    async def vertical_domain_async(self) -> List[str]:
-        """List of unqiue object vertical domain"""
-        return await self._get_field_values_async("data.vertical_domain")
-
-    @property
-    def contents(self) -> List[str]:
-        """List of unique contents"""
-        return self._get_field_values("data.content.keyword")
-
-    @property
-    async def contents_async(self) -> List[str]:
-        """List of unique contents"""
-        return self._get_field_values_async("data.content.keyword")
-
-    @property
-    def columns(self) -> List[str]:
-        """List of unique column names"""
-        return self._get_field_values("data.spec.columns.keyword")
-
-    @property
-    async def columns_async(self) -> List[str]:
-        """List of unique column names"""
-        return await self._get_field_values_async("data.spec.columns.keyword")
-
     _timestamp_query = {
         "bool": {
             "must": [{"exists": {"field": "data.time.t0"}}],
@@ -876,62 +806,7 @@ class SearchContext:
         return self._extract_intervals(res)
 
     def filter(self, **kwargs) -> "SearchContext":
-        """Filter SearchContext
-
-        Apply additional filters to SearchContext and get a new filtered
-        instance.
-
-        Args:
-            name (Union[str, List[str], bool]): name
-            tagname (Union[str, List[str], bool]): tagname
-            dataformat (Union[str, List[str], bool]): data format
-            iteration (Union[int, List[int], bool]): iteration id
-            realization Union[int, List[int], bool]: realization id
-            aggregation (Union[str, List[str], bool]): aggregation operation
-            stage (Union[str, List[str], bool]): context/stage
-            time (TimeFilter): time filter
-            uuid (Union[str, List[str], bool]): object uuid
-            stratigraphic (Union[str, List[str], bool]): stratigraphic
-            vertical_domain (Union[str, List[str], bool]): vertical_domain
-            content (Union[str, List[str], bool): = content
-
-        Returns:
-            SearchContext: A filtered SearchContext
-
-        Examples:
-
-            Match one value::
-
-                surfs = case.surfaces.filter(
-                    iteration="iter-0"
-                    name="my_surface_name"
-                )
-
-            Match multiple values::
-
-                surfs = case.surfaces.filter(
-                    name=["one_name", "another_name"]
-                )
-
-            Get aggregated surfaces with specific operation::
-
-                surfs = case.surfaces.filter(
-                    aggregation="max"
-                )
-
-            Get all aggregated surfaces::
-
-                surfs = case.surfaces.filter(
-                    aggregation=True
-                )
-
-            Get all non-aggregated surfaces::
-
-                surfs = case.surfaces.filter(
-                    aggregation=False
-                )
-
-        """
+        """Filter SearchContext"""
 
         must = self._must[:]
         must_not = self._must_not[:]
@@ -999,10 +874,16 @@ class SearchContext:
     def dictionaries(self):
         return self._context_for_class("dictionary")
 
+
 def _gen_filter_doc(spec):
-    fmap = { _gen_filter_id: "Id", _gen_filter_bool: "Boolean",
-             _gen_filter_name: "Name", _gen_filter_gen: "General",
-             _gen_filter_time: "Time", _gen_filter_complex: "Complex" }
+    fmap = {
+        _gen_filter_id: "Id",
+        _gen_filter_bool: "Boolean",
+        _gen_filter_name: "Name",
+        _gen_filter_gen: "General",
+        _gen_filter_time: "Time",
+        _gen_filter_complex: "Complex",
+    }
     ret = """\
 Filter SearchContext.
 
@@ -1014,10 +895,13 @@ The filters (specified as keyword args) are of these formats:
 """
     for gen, name in fmap.items():
         ret = ret + f"    {name}:  {gen.__doc__}\n"
-    ret = ret + """
+    ret = (
+        ret
+        + """
 Args:
 
 """
+    )
     for name in sorted(spec.keys()):
         gen, property = spec[name]
         if gen in [_gen_filter_complex, _gen_filter_none]:
@@ -1027,13 +911,15 @@ Args:
             if property is None:
                 ret = ret + f"    {name} ({typ})\n"
             else:
-                ret = ret + f"    {name} ({typ}): \"{property}\"\n"
+                ret = ret + f'    {name} ({typ}): "{property}"\n'
                 pass
             pass
         pass
     ret = ret + "    has (Complex)\n"
     ret = ret + "    complex (Complex)\n"
-    ret = ret + """
+    ret = (
+        ret
+        + """
 Returns:
     SearchContext: A filtered SearchContext.
 
@@ -1071,6 +957,40 @@ Examples:
                 )
 
 """
+    )
     return ret
 
+
 SearchContext.filter.__doc__ = _gen_filter_doc(_filterspec)
+
+
+def _build_bucket_fn(property, docstring):
+    def fn(self):
+        return self._get_field_values(property)
+
+    return fn
+
+
+def _build_bucket_fn_async(property, docstring):
+    async def fn(self):
+        return await self._get_field_values_async(property)
+
+    return fn
+
+
+def _inject_bucket_fns(spec):
+    for name, defn in spec.items():
+        prop, docstring = defn
+        fn = _build_bucket_fn(prop, docstring)
+        setattr(SearchContext, name, property(fn, None, None, docstring))
+        afn = _build_bucket_fn_async(prop, docstring)
+        setattr(
+            SearchContext,
+            name + "_async",
+            property(afn, None, None, docstring),
+        )
+        pass
+    return
+
+
+_inject_bucket_fns(_bucket_spec)
