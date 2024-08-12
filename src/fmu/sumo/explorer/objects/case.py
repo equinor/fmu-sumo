@@ -134,18 +134,7 @@ class Case(Document, SearchContext):
         Returns:
             List[int]: realization ids
         """
-        must = [{"term": {"_sumo.parent_object.keyword": self.uuid}}]
-
-        if iteration:
-            must.append({"term": {"fmu.iteration.name.keyword": iteration}})
-
-        buckets = self._utils.get_buckets(
-            "fmu.realization.id",
-            query={"bool": {"must": must}},
-            sort=["fmu.realization.id"],
-        )
-
-        return list(map(lambda b: b["key"], buckets))
+        return self.filter(iteration=iteration)._get_field_values("fmu.realization.id")
 
     async def get_realizations_async(self, iteration: str = None) -> List[int]:
         """Get a list of realization ids
@@ -161,18 +150,7 @@ class Case(Document, SearchContext):
         Returns:
             List[int]: realization ids
         """
-        must = [{"term": {"_sumo.parent_object.keyword": self.uuid}}]
-
-        if iteration:
-            must.append({"term": {"fmu.iteration.name.keyword": iteration}})
-
-        buckets = await self._utils.get_buckets_async(
-            "fmu.realization.id",
-            query={"bool": {"must": must}},
-            sort=["fmu.realization.id"],
-        )
-
-        return list(map(lambda b: b["key"], buckets))
+        return await self.filter(iteration=iteration)._get_field_values("fmu.realization.id")
 
 
 Case.map_properties(Case, _prop_desc)
