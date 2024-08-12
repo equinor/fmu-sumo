@@ -14,6 +14,7 @@ def _gen_filter_none():
 
 
 def _gen_filter_id():
+    """Match against document id(s) (in uuid format)."""
     def _fn(value):
         if value is None:
             return None, None
@@ -28,6 +29,8 @@ def _gen_filter_id():
 
 
 def _gen_filter_gen(attr):
+    """Match property against either single value or list of values.
+If the value given is a boolen, tests for existence or not of the property."""
     def _fn(value):
         if value is None:
             return None, None
@@ -44,6 +47,7 @@ def _gen_filter_gen(attr):
 
 
 def _gen_filter_name():
+    """Match against \"data.name\", or \"case.name\" for case objects."""
     def _fn(value):
         if value is None:
             return None, None
@@ -69,6 +73,7 @@ def _gen_filter_name():
 
 
 def _gen_filter_time():
+    """Match against a TimeFilter instance."""
     def _fn(value):
         if value is None:
             return None, None
@@ -79,6 +84,7 @@ def _gen_filter_time():
 
 
 def _gen_filter_bool(attr):
+    """Match boolean value."""
     def _fn(value):
         if value is None:
             return None, None
@@ -89,6 +95,8 @@ def _gen_filter_bool(attr):
 
 
 def _gen_filter_complex():
+    """Match against user-supplied query, which is a structured
+Elasticsearch query in dictionary form."""
     def _fn(value):
         if value is None:
             return None, None
@@ -97,32 +105,44 @@ def _gen_filter_complex():
 
     return _fn
 
-
-filters = {
-    "id": _gen_filter_id(),
-    "cls": _gen_filter_gen("class.keyword"),
-    "time": _gen_filter_time(),
-    "name": _gen_filter_name(),
-    "uuid": _gen_filter_gen("fmu.case.uuid.keyword"),
-    "tagname": _gen_filter_gen("data.tagname.keyword"),
-    "dataformat": _gen_filter_gen("data.format.keyword"),
-    "iteration": _gen_filter_gen("fmu.iteration.name.keyword"),
-    "realization": _gen_filter_gen("fmu.realization.id"),
-    "aggregation": _gen_filter_gen("fmu.aggregation.operation.keyword"),
-    "stage": _gen_filter_gen("fmu.context.stage.keyword"),
-    "column": _gen_filter_gen("data.spec.columns.keyword"),
-    "vertical_domain": _gen_filter_gen("data.vertical_domain.keyword"),
-    "content": _gen_filter_gen("data.content.keyword"),
-    "status": _gen_filter_gen("_sumo.status.keyword"),
-    "user": _gen_filter_gen("fmu.user.keyword"),
-    "asset": _gen_filter_gen("access.asset.name.keyword"),
-    "field": _gen_filter_gen("masterdata.smda.field.keyword"),
-    "stratigraphic": _gen_filter_bool("data.stratigraphic"),
-    "is_observation": _gen_filter_bool("data.is_observation"),
-    "is_prediction": _gen_filter_bool("data.is_prediction"),
-    "complex": _gen_filter_complex(),
-    "has": _gen_filter_none(),
+_filterspec = {
+    "id": [_gen_filter_id, None],
+    "cls": [_gen_filter_gen, "class.keyword"],
+    "time": [_gen_filter_time, None],
+    "name": [_gen_filter_name, None],
+    "uuid": [_gen_filter_gen, "fmu.case.uuid.keyword"],
+    "tagname": [_gen_filter_gen, "data.tagname.keyword"],
+    "dataformat": [_gen_filter_gen, "data.format.keyword"],
+    "iteration": [_gen_filter_gen, "fmu.iteration.name.keyword"],
+    "realization": [_gen_filter_gen, "fmu.realization.id"],
+    "aggregation": [_gen_filter_gen, "fmu.aggregation.operation.keyword"],
+    "stage": [_gen_filter_gen, "fmu.context.stage.keyword"],
+    "column": [_gen_filter_gen, "data.spec.columns.keyword"],
+    "vertical_domain": [_gen_filter_gen, "data.vertical_domain.keyword"],
+    "content": [_gen_filter_gen, "data.content.keyword"],
+    "status": [_gen_filter_gen, "_sumo.status.keyword"],
+    "user": [_gen_filter_gen, "fmu.user.keyword"],
+    "asset": [_gen_filter_gen, "access.asset.name.keyword"],
+    "field": [_gen_filter_gen, "masterdata.smda.field.keyword"],
+    "stratigraphic": [_gen_filter_bool, "data.stratigraphic"],
+    "is_observation": [_gen_filter_bool, "data.is_observation"],
+    "is_prediction": [_gen_filter_bool, "data.is_prediction"],
+    "complex": [_gen_filter_complex, None],
+    "has": [_gen_filter_none, None],
 }
+
+def _gen_filters(spec):
+    res = {}
+    for name, desc in spec.items():
+        gen, param = desc
+        if param is None:
+            res[name] = gen()
+        else:
+            res[name] = gen(param)
+            pass
+    return res
+
+filters = _gen_filters(_filterspec)
 
 
 def _build_bucket_query(query, field, size):
@@ -978,3 +998,79 @@ class SearchContext:
     @property
     def dictionaries(self):
         return self._context_for_class("dictionary")
+
+def _gen_filter_doc(spec):
+    fmap = { _gen_filter_id: "Id", _gen_filter_bool: "Boolean",
+             _gen_filter_name: "Name", _gen_filter_gen: "General",
+             _gen_filter_time: "Time", _gen_filter_complex: "Complex" }
+    ret = """\
+Filter SearchContext.
+
+Apply additional filters to SearchContext and return a new
+filtered instance.
+
+The filters (specified as keyword args) are of these formats:
+
+"""
+    for gen, name in fmap.items():
+        ret = ret + f"    {name}:  {gen.__doc__}\n"
+    ret = ret + """
+Args:
+
+"""
+    for name in sorted(spec.keys()):
+        gen, property = spec[name]
+        if gen in [_gen_filter_complex, _gen_filter_none]:
+            continue
+        typ = fmap.get(gen)
+        if typ is not None:
+            if property is None:
+                ret = ret + f"    {name} ({typ})\n"
+            else:
+                ret = ret + f"    {name} ({typ}): \"{property}\"\n"
+                pass
+            pass
+        pass
+    ret = ret + "    has (Complex)\n"
+    ret = ret + "    complex (Complex)\n"
+    ret = ret + """
+Returns:
+    SearchContext: A filtered SearchContext.
+
+Examples:
+
+    Match one value::
+
+        surfs = case.surfaces.filter(
+                    iteration="iter-0",
+                    name="my_surface_name"
+                )
+
+    Match multiple values::
+
+        surfs = case.surfaces.filter(
+                    name=["one_name", "another_name"]
+                )
+
+    Get aggregated surfaces with specific operation::
+
+        surfs = case.surfaces.filter(
+                    aggregation="max"
+                )
+
+    Get all aggregated surfaces::
+
+        surfs = case.surfaces.filter(
+                    aggregation=True
+                )
+
+    Get all non-aggregated surfaces::
+
+        surfs = case.surfaces.filter(
+                    aggregation=False
+                )
+
+"""
+    return ret
+
+SearchContext.filter.__doc__ = _gen_filter_doc(_filterspec)
