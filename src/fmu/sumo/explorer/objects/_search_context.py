@@ -271,12 +271,10 @@ class SearchContext:
         sumo: SumoClient,
         must: List = [],
         must_not: List = [],
-        select: List[str] = None,
     ):
         self._sumo = sumo
         self._must = must[:]
         self._must_not = must_not[:]
-        self._select = select
         self._field_values = {}
         self._hits = None
         self._cache = LRUCache(capacity=200)
@@ -855,9 +853,7 @@ class SearchContext:
             if _must_not is not None:
                 must_not.append(_must_not)
 
-        sc = SearchContext(
-            self._sumo, must=must, must_not=must_not, select=self._select
-        )
+        sc = SearchContext(self._sumo, must=must, must_not=must_not)
 
         if "has" in kwargs:
             # Get list of cases matched by current filter set
@@ -870,13 +866,11 @@ class SearchContext:
                     {"terms": {"fmu.case.uuid.keyword": uuids}},
                     kwargs["has"],
                 ],
-                select=self._select,
             )
             uuids = sc._get_field_values("fmu.case.uuid.keyword")
             sc = SearchContext(
                 self._sumo,
                 must=[{"ids": {"values": uuids}}],
-                select=self._select,
             )
 
         return sc
