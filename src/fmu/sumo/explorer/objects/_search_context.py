@@ -31,7 +31,8 @@ def _gen_filter_id():
 
 def _gen_filter_gen(attr):
     """Match property against either single value or list of values.
-If the value given is a boolean, tests for existence or not of the property."""
+    If the value given is a boolean, tests for existence or not of the property.
+    """
 
     def _fn(value):
         if value is None:
@@ -101,7 +102,7 @@ def _gen_filter_bool(attr):
 
 def _gen_filter_complex():
     """Match against user-supplied query, which is a structured
-Elasticsearch query in dictionary form."""
+    Elasticsearch query in dictionary form."""
 
     def _fn(value):
         if value is None:
@@ -199,6 +200,14 @@ def _build_bucket_query(query, field, size):
                 }
             }
         },
+    }
+
+
+def _build_bucket_query_simple(query, field, size):
+    return {
+        "size": 0,
+        "query": query,
+        "aggs": {f"{field}": {"terms": {"field": field, "size": size}}},
     }
 
 
@@ -606,20 +615,26 @@ class SearchContext:
             A List of unique values for a given field
         """
 
-        buckets_per_batch = 10000
-        query = _build_bucket_query(self._query, field, buckets_per_batch)
+        buckets_per_batch = 1000
+
         # fast path: try without Pit
+        query = _build_bucket_query_simple(
+            self._query, field, buckets_per_batch
+        )
         res = self._sumo.post("/search", json=query).json()
-        buckets = res["aggregations"][field]["buckets"]
-        if len(buckets) < buckets_per_batch:
+        other_docs_count = res["aggregations"][field]["sum_other_doc_count"]
+        if other_docs_count == 0:
+            buckets = res["aggregations"][field]["buckets"]
             buckets = [
                 {
-                    "key": bucket["key"][field],
+                    "key": bucket["key"],
                     "doc_count": bucket["doc_count"],
                 }
                 for bucket in buckets
             ]
             return buckets
+
+        query = _build_bucket_query(self._query, field, buckets_per_batch)
         all_buckets = []
         after_key = None
         with Pit(self._sumo, "1m") as pit:
@@ -655,11 +670,30 @@ class SearchContext:
 
         Arguments:
             - field (str): a field in the metadata
+
         Returns:
             A List of unique values for a given field
         """
 
-        buckets_per_batch = 10000
+        buckets_per_batch = 1000
+
+        # fast path: try without Pit
+        query = _build_bucket_query_simple(
+            self._query, field, buckets_per_batch
+        )
+        res = (await self._sumo.post_async("/search", json=query)).json()
+        other_docs_count = res["aggregations"][field]["sum_other_doc_count"]
+        if other_docs_count == 0:
+            buckets = res["aggregations"][field]["buckets"]
+            buckets = [
+                {
+                    "key": bucket["key"],
+                    "doc_count": bucket["doc_count"],
+                }
+                for bucket in buckets
+            ]
+            return buckets
+
         query = _build_bucket_query(self._query, field, buckets_per_batch)
         all_buckets = []
         after_key = None
