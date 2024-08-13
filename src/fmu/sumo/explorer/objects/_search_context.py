@@ -131,7 +131,7 @@ _filterspec = {
     "status": [_gen_filter_gen, "_sumo.status.keyword"],
     "user": [_gen_filter_gen, "fmu.user.keyword"],
     "asset": [_gen_filter_gen, "access.asset.name.keyword"],
-    "field": [_gen_filter_gen, "masterdata.smda.field.keyword"],
+    "field": [_gen_filter_gen, "masterdata.smda.field.identifier.keyword"],
     "stratigraphic": [_gen_filter_bool, "data.stratigraphic"],
     "is_observation": [_gen_filter_bool, "data.is_observation"],
     "is_prediction": [_gen_filter_bool, "data.is_prediction"],
