@@ -159,20 +159,11 @@ filters = _gen_filters(_filterspec)
 
 
 _bucket_spec = {
-    "cases": ["fmu.case.uuid.keyword", "List of unique case uuids."],
     "names": ["data.name.keyword", "List of unique object names."],
     "tagnames": ["data.tagname.keyword", "List of unique object tagnames."],
     "dataformats": [
         "data.format.keyword",
         "List of unique data.format values.",
-    ],
-    "iterations": [
-        "fmu.iteration.name.keyword",
-        "List of unique object iteration names.",
-    ],
-    "realizations": [
-        "fmu.realization.id",
-        "List of unique object realization ids.",
     ],
     "aggregations": [
         "fmu.aggregation.operation.keyword",
@@ -442,7 +433,6 @@ class SearchContext:
             self._maybe_prefetch(self._curr_index)
             res = self.get_object(uuid)
             self._curr_index += 1
-            return self._to_sumo(res)
         else:
             raise StopIteration
 
@@ -459,7 +449,6 @@ class SearchContext:
             await self._maybe_prefetch_async(self._curr_index)
             res = await self.get_object_async(uuid)
             self._curr_index += 1
-            return self._to_sumo(res)
         else:
             raise StopIteration
 
@@ -468,16 +457,14 @@ class SearchContext:
             self._hits = self._search_all()
             pass
         uuid = self._hits[index]
-        obj = self.get_object(uuid)
-        return self._to_sumo(obj)
+        return self.get_object(uuid)
 
     async def getitem_async(self, index):
         if self._hits is None:
             self._hits = await self._search_all_async()
             pass
         uuid = self._hits[index]
-        obj = self.get_object_async(uuid)
-        return self._to_sumo(obj)
+        return self.get_object_async(uuid)
 
     def get_object(self, uuid: str, select: List[str] = None) -> Dict:
         """Get metadata object by uuid
@@ -507,7 +494,7 @@ class SearchContext:
             obj = hits[0]
             self._cache.put(uuid, obj)
 
-        return obj
+        return self._to_sumo(obj)
 
     async def get_object_async(
         self, uuid: str, select: List[str] = None
@@ -540,7 +527,7 @@ class SearchContext:
             obj = hits[0]
             self._cache.put(uuid, obj)
 
-        return obj
+        return self._to_sumo(obj)
 
     def _maybe_prefetch(self, index):
         uuid = self._hits[index]
@@ -768,6 +755,23 @@ class SearchContext:
         }
     }
 
+    def _context_for_class(self, cls):
+        return self.filter(cls=cls)
+
+    @property
+    def cases(self):
+        return self._context_for_class("case")
+
+    @property
+    def iterations(self):
+        """Iterations from current selection."""
+        return objects.Iterations(self)
+
+    @property
+    def realizations(self):
+        """Realizations from current selection."""
+        return objects.Realizations(self)
+
     @property
     def timestamps(self) -> List[str]:
         """List of unique timestamps in SearchContext"""
@@ -876,13 +880,6 @@ class SearchContext:
 
         return sc
 
-    def _context_for_class(self, cls):
-        return self.filter(cls=cls)
-
-    @property
-    def cases(self):
-        return self._context_for_class("case")
-
     @property
     def surfaces(self):
         return self._context_for_class("surface")
@@ -902,6 +899,211 @@ class SearchContext:
     @property
     def dictionaries(self):
         return self._context_for_class("dictionary")
+
+    def _get_object_by_class_and_uuid(self, cls, uuid):
+        obj = self.get_object(uuid)
+        if obj["_source"]["class"] != cls:
+            raise Exception(f"Document of type {cls} not found: {uuid}")
+        return self._to_sumo(obj)
+
+    async def _get_object_by_class_and_uuid_async(self, cls, uuid):
+        obj = self.get_object_async(uuid)
+        if obj["_source"]["class"] != cls:
+            raise Exception(f"Document of type {cls} not found: {uuid}")
+        return self._to_sumo(obj)
+
+    def get_case_by_uuid(self, uuid: str):
+        """Get case object by uuid
+
+        Args:
+            uuid (str): case uuid
+
+        Returns:
+            Case: case object
+        """
+        return self._get_object_by_class_and_uuid("case", uuid)
+
+    async def get_case_by_uuid_async(self, uuid: str):
+        """Get case object by uuid
+
+        Args:
+            uuid (str): case uuid
+
+        Returns:
+            Case: case object
+        """
+        return await self._get_object_by_class_and_uuid_async("case", uuid)
+
+    def _iteration_query(self, uuid):
+        return {
+            "query": {"term": {"fmu.iteration.uuid.keyword": {"value": uuid}}},
+            "size": 1,
+            "_source": {
+                "includes": [
+                    "$schema",
+                    "source",
+                    "version",
+                    "access",
+                    "masterdata",
+                    "fmu.case",
+                    "fmu.iteration",
+                ],
+            },
+        }
+
+    def get_iteration_by_uuid(self, uuid: str):
+        """Get iteration object by uuid
+
+        Args:
+            uuid (str): iteration uuid
+
+        Returns: iteration object
+        """
+        res = self._sumo.post(
+            "/search", json=self._iteration_query(uuid)
+        ).json()
+        obj = res["hits"]["hits"][0]
+        obj["_id"] = uuid
+        return objects.Iteration(self._sumo, obj)
+
+    async def get_iteration_by_uuid_async(self, uuid: str):
+        """Get iteration object by uuid
+
+        Args:
+            uuid (str): iteration uuid
+
+        Returns: iteration object
+        """
+        res = (
+            await self._sumo.post("/search", json=self._iteration_query(uuid))
+        ).json()
+        obj = res["hits"]["hits"][0]
+        obj["_id"] = uuid
+        return objects.Iteration(self._sumo, obj)
+
+    def _realization_query(self, uuid):
+        return {
+            "query": {
+                "term": {"fmu.realization.uuid.keyword": {"value": uuid}}
+            },
+            "size": 1,
+            "_source": {
+                "includes": [
+                    "$schema",
+                    "source",
+                    "version",
+                    "access",
+                    "masterdata",
+                    "fmu.case",
+                    "fmu.iteration",
+                    "fmu.realization",
+                ],
+            },
+        }
+
+    def get_realization_by_uuid(self, uuid: str):
+        """Get realization object by uuid
+
+        Args:
+            uuid (str): realization uuid
+
+        Returns: realization object
+        """
+        res = self._sumo.post(
+            "/search", json=self._realization_query(uuid)
+        ).json()
+        obj = res["hits"]["hits"][0]
+        obj["_id"] = uuid
+        return objects.Realization(self._sumo, obj)
+
+    async def get_realization_by_uuid_async(self, uuid: str):
+        """Get realization object by uuid
+
+        Args:
+            uuid (str): realization uuid
+
+        Returns: realization object
+        """
+        res = (
+            await self._sumo.post(
+                "/search", json=self._realization_query(uuid)
+            )
+        ).json()
+        obj = res["hits"]["hits"][0]
+        obj["_id"] = uuid
+        return objects.Realization(self._sumo, obj)
+
+    def get_surface_by_uuid(self, uuid: str):
+        """Get surface object by uuid
+
+        Args:
+            uuid (str): surface uuid
+
+        Returns:
+            Surface: surface object
+        """
+        metadata = self.get_object(uuid, _CHILD_FIELDS)
+        return objects.Surface(self._sumo, metadata)
+
+    async def get_surface_by_uuid_async(self, uuid: str):
+        """Get surface object by uuid
+
+        Args:
+            uuid (str): surface uuid
+
+        Returns:
+            Surface: surface object
+        """
+        metadata = await self.get_object_async(uuid, _CHILD_FIELDS)
+        return objects.Surface(self._sumo, metadata)
+
+    def get_polygons_by_uuid(self, uuid: str):
+        """Get polygons object by uuid
+
+        Args:
+            uuid (str): polygons uuid
+
+        Returns:
+            Polygons: polygons object
+        """
+        metadata = self.get_object(uuid, _CHILD_FIELDS)
+        return objects.Polygons(self._sumo, metadata)
+
+    async def get_polygons_by_uuid_async(self, uuid: str):
+        """Get polygons object by uuid
+
+        Args:
+            uuid (str): polygons uuid
+
+        Returns:
+            Polygons: polygons object
+        """
+        metadata = await self.get_object_async(uuid, _CHILD_FIELDS)
+        return objects.Polygons(self._sumo, metadata)
+
+    def get_table_by_uuid(self, uuid: str):
+        """Get table object by uuid
+
+        Args:
+            uuid (str): table uuid
+
+        Returns:
+            Table: table object
+        """
+        metadata = self.get_object(uuid, _CHILD_FIELDS)
+        return objects.Table(self._sumo, metadata)
+
+    async def get_table_by_uuid_async(self, uuid: str):
+        """Get table object by uuid
+
+        Args:
+            uuid (str): table uuid
+
+        Returns:
+            Table: table object
+        """
+        metadata = await self.get_object_async(uuid, _CHILD_FIELDS)
+        return objects.Table(self._sumo, metadata)
 
     def _verify_aggregation_operation(self):
         query = {
