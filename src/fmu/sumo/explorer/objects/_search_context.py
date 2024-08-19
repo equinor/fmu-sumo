@@ -953,8 +953,6 @@ class SearchContext:
             "object_ids": uuids,
             "operations": [operation],
         }
-        if columns is not None:
-            spec["columns"] = columns
         del prototype["_source"]["fmu"]["realization"]
         del prototype["_source"]["_sumo"]
         del prototype["_source"]["file"]
@@ -967,14 +965,15 @@ class SearchContext:
             "realization_ids": rids,
             "operation": operation,
         }
-        cols = columns[:]
-        table_index = prototype["_source"]["data"]["table_index"]
-        if table_index is not None and len(table_index) != 0 and table_index[0] not in cols:
-            cols.insert(0, table_index[0])
+        if columns is not None:
+            spec["columns"] = columns
+            cols = columns[:]
+            table_index = prototype["_source"]["data"]["table_index"]
+            if table_index is not None and len(table_index) != 0 and table_index[0] not in cols:
+                cols.insert(0, table_index[0])
+                pass
+            prototype["_source"]["data"]["spec"]["columns"] = cols
             pass
-        prototype["_source"]["data"]["spec"]["columns"] = cols
-        print(json.dumps(spec, indent=2))
-
         try:
             res = self._sumo.post("/aggregations", json=spec)
         except httpx.HTTPStatusError as ex:
