@@ -13,17 +13,16 @@ from warnings import warn
 class Table(Child):
     """Class representing a table object in Sumo"""
 
-    def __init__(self, sumo: SumoClient, metadata: dict) -> None:
+    def __init__(self, sumo: SumoClient, metadata: dict, blob=None) -> None:
         """
         Args:
             sumo (SumoClient): connection to Sumo
             metadata: (dict): child object metadata
         """
-        super().__init__(sumo, metadata)
+        super().__init__(sumo, metadata, blob)
         self._dataframe = None
         self._arrowtable = None
         self._logger = logging.getLogger("__name__" + ".Table")
-        self._blob = None
 
     def _get_blob(self):
         if self._blob is None:

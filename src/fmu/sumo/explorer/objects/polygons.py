@@ -10,13 +10,13 @@ from warnings import warn
 class Polygons(Child):
     """Class representig a polygons object in Sumo"""
 
-    def __init__(self, sumo: SumoClient, metadata: Dict) -> None:
+    def __init__(self, sumo: SumoClient, metadata: Dict, blob=None) -> None:
         """
         Args:
             sumo (SumoClient): connection to Sumo
             metadata (dict): polygon metadata
         """
-        super().__init__(sumo, metadata)
+        super().__init__(sumo, metadata, blob)
 
     def to_pandas(self) -> pd.DataFrame:
         """Get polygons object as a DataFrame

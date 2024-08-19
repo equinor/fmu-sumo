@@ -12,6 +12,7 @@ _prop_desc = [
     ("casename", "fmu.case.name", "Object case name"),
     ("content", "data.content", "Content"),
     ("tagname", "data.tagname", "Object tagname"),
+    ("columns", "data.spec.columns", "Object table columns"),
     ("stratigraphic", "data.stratigraphic", "Object stratigraphic"),
     ("vertical_domain", "data.vertical_domain", "Object vertical domain"),
     ("context", "fmu.context.stage", "Object context"),
@@ -34,7 +35,7 @@ _prop_desc = [
 class Child(Document):
     """Class representing a child object in Sumo"""
 
-    def __init__(self, sumo: SumoClient, metadata: Dict) -> None:
+    def __init__(self, sumo: SumoClient, metadata: Dict, blob=None) -> None:
         """
         Args:
             sumo (SumoClient): connection to Sumo
@@ -42,7 +43,7 @@ class Child(Document):
         """
         super().__init__(metadata)
         self._sumo = sumo
-        self._blob = None
+        self._blob = blob
 
     @property
     def blob(self) -> BytesIO:

@@ -1,6 +1,9 @@
 import json
+import uuid
+import httpx
 from typing import List, Dict, Tuple
 from datetime import datetime
+from io import BytesIO
 from sumo.wrapper import SumoClient
 import fmu.sumo.explorer.objects as objects
 from fmu.sumo.explorer.cache import LRUCache
@@ -156,6 +159,7 @@ filters = _gen_filters(_filterspec)
 
 
 _bucket_spec = {
+    "cases": ["fmu.case.uuid.keyword", "List of unique case uuids."],
     "names": ["data.name.keyword", "List of unique object names."],
     "tagnames": ["data.tagname.keyword", "List of unique object tagnames."],
     "dataformats": [
@@ -296,10 +300,12 @@ class SearchContext:
                     "bool": {"must": self._must, "must_not": self._must_not}
                 }
 
-    def _to_sumo(self, obj):
+    def _to_sumo(self, obj, blob=None):
         cls = obj["_source"]["class"]
+        if cls == "case":
+            return objects.Case(self._sumo, obj)
+        # ELSE
         constructor = {
-            "case": objects.Case,
             "cube": objects.Cube,
             "dictionary": objects.Dictionary,
             "polygons": objects.Polygons,
@@ -307,7 +313,7 @@ class SearchContext:
             "table": objects.Table,
         }.get(cls)
         assert constructor is not None
-        return constructor(self._sumo, obj)
+        return constructor(self._sumo, obj, blob)
 
     def __len__(self):
         if self._hits is not None:
@@ -364,8 +370,8 @@ class SearchContext:
             pass
         return all_hits
 
-    def _search_all(self):
-        return self.__search_all(query=self._query, size=1000, select=False)
+    def _search_all(self, select=False):
+        return self.__search_all(query=self._query, size=1000, select=select)
 
     async def __search_all_async(self, query, size=1000, select=False):
         all_hits = []
@@ -406,9 +412,9 @@ class SearchContext:
             pass
         return all_hits
 
-    async def _search_all_async(self):
+    async def _search_all_async(self, select=False):
         return await __search_all_async(
-            query=self._query, size=1000, select=False
+            query=self._query, size=1000, select=select
         )
 
     @property
@@ -755,11 +761,6 @@ class SearchContext:
 
         return self._field_values[field]
 
-    @property
-    def cases(self):
-        """Cases in Sumo"""
-        return self.filter(cls="case")
-
     _timestamp_query = {
         "bool": {
             "must": [{"exists": {"field": "data.time.t0"}}],
@@ -901,6 +902,89 @@ class SearchContext:
     @property
     def dictionaries(self):
         return self._context_for_class("dictionary")
+
+    def _verify_aggregation_operation(self):
+        query = {
+            "query": self._query,
+            "size": 1,
+            "track_total_hits": True,
+            "aggs": {
+                k: {"terms": {"field": k + ".keyword", "size": 1}}
+                for k in [
+                    "fmu.case.uuid",
+                    "class",
+                    "fmu.iteration.name",
+                    "data.name",
+                    "data.tagname",
+                    "data.content",
+                ]
+            },
+        }
+        sres = self._sumo.post("/search", json=query).json()
+        prototype = sres["hits"]["hits"][0]
+        conflicts = [
+            k
+            for (k, v) in sres["aggregations"].items()
+            if (
+                ("sum_other_doc_count" in v) and (v["sum_other_doc_count"] > 0)
+            )
+        ]
+        if len(conflicts) > 0:
+            raise Exception(f"Conflicting values for {conflicts}")
+
+        hits = self._search_all(select=["fmu.realization.id"])
+
+        if sres["hits"]["total"]["value"] != len(hits):
+            raise Exception(
+                f"Expected {len(object_ids)} hits; got {sres['hits']['total']['value']}"
+            )
+        if any(
+            [hit["_source"]["fmu"].get("realization") is None for hit in hits]
+        ):
+            raise Exception("Selection contains non-realization data.")
+
+        uuids = [hit["_id"] for hit in hits]
+        rids = [hit["_source"]["fmu"]["realization"]["id"] for hit in hits]
+        return prototype, uuids, rids
+
+    def aggregate(self, columns=None, operation=None):
+        prototype, uuids, rids = self._verify_aggregation_operation()
+        spec = {
+            "object_ids": uuids,
+            "operations": [operation],
+        }
+        if columns is not None:
+            spec["columns"] = columns
+        del prototype["_source"]["fmu"]["realization"]
+        del prototype["_source"]["_sumo"]
+        del prototype["_source"]["file"]
+        del prototype["_source"]["access"]
+        if "context" in prototype["_source"]["fmu"]:
+            prototype["_source"]["fmu"]["context"]["stage"] = "iteration"
+            pass
+        prototype["_source"]["fmu"]["aggregation"] = {
+            "id": str(uuid.uuid4()),
+            "realization_ids": rids,
+            "operation": operation,
+        }
+        cols = columns[:]
+        table_index = prototype["_source"]["data"]["table_index"]
+        if table_index is not None and len(table_index) != 0 and table_index[0] not in cols:
+            cols.insert(0, table_index[0])
+            pass
+        prototype["_source"]["data"]["spec"]["columns"] = cols
+        print(json.dumps(spec, indent=2))
+
+        try:
+            res = self._sumo.post("/aggregations", json=spec)
+        except httpx.HTTPStatusError as ex:
+            print(ex.response.reason_phrase)
+            print(ex.response.text)
+            raise ex
+        blob = BytesIO(res.content)
+        res = self._to_sumo(prototype, blob)
+        res._blob = blob
+        return res
 
 
 def _gen_filter_doc(spec):
