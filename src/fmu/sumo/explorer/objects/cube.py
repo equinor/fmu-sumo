@@ -16,7 +16,7 @@ except ImportError:
 class Cube(Child):
     """Class representig a seismic cube object in Sumo"""
 
-    def __init__(self, sumo: SumoClient, metadata: Dict) -> None:
+    def __init__(self, sumo: SumoClient, metadata: Dict, blob=None) -> None:
         """
         Args:
             sumo (SumoClient): connection to Sumo

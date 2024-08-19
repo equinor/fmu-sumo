@@ -11,7 +11,7 @@ class Dictionary(Child):
 
     _parsed: dict
 
-    def __init__(self, sumo: SumoClient, metadata: Dict) -> None:
+    def __init__(self, sumo: SumoClient, metadata: Dict, blob=None) -> None:
         """
         Args:
             sumo (SumoClient): connection to Sumo
@@ -19,7 +19,7 @@ class Dictionary(Child):
         """
         self._parsed = None
 
-        super().__init__(sumo, metadata)
+        super().__init__(sumo, metadata, blob)
 
     def parse(self) -> Dict:
         if self._parsed is None:
