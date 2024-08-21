@@ -132,7 +132,7 @@ _filterspec = {
     "vertical_domain": [_gen_filter_gen, "data.vertical_domain.keyword"],
     "content": [_gen_filter_gen, "data.content.keyword"],
     "status": [_gen_filter_gen, "_sumo.status.keyword"],
-    "user": [_gen_filter_gen, "fmu.user.keyword"],
+    "user": [_gen_filter_gen, "fmu.case.user.id.keyword"],
     "asset": [_gen_filter_gen, "access.asset.name.keyword"],
     "field": [_gen_filter_gen, "masterdata.smda.field.identifier.keyword"],
     "stratigraphic": [_gen_filter_bool, "data.stratigraphic"],
@@ -180,6 +180,8 @@ _bucket_spec = {
     ],
     "contents": ["data.content.keyword", "List of unique contents."],
     "columns": ["data.spec.columns.keyword", "List of unique column names."],
+    "statuses": ["_sumo.status.keyword", "List of unique case statuses."],
+    "users": ["fmu.case.user.id.keyword", "List of unique user names."]
 }
 
 
@@ -431,8 +433,8 @@ class SearchContext:
         if self._curr_index < len(self._hits):
             uuid = self._hits[self._curr_index]
             self._maybe_prefetch(self._curr_index)
-            res = self.get_object(uuid)
             self._curr_index += 1
+            return self.get_object(uuid)
         else:
             raise StopIteration
 
@@ -447,8 +449,8 @@ class SearchContext:
         if self._curr_index < len(self._hits):
             uuid = self._hits[self._curr_index]
             await self._maybe_prefetch_async(self._curr_index)
-            res = await self.get_object_async(uuid)
             self._curr_index += 1
+            return await self.get_object_async(uuid)
         else:
             raise StopIteration
 
@@ -538,7 +540,7 @@ class SearchContext:
         hits = self.__search_all(
             {"ids": {"values": uuids}},
             select={
-                "exclude": ["data.spec.columns", "fmu.realization.parameters"],
+                "excludes": ["data.spec.columns", "fmu.realization.parameters"],
             },
         )
         if len(hits) == 0:
@@ -556,7 +558,7 @@ class SearchContext:
         hits = await self.__search_all_async(
             {"ids": {"values": uuids}},
             select={
-                "exclude": ["data.spec.columns", "fmu.realization.parameters"],
+                "excludes": ["data.spec.columns", "fmu.realization.parameters"],
             },
         )
         if len(hits) == 0:
@@ -902,13 +904,13 @@ class SearchContext:
 
     def _get_object_by_class_and_uuid(self, cls, uuid):
         obj = self.get_object(uuid)
-        if obj["_source"]["class"] != cls:
+        if obj.metadata["class"] != cls:
             raise Exception(f"Document of type {cls} not found: {uuid}")
         return self._to_sumo(obj)
 
     async def _get_object_by_class_and_uuid_async(self, cls, uuid):
         obj = self.get_object_async(uuid)
-        if obj["_source"]["class"] != cls:
+        if obj.metadata["class"] != cls:
             raise Exception(f"Document of type {cls} not found: {uuid}")
         return self._to_sumo(obj)
 
