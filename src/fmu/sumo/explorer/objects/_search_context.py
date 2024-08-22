@@ -1,6 +1,7 @@
 import json
 import uuid
 import httpx
+import deprecation
 from typing import List, Dict, Tuple
 from datetime import datetime
 from io import BytesIO
@@ -406,7 +407,7 @@ class SearchContext:
         return all_hits
 
     async def _search_all_async(self, select=False):
-        return await __search_all_async(
+        return await self.__search_all_async(
             query=self._query, size=1000, select=select
         )
 
@@ -466,7 +467,7 @@ class SearchContext:
             self._hits = await self._search_all_async()
             pass
         uuid = self._hits[index]
-        return self.get_object_async(uuid)
+        return await self.get_object_async(uuid)
 
     def get_object(self, uuid: str, select: List[str] = None) -> Dict:
         """Get metadata object by uuid
@@ -906,13 +907,13 @@ class SearchContext:
         obj = self.get_object(uuid)
         if obj.metadata["class"] != cls:
             raise Exception(f"Document of type {cls} not found: {uuid}")
-        return self._to_sumo(obj)
+        return obj
 
     async def _get_object_by_class_and_uuid_async(self, cls, uuid):
         obj = self.get_object_async(uuid)
         if obj.metadata["class"] != cls:
             raise Exception(f"Document of type {cls} not found: {uuid}")
-        return self._to_sumo(obj)
+        return obj
 
     def get_case_by_uuid(self, uuid: str):
         """Get case object by uuid
@@ -1188,6 +1189,34 @@ class SearchContext:
         res = self._to_sumo(prototype, blob)
         res._blob = blob
         return res
+
+    @deprecation.deprecated(details="Use the method 'aggregate' instead, with parameter 'operation'.")
+    def min(self):
+        return self.aggregate(operation="min")
+
+    @deprecation.deprecated(details="Use the method 'aggregate' instead, with parameter 'operation'.")
+    def max(self):
+        return self.aggregate(operation="max")
+
+    @deprecation.deprecated(details="Use the method 'aggregate' instead, with parameter 'operation'.")
+    def mean(self):
+        return self.aggregate(operation="mean")
+
+    @deprecation.deprecated(details="Use the method 'aggregate' instead, with parameter 'operation'.")
+    def std(self):
+        return self.aggregate(operation="std")
+
+    @deprecation.deprecated(details="Use the method 'aggregate' instead, with parameter 'operation'.")
+    def p10(self):
+        return self.aggregate(operation="p10")
+
+    @deprecation.deprecated(details="Use the method 'aggregate' instead, with parameter 'operation'.")
+    def p50(self):
+        return self.aggregate(operation="p50")
+
+    @deprecation.deprecated(details="Use the method 'aggregate' instead, with parameter 'operation'.")
+    def p90(self):
+        return self.aggregate(operation="p90")
 
 
 def _gen_filter_doc(spec):
