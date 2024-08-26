@@ -134,8 +134,12 @@ class SurfaceCollection(ChildCollection):
             object_ids = list(map(lambda obj: obj["_id"], objects))
 
             res = self._sumo.post(
-                "/surface/aggregate",
-                json={"operation": [operation], "object_ids": object_ids},
+                "/aggregations",
+                json={
+                    "operation": [operation],
+                    "object_ids": object_ids,
+                    "class": "surface",
+                },
             )
 
             self._aggregation_cache[operation] = surface_from_file(
@@ -152,8 +156,12 @@ class SurfaceCollection(ChildCollection):
             object_ids = list(map(lambda obj: obj["_id"], objects))
 
             res = await self._sumo.post_async(
-                "/surface/aggregate",
-                json={"operation": [operation], "object_ids": object_ids},
+                "/aggregations",
+                json={
+                    "operations": [operation],
+                    "object_ids": object_ids,
+                    "class": "surface",
+                },
             )
 
             self._aggregation_cache[operation] = surface_from_file(
