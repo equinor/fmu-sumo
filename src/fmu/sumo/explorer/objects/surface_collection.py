@@ -136,7 +136,7 @@ class SurfaceCollection(ChildCollection):
             res = self._sumo.post(
                 "/aggregations",
                 json={
-                    "operation": [operation],
+                    "operations": [operation],
                     "object_ids": object_ids,
                     "class": "surface",
                 },
