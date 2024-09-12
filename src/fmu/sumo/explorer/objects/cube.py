@@ -7,11 +7,6 @@ from fmu.sumo.explorer.objects._child import Child
 import sys
 import warnings
 
-try:
-    import openvds
-except ImportError:
-    warnings.warn("OpenVDS is missing. Some Cube methods will not work.")
-
 
 class Cube(Child):
     """Class representig a seismic cube object in Sumo"""
@@ -84,6 +79,11 @@ class Cube(Child):
 
     @property
     def openvds_handle(self):
+        try:
+            import openvds
+        except ModuleNotFoundError:
+            raise RuntimeError("Unable to import openvds; probably not installed.")
+
         if self._url is None:
             self._populate_url()
 
@@ -96,6 +96,11 @@ class Cube(Child):
 
     @property
     async def openvds_handle_async(self):
+        try:
+            import openvds
+        except ModuleNotFoundError:
+            raise RuntimeError("Unable to import openvds; probably not installed.")
+
         if self._url is None:
             await self._populate_url_async()
 

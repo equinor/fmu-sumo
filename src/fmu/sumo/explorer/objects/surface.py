@@ -1,7 +1,6 @@
 """Module containg class for surface"""
 
 from typing import Dict
-from xtgeo import RegularSurface, surface_from_file
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._child import Child
 
@@ -18,23 +17,33 @@ class Surface(Child):
         """
         super().__init__(sumo, metadata, blob)
 
-    def to_regular_surface(self) -> RegularSurface:
+    def to_regular_surface(self):
         """Get surface object as a RegularSurface
 
         Returns:
             RegularSurface: A RegularSurface object
         """
         try:
+            from xtgeo import surface_from_file
+        except ModuleNotFoundError:
+            raise RuntimeError("Unable to import xtgeo; probably not installed.")
+
+        try:
             return surface_from_file(self.blob)
         except TypeError as type_err:
             raise TypeError(f"Unknown format: {self.format}") from type_err
 
-    async def to_regular_surface_async(self) -> RegularSurface:
+    async def to_regular_surface_async(self):
         """Get surface object as a RegularSurface
 
         Returns:
             RegularSurface: A RegularSurface object
         """
+        try:
+            from xtgeo import surface_from_file
+        except ModuleNotFoundError:
+            raise RuntimeError("Unable to import xtgeo; probably not installed.")
+
         try:
             return surface_from_file(await self.blob_async)
         except TypeError as type_err:
