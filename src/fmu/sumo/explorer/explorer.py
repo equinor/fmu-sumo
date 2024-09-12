@@ -57,6 +57,10 @@ class Explorer(SearchContext):
                 DeprecationWarning,
             )
 
+    @property
+    def cases(self):
+        return self._context_for_class("case")
+
     def get_permissions(self, asset: str = None):
         """Get permissions
 

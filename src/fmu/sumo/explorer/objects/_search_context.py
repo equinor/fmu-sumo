@@ -763,7 +763,8 @@ class SearchContext:
 
     @property
     def cases(self):
-        return self._context_for_class("case")
+        """Cases from current selection."""
+        return objects.Cases(self)
 
     @property
     def iterations(self):
