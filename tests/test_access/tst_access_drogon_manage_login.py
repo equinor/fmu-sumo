@@ -104,7 +104,7 @@ def test_aggregations_bulk(explorer: Explorer):
     assert len(cases) > 0
     case = None
     for c in cases:
-        if len(c.get_realizations()) > 1 and len(c.surfaces) > 40:
+        if len(c.realizations) > 1 and len(c.surfaces) > 40:
             case = c
             break
     assert case
@@ -130,7 +130,7 @@ def test_aggregations_fast(explorer: Explorer):
     case = None
     for c in cases:
         if (
-            len(c.get_realizations()) > 1
+            len(c.realizations) > 1
             and len(c.surfaces) > 40
             and len(c.iterations) == 1
             and len(
