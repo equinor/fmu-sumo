@@ -114,7 +114,7 @@ def test_aggregate_bulk(explorer: Explorer):
         "operations": ["min"],
         "case_uuid": case_uuid,
         "class": "surface",
-        "iteration_name": case.iterations[0].get("name"),
+        "iteration_name": case.iterations[0].name,
     }
     response = explorer._sumo.post(f"/aggregations", json=body)
     print(response.status_code)
@@ -160,7 +160,7 @@ def test_aggregations_fast(explorer: Explorer):
         "operations": ["min"],
         "object_ids": surface_uuids,
         "class": "surface",
-        "iteration_name": case.iterations[0].get("name"),
+        "iteration_name": case.iterations[0].name,
     }
     response = explorer._sumo.post(f"/aggregations", json=body)
     print("Response status code:", response.status_code)

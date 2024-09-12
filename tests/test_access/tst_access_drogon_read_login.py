@@ -139,7 +139,7 @@ def test_aggregations_fast(explorer: Explorer):
         "operations": ["min"],
         "object_ids": surface_uuids,
         "class": "surface",
-        "iteration_name": case.iterations[0].get("name"),
+        "iteration_name": case.iterations[0].name,
     }
     print("About to trigger fast-aggregation on case", case_uuid)
     print("using body", body)
@@ -167,7 +167,7 @@ def test_aggregate_bulk(explorer: Explorer):
         "operations": ["min"],
         "case_uuid": case_uuid,
         "class": "surface",
-        "iteration_name": case.iterations[0].get("name"),
+        "iteration_name": case.iterations[0].name,
     }
     print("About to trigger bulk aggregation on case", case_uuid)
     print("using body", body, " this should raise exception")
