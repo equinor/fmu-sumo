@@ -541,7 +541,7 @@ class SearchContext:
         hits = self.__search_all(
             {"ids": {"values": uuids}},
             select={
-                "excludes": ["data.spec.columns", "fmu.realization.parameters"],
+                "excludes": ["fmu.realization.parameters"],
             },
         )
         if len(hits) == 0:
@@ -559,7 +559,7 @@ class SearchContext:
         hits = await self.__search_all_async(
             {"ids": {"values": uuids}},
             select={
-                "excludes": ["data.spec.columns", "fmu.realization.parameters"],
+                "excludes": ["fmu.realization.parameters"],
             },
         )
         if len(hits) == 0:
