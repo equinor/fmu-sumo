@@ -1,5 +1,19 @@
 """Contains class for one document"""
+
+import re
 from typing import List, Dict
+
+_path_split_rx = re.compile(r"\]\.|\.|\[")
+
+
+def _splitpath(path):
+    parts = _path_split_rx.split(path)
+    return [int(x) if re.match(r"\d+", x) else x for x in parts]
+
+
+def _makeprop(attribute):
+    path = _splitpath(attribute)
+    return lambda self: self._get_property(path)
 
 
 class Document:
@@ -28,10 +42,10 @@ class Document:
         return self._metadata
 
     def _get_property(self, path: List[str]):
-        curr = self._metadata.copy()
+        curr = self._metadata
 
         for key in path:
-            if key in curr:
+            if (isinstance(curr, list) and key < len(curr)) or key in curr:
                 curr = curr[key]
             else:
                 return None
@@ -40,3 +54,8 @@ class Document:
 
     def __getitem__(self, key: str):
         return self._metadata[key]
+
+    @staticmethod
+    def map_properties(cls, propmap):
+        for name, attribute, doc in propmap:
+            setattr(cls, name, property(_makeprop(attribute), None, None, doc))

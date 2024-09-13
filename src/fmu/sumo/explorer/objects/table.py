@@ -1,4 +1,5 @@
 """module containing class for table"""
+
 import logging
 import pandas as pd
 import pyarrow as pa
@@ -7,22 +8,22 @@ import pyarrow.feather as pf
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._child import Child
 from warnings import warn
+from typing import Dict
 
 
 class Table(Child):
     """Class representing a table object in Sumo"""
 
-    def __init__(self, sumo: SumoClient, metadata: dict) -> None:
+    def __init__(self, sumo: SumoClient, metadata: Dict, blob=None) -> None:
         """
         Args:
             sumo (SumoClient): connection to Sumo
             metadata: (dict): child object metadata
         """
-        super().__init__(sumo, metadata)
+        super().__init__(sumo, metadata, blob)
         self._dataframe = None
         self._arrowtable = None
         self._logger = logging.getLogger("__name__" + ".Table")
-        self._blob = None
 
     def _get_blob(self):
         if self._blob is None:
@@ -49,7 +50,9 @@ class Table(Child):
             elif self.dataformat == "arrow":
                 dataframe = pf.read_feather(blob)
             else:
-                raise TypeError(f"Don't know how to convert a blob of format {self.dataformat} to a pandas table.")
+                raise TypeError(
+                    f"Don't know how to convert a blob of format {self.dataformat} to a pandas table."
+                )
         except Exception as ex0:
             try:
                 dataframe = pd.read_csv(blob)
@@ -60,7 +63,9 @@ class Table(Child):
                     try:
                         dataframe = pf.read_feather(blob)
                     except Exception as ex:
-                        raise TypeError(f"Unable to convert a blob of format {self.dataformat} to pandas table; tried csv, parquet and feather.")
+                        raise TypeError(
+                            f"Unable to convert a blob of format {self.dataformat} to pandas table; tried csv, parquet and feather."
+                        )
                     pass
                 pass
             pass
@@ -95,20 +100,18 @@ class Table(Child):
     def _construct_arrow_from_blob(self, blob):
         try:
             if self.dataformat == "csv":
-                arrowtable = pa.Table.from_pandas(
-                    pd.read_csv(blob)
-                )
+                arrowtable = pa.Table.from_pandas(pd.read_csv(blob))
             elif self.dataformat == "parquet":
                 arrowtable = pq.read_table(blob)
             elif self.dataformat == "arrow":
                 arrowtable = pf.read_table(blob)
             else:
-                raise TypeError(f"Don't know how to convert a blob of format {self.dataformat} to a pandas table.")
+                raise TypeError(
+                    f"Don't know how to convert a blob of format {self.dataformat} to a pandas table."
+                )
         except Exception as ex0:
             try:
-                arrowtable = pa.Table.from_pandas(
-                    pd.read_csv(blob)
-                )
+                arrowtable = pa.Table.from_pandas(pd.read_csv(blob))
             except Exception as ex:
                 try:
                     arrowtable = pq.read_table(blob)
@@ -116,7 +119,9 @@ class Table(Child):
                     try:
                         arrowtable = pf.read_table(selfblob)
                     except Exception as ex:
-                        raise TypeError(f"Unable to convert a blob of format {self.dataformat} to arrow; tried csv, parquet and feather.")
+                        raise TypeError(
+                            f"Unable to convert a blob of format {self.dataformat} to arrow; tried csv, parquet and feather."
+                        )
                     pass
                 pass
             pass

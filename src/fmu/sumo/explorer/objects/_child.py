@@ -5,11 +5,37 @@ from io import BytesIO
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._document import Document
 
+_prop_desc = [
+    ("name", "data.name", "Object name"),
+    ("dataname", "data.name", "Object name"),
+    ("classname", "class.name", "Object class name"),
+    ("casename", "fmu.case.name", "Object case name"),
+    ("content", "data.content", "Content"),
+    ("tagname", "data.tagname", "Object tagname"),
+    ("columns", "data.spec.columns", "Object table columns"),
+    ("stratigraphic", "data.stratigraphic", "Object stratigraphic"),
+    ("vertical_domain", "data.vertical_domain", "Object vertical domain"),
+    ("context", "fmu.context.stage", "Object context"),
+    ("iteration", "fmu.iteration.name", "Object iteration"),
+    ("realization", "fmu.realization.id", "Object realization"),
+    (
+        "aggregation",
+        "fmu.aggregation.operation",
+        "Object aggregation operation",
+    ),
+    ("stage", "fmu.context.stage", "Object stage"),
+    ("format", "data.format", "Object file format"),
+    ("dataformat", "data.format", "Object file format"),
+    ("relative_path", "file.relative_path", "Object relative file path"),
+    ("bbox", "data.bbox", "Object boundary-box data"),
+    ("spec", "data.spec", "Object spec data"),
+]
+
 
 class Child(Document):
     """Class representing a child object in Sumo"""
 
-    def __init__(self, sumo: SumoClient, metadata: Dict) -> None:
+    def __init__(self, sumo: SumoClient, metadata: Dict, blob=None) -> None:
         """
         Args:
             sumo (SumoClient): connection to Sumo
@@ -17,73 +43,7 @@ class Child(Document):
         """
         super().__init__(metadata)
         self._sumo = sumo
-        self._blob = None
-
-    @property
-    def name(self) -> str:
-        """Object name"""
-        return self._get_property(["data", "name"])
-
-    @property
-    def content(self) -> str:
-        """Content"""
-        return self._get_property(["data", "content"])
-
-    @property
-    def tagname(self) -> str:
-        """Object tagname"""
-        return self._get_property(["data", "tagname"])
-
-    @property
-    def stratigraphic(self) -> str:
-        """Object stratigraphic"""
-        return self._get_property(["data", "stratigraphic"])
-
-    @property
-    def vertical_domain(self) -> str:
-        """Object vertical_domain"""
-        return self._get_property(["data", "vertical_domain"])
-
-    @property
-    def context(self) -> str:
-        """Object context"""
-        return self._get_property(["fmu", "context", "stage"])
-
-    @property
-    def iteration(self) -> int:
-        """Object iteration"""
-        return self._get_property(["fmu", "iteration", "name"])
-
-    @property
-    def realization(self) -> int:
-        """Object realization"""
-        return self._get_property(["fmu", "realization", "id"])
-
-    @property
-    def aggregation(self) -> str:
-        """Object aggregation operation"""
-        return self._get_property(["fmu", "aggregation", "operation"])
-
-    @property
-    def stage(self) -> str:
-        """Object stage"""
-        return self._get_property(["fmu", "context", "stage"])
-
-    @property
-    def format(self) -> str:
-        """Object file format"""
-        # (Legacy) alias for `dataformat`. Deprecate at some point?
-        return self.dataformat
-
-    @property
-    def dataformat(self) -> str:
-        """Object file format"""
-        return self._get_property(["data", "format"])
-
-    @property
-    def relative_path(self) -> str:
-        """Object relative file path"""
-        return self._get_property(["file", "relative_path"])
+        self._blob = blob
 
     @property
     def blob(self) -> BytesIO:
@@ -102,3 +62,28 @@ class Child(Document):
             self._blob = BytesIO(res.content)
 
         return self._blob
+
+    @property
+    def timestamp(self) -> str:
+        """Object timestmap data"""
+        t0 = self._get_property(["data", "time", "t0", "value"])
+        t1 = self._get_property(["data", "time", "t1", "value"])
+
+        if t0 is not None and t1 is None:
+            return t0
+
+        return None
+
+    @property
+    def interval(self) -> str:
+        """Object interval data"""
+        t0 = self._get_property(["data", "time", "t0", "value"])
+        t1 = self._get_property(["data", "time", "t1", "value"])
+
+        if t0 is not None and t1 is not None:
+            return (t0, t1)
+
+        return None
+
+
+Child.map_properties(Child, _prop_desc)

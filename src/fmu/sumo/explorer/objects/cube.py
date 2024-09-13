@@ -1,4 +1,5 @@
 """Module containing class for cube object"""
+
 import json
 from typing import Dict
 from sumo.wrapper import SumoClient
@@ -6,22 +7,17 @@ from fmu.sumo.explorer.objects._child import Child
 import sys
 import warnings
 
-try:
-    import openvds
-except ImportError:
-    warnings.warn("OpenVDS is missing. Some Cube methods will not work.")
-
 
 class Cube(Child):
     """Class representig a seismic cube object in Sumo"""
 
-    def __init__(self, sumo: SumoClient, metadata: Dict) -> None:
+    def __init__(self, sumo: SumoClient, metadata: Dict, blob=None) -> None:
         """
         Args:
             sumo (SumoClient): connection to Sumo
             metadata (dict): cube metadata
         """
-        super().__init__(sumo, metadata)
+        super().__init__(sumo, metadata, blob)
         self._url = None
         self._sas = None
 
@@ -83,6 +79,11 @@ class Cube(Child):
 
     @property
     def openvds_handle(self):
+        try:
+            import openvds
+        except ModuleNotFoundError:
+            raise RuntimeError("Unable to import openvds; probably not installed.")
+
         if self._url is None:
             self._populate_url()
 
@@ -95,6 +96,11 @@ class Cube(Child):
 
     @property
     async def openvds_handle_async(self):
+        try:
+            import openvds
+        except ModuleNotFoundError:
+            raise RuntimeError("Unable to import openvds; probably not installed.")
+
         if self._url is None:
             await self._populate_url_async()
 
@@ -104,25 +110,3 @@ class Cube(Child):
             url = "azureSAS" + self._url[5:] + "/"
             sas = "Suffix=?" + self._sas
             return openvds.open(url, sas)
-
-    @property
-    def timestamp(self) -> str:
-        """Surface timestmap data"""
-        t0 = self._get_property(["data", "time", "t0", "value"])
-        t1 = self._get_property(["data", "time", "t1", "value"])
-
-        if t0 is not None and t1 is None:
-            return t0
-
-        return None
-
-    @property
-    def interval(self) -> str:
-        """Surface interval data"""
-        t0 = self._get_property(["data", "time", "t0", "value"])
-        t1 = self._get_property(["data", "time", "t1", "value"])
-
-        if t0 is not None and t1 is not None:
-            return (t0, t1)
-
-        return None

@@ -104,7 +104,7 @@ def test_aggregate_bulk(explorer: Explorer):
     assert len(cases) > 0
     case = None
     for c in cases:
-        if len(c.get_realizations()) > 1 and len(c.surfaces) > 40:
+        if len(c.realizations) > 1 and len(c.surfaces) > 40:
             case = c
             break
     assert case
@@ -114,7 +114,7 @@ def test_aggregate_bulk(explorer: Explorer):
         "operations": ["min"],
         "case_uuid": case_uuid,
         "class": "surface",
-        "iteration_name": case.iterations[0].get("name"),
+        "iteration_name": case.iterations[0].name,
     }
     response = explorer._sumo.post(f"/aggregations", json=body)
     print(response.status_code)
@@ -130,7 +130,7 @@ def test_aggregations_fast(explorer: Explorer):
     case = None
     for c in cases:
         if (
-            len(c.get_realizations()) > 1
+            len(c.realizations) > 1
             and len(c.surfaces) > 40
             and len(c.iterations) == 1
             and len(
@@ -160,7 +160,7 @@ def test_aggregations_fast(explorer: Explorer):
         "operations": ["min"],
         "object_ids": surface_uuids,
         "class": "surface",
-        "iteration_name": case.iterations[0].get("name"),
+        "iteration_name": case.iterations[0].name,
     }
     response = explorer._sumo.post(f"/aggregations", json=body)
     print("Response status code:", response.status_code)

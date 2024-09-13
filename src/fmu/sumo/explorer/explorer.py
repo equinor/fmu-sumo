@@ -1,19 +1,13 @@
 """Module containing class for exploring results from sumo"""
+
+import warnings
+import httpx
+
 from sumo.wrapper import SumoClient
-from fmu.sumo.explorer.pit import Pit
-from fmu.sumo.explorer.objects.case_collection import (
-    CaseCollection,
-    _CASE_FIELDS,
-)
-from fmu.sumo.explorer.objects._child_collection import _CHILD_FIELDS
-from fmu.sumo.explorer.objects.surface import Surface
-from fmu.sumo.explorer.objects.polygons import Polygons
-from fmu.sumo.explorer.objects.table import Table
-from fmu.sumo.explorer.objects.case import Case
-from fmu.sumo.explorer._utils import Utils
+from fmu.sumo.explorer.objects._search_context import SearchContext
 
 
-class Explorer:
+class Explorer(SearchContext):
     """Class for consuming FMU results from Sumo.
     The Sumo Explorer is a Python package for consuming FMU results stored
     in Sumo. It is FMU aware, and creates an abstraction on top of the
@@ -36,39 +30,23 @@ class Explorer:
     ):
         """Initialize the Explorer class
 
-        When iterating over large datasets, use the `keep_alive` argument
-        to create a snapshot of the data to ensure consistency. The
-        argument specifies the lifespan of the snapshot and every
-        request to the Sumo API will extend the lifetime of the snapshot
-        with the specified `keep_alive` value. The argument uses a format
-        of a number followed by a unit indicator. Supported indicators are:
-            - d (day)
-            - h (hour)
-            - m (minute)
-            - s (second)
-            - ms (milisecond)
-            - micros (microsecond)
-            - nanos (nanosecond)
-
-        Examples: 1d, 2h, 15m, 30s
-
-        Every request to Sumo will extend the lifespan of the snapshot
-        by the time specified in `keep_alive`.
-
         Args:
             env (str): Sumo environment
             token (str): authenticate with existing token
             interactive (bool): authenticate using interactive flow (browser)
-            keep_alive (str): point in time lifespan
+            keep_alive (str): point in time lifespan (deprecated and ignored)
         """
-        self._sumo = SumoClient(env, token=token, interactive=interactive)
-        self._pit = Pit(self._sumo, keep_alive) if keep_alive else None
-        self._utils = Utils(self._sumo)
+        sumo = SumoClient(env, token=token, interactive=interactive, timeout=httpx.Timeout(180.0))
+        SearchContext.__init__(self, sumo)
+        if keep_alive:
+            warnings.warn(
+                "The constructor argument 'keep_alive' to class 'Explorer' has been deprecated.",
+                DeprecationWarning,
+            )
 
     @property
     def cases(self):
-        """Cases in Sumo"""
-        return CaseCollection(sumo=self._sumo, pit=self._pit)
+        return self._context_for_class("case")
 
     def get_permissions(self, asset: str = None):
         """Get permissions
@@ -105,104 +83,3 @@ class Explorer:
 
         return res
 
-    def get_case_by_uuid(self, uuid: str) -> Case:
-        """Get case object by uuid
-
-        Args:
-            uuid (str): case uuid
-
-        Returns:
-            Case: case object
-        """
-        cases = self.cases.filter(uuid=uuid)
-        if len(cases) == 0:
-            raise Exception(f"Document not found: {uuid}")
-
-        return cases[0]
-
-    async def get_case_by_uuid_async(self, uuid: str) -> Case:
-        """Get case object by uuid
-
-        Args:
-            uuid (str): case uuid
-
-        Returns:
-            Case: case object
-        """
-        cases = self.cases.filter(uuid=uuid)
-        if await cases.length_async() == 0:
-            raise Exception(f"Document not found: {uuid}")
-
-        return await cases.getitem_async(0)
-
-    def get_surface_by_uuid(self, uuid: str) -> Surface:
-        """Get surface object by uuid
-
-        Args:
-            uuid (str): surface uuid
-
-        Returns:
-            Surface: surface object
-        """
-        metadata = self._utils.get_object(uuid, _CHILD_FIELDS)
-        return Surface(self._sumo, metadata)
-
-    async def get_surface_by_uuid_async(self, uuid: str) -> Surface:
-        """Get surface object by uuid
-
-        Args:
-            uuid (str): surface uuid
-
-        Returns:
-            Surface: surface object
-        """
-        metadata = await self._utils.get_object_async(uuid, _CHILD_FIELDS)
-        return Surface(self._sumo, metadata)
-
-    def get_polygons_by_uuid(self, uuid: str) -> Polygons:
-        """Get polygons object by uuid
-
-        Args:
-            uuid (str): polygons uuid
-
-        Returns:
-            Polygons: polygons object
-        """
-        metadata = self._utils.get_object(uuid, _CHILD_FIELDS)
-        return Polygons(self._sumo, metadata)
-
-    async def get_polygons_by_uuid_async(self, uuid: str) -> Polygons:
-        """Get polygons object by uuid
-
-        Args:
-            uuid (str): polygons uuid
-
-        Returns:
-            Polygons: polygons object
-        """
-        metadata = await self._utils.get_object_async(uuid, _CHILD_FIELDS)
-        return Polygons(self._sumo, metadata)
-
-    def get_table_by_uuid(self, uuid: str) -> Table:
-        """Get table object by uuid
-
-        Args:
-            uuid (str): table uuid
-
-        Returns:
-            Table: table object
-        """
-        metadata = self._utils.get_object(uuid, _CHILD_FIELDS)
-        return Table(self._sumo, metadata)
-
-    async def get_table_by_uuid_async(self, uuid: str) -> Table:
-        """Get table object by uuid
-
-        Args:
-            uuid (str): table uuid
-
-        Returns:
-            Table: table object
-        """
-        metadata = await self._utils.get_object_async(uuid, _CHILD_FIELDS)
-        return Table(self._sumo, metadata)

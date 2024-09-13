@@ -120,7 +120,7 @@ def test_aggregations_fast(explorer: Explorer):
     assert len(cases) > 0
     case = None
     for c in cases:
-        if (len(c.get_realizations()) > 1 and 
+        if (len(c.realizations) > 1 and
             len(c.surfaces) > 40 and
             len(c.iterations) == 1 and
             len(c.surfaces.filter(name="Therys Fm.", tagname="FACIES_Fraction_Calcite")) > 2):
@@ -139,7 +139,7 @@ def test_aggregations_fast(explorer: Explorer):
         "operations": ["min"],
         "object_ids": surface_uuids,
         "class": "surface",
-        "iteration_name": case.iterations[0].get("name"),
+        "iteration_name": case.iterations[0].name,
     }
     print("About to trigger fast-aggregation on case", case_uuid)
     print("using body", body)
@@ -158,7 +158,7 @@ def test_aggregate_bulk(explorer: Explorer):
     assert len(cases) > 0
     case = None
     for c in cases:
-        if len(c.get_realizations()) > 1 and len(c.surfaces) > 40:
+        if len(c.realizations) > 1 and len(c.surfaces) > 40:
             case = c
             break
     assert case
@@ -167,7 +167,7 @@ def test_aggregate_bulk(explorer: Explorer):
         "operations": ["min"],
         "case_uuid": case_uuid,
         "class": "surface",
-        "iteration_name": case.iterations[0].get("name"),
+        "iteration_name": case.iterations[0].name,
     }
     print("About to trigger bulk aggregation on case", case_uuid)
     print("using body", body, " this should raise exception")
