@@ -1174,7 +1174,7 @@ class SearchContext:
         if columns is not None:
             spec["columns"] = columns
             cols = columns[:]
-            table_index = prototype["_source"]["data"]["table_index"]
+            table_index = prototype["_source"]["data"].get("table_index")
             if table_index is not None and len(table_index) != 0 and table_index[0] not in cols:
                 cols.insert(0, table_index[0])
                 pass
