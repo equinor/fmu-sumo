@@ -1,7 +1,6 @@
 """ Module for searchcontext for collection of realizations. """
 
 from typing import Dict, List
-from fmu.sumo.explorer.objects.realization import Realization
 from fmu.sumo.explorer.objects._search_context import SearchContext
 
 class Realizations(SearchContext):

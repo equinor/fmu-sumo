@@ -1,7 +1,5 @@
 """ Module for searchcontext for collection of cases. """
 
-from typing import Dict, List
-from fmu.sumo.explorer.objects.case import Case
 from fmu.sumo.explorer.objects._search_context import SearchContext
 
 class Cases(SearchContext):
@@ -28,10 +26,18 @@ class Cases(SearchContext):
         return self._length
     
     def _search_all(self, select=False):
-        return self._get_field_values("fmu.case.uuid.keyword")
+        uuids = self._get_field_values("fmu.case.uuid.keyword")
+        if select is False:
+            return uuids
+        # ELSE
+        return SearchContext(must=[{"ids": {"values": uuids}}])._search_all(select=select)
 
     async def _search_all_async(self, select=False):
-        return await self._get_field_values_async("fmu.case.uuid.keyword")
+        uuids = await self._get_field_values_async("fmu.case.uuid.keyword")
+        if select is False:
+            return uuids
+        # ELSE
+        return await SearchContext(must=[{"ids": {"values": uuids}}])._search_all_async(select=select)
 
     def _maybe_prefetch(self, index):
         return
@@ -39,41 +45,3 @@ class Cases(SearchContext):
     async def _maybe_prefetch_async(self, index):
         return
     
-    # def get_object(self, uuid: str, select: List[str] = None) -> Dict:
-    #     """Get metadata object by uuid
-
-    #     Args:
-    #         uuid (str): uuid of metadata object
-    #         select (List[str]): list of metadata fields to return
-
-    #     Returns:
-    #         Dict: a metadata object
-    #     """
-    #     obj = self._cache.get(uuid)
-    #     if obj is None:
-    #         obj = self.get_case_by_uuid(uuid)
-    #         self._cache.put(uuid, obj)
-    #         pass
-
-    #     return obj
-
-    # async def get_object_async(
-    #         self, uuid: str, select: List[str] = None
-    # ) -> Dict:
-    #     """Get metadata object by uuid
-
-    #     Args:
-    #         uuid (str): uuid of metadata object
-    #         select (List[str]): list of metadata fields to return
-
-    #     Returns:
-    #         Dict: a metadata object
-    #     """
-
-    #     obj = self._cache.get(uuid)
-    #     if obj is None:
-    #         obj = await self.get_case_by_uuid_async(uuid)
-    #         self._cache.put(uuid, obj)
-
-    #     return obj
-

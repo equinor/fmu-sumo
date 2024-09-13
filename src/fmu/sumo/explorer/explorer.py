@@ -5,19 +5,6 @@ import httpx
 
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._search_context import SearchContext
-from fmu.sumo.explorer.objects.surface import Surface
-from fmu.sumo.explorer.objects.polygons import Polygons
-from fmu.sumo.explorer.objects.table import Table
-from fmu.sumo.explorer.objects.case import Case
-from fmu.sumo.explorer.objects.iteration import Iteration
-from fmu.sumo.explorer.objects.realization import Realization
-
-_CASE_FIELDS = {"include": [], "exclude": []}
-
-_CHILD_FIELDS = {
-    "include": [],
-    "exclude": ["data.spec.columns", "fmu.realization.parameters"],
-}
 
 
 class Explorer(SearchContext):

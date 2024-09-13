@@ -17,7 +17,7 @@ class Cube(Child):
             sumo (SumoClient): connection to Sumo
             metadata (dict): cube metadata
         """
-        super().__init__(sumo, metadata)
+        super().__init__(sumo, metadata, blob)
         self._url = None
         self._sas = None
 

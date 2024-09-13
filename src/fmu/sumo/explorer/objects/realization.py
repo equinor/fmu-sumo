@@ -1,6 +1,6 @@
 """ Module for (pseudo) realization class. """
 
-from typing import Dict, List
+from typing import Dict
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._document import Document
 from fmu.sumo.explorer.objects._search_context import SearchContext

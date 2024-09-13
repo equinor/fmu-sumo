@@ -8,12 +8,13 @@ import pyarrow.feather as pf
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._child import Child
 from warnings import warn
+from typing import Dict
 
 
 class Table(Child):
     """Class representing a table object in Sumo"""
 
-    def __init__(self, sumo: SumoClient, metadata: dict, blob=None) -> None:
+    def __init__(self, sumo: SumoClient, metadata: Dict, blob=None) -> None:
         """
         Args:
             sumo (SumoClient): connection to Sumo

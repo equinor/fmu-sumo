@@ -1,4 +1,3 @@
-import json
 import uuid
 import httpx
 import deprecation
@@ -8,6 +7,14 @@ from io import BytesIO
 from sumo.wrapper import SumoClient
 import fmu.sumo.explorer.objects as objects
 from fmu.sumo.explorer.cache import LRUCache
+
+
+_CASE_FIELDS = {"include": [], "exclude": []}
+
+_CHILD_FIELDS = {
+    "include": [],
+    "exclude": ["data.spec.columns", "fmu.realization.parameters"],
+}
 
 
 def _gen_filter_none():
@@ -1140,10 +1147,6 @@ class SearchContext:
 
         hits = self._search_all(select=["fmu.realization.id"])
 
-        if sres["hits"]["total"]["value"] != len(hits):
-            raise Exception(
-                f"Expected {len(object_ids)} hits; got {sres['hits']['total']['value']}"
-            )
         if any(
             [hit["_source"]["fmu"].get("realization") is None for hit in hits]
         ):

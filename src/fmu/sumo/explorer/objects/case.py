@@ -87,7 +87,7 @@ class Case(Document, SearchContext):
         """Overview of case contents."""
         def extract_bucket_keys(bucket, name):
             return [b["key"] for b in bucket[name]["buckets"]]
-        if self._overview == None:
+        if self._overview is None:
             query = _make_overview_query(self._uuid)
             res = self._sumo.post("/search", json=query)
             data = res.json()

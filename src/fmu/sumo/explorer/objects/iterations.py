@@ -1,12 +1,11 @@
 """ Module for searchcontext for collection of iterations. """
 
 from typing import Dict, List
-from fmu.sumo.explorer.objects.iteration import Iteration
 from fmu.sumo.explorer.objects._search_context import SearchContext
 
 class Iterations(SearchContext):
-    def __init__(self, sc):
-        super().__init__(sc._sumo, sc._must, sc._must_not)
+    def __init__(self, _search_context):
+        super().__init__(_search_context._sumo, _search_context._must, _search_context._must_not)
         return
 
     def __len__(self):
