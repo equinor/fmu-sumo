@@ -36,11 +36,8 @@ class Metrics:
         return self._aggregate("extended_stats", field=field)
 
     def percentiles(self, field, percents=None):
-        if percents is None:
-            return self._aggregate("percentiles", field=field)
-        else:
-            return self._aggregate("percentiles", field=field,
-                                   percents=percents)
+        return self._aggregate("percentiles", field=field,
+                               percents=percents)
 
     
 
