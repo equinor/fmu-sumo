@@ -65,7 +65,7 @@ def test_get_cases(explorer: Explorer):
 def test_write(explorer: Explorer):
     """Test a write method"""
     print("Running test:", inspect.currentframe().f_code.co_name)
-    cases = explorer.cases
+    cases = explorer.cases.filter(status="scratch")
     print("Number of cases: ", len(cases))
     assert len(cases) > 0
     case = cases[0]
@@ -99,7 +99,7 @@ def test_read_restricted_classification_data(explorer: Explorer):
 def test_aggregations_bulk(explorer: Explorer):
     """Test a bulk aggregation method"""
     print("Running test:", inspect.currentframe().f_code.co_name)
-    cases = explorer.cases
+    cases = explorer.cases.filter(status="scratch")
     print("Number of cases: ", len(cases))
     assert len(cases) > 0
     case = None
