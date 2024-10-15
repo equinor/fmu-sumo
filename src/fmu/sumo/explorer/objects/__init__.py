@@ -1,6 +1,7 @@
 """Sumo cases and child objects"""
 
 from fmu.sumo.explorer.objects._search_context import SearchContext
+from fmu.sumo.explorer.objects._metrics import Metrics
 from fmu.sumo.explorer.objects.case import Case
 from fmu.sumo.explorer.objects.cases import Cases
 from fmu.sumo.explorer.objects.cube import Cube
