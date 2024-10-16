@@ -4,6 +4,7 @@
     will fail."""
 
 import os
+import sys
 import json
 import inspect
 import pytest

@@ -3,6 +3,7 @@
     specific access rights. Running this test with your personal login
     will fail."""
 import os
+import sys
 import json
 import inspect
 import pytest
