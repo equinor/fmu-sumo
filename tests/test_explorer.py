@@ -196,14 +196,14 @@ def test_case_surfaces_type(test_case: Case):
 
 def test_case_surfaces_size(test_case: Case):
     """Test that Case.surfaces has the correct size"""
-    assert len(test_case.surfaces) == 219
+    assert len(test_case.surfaces) == 271
 
 
 def test_case_surfaces_filter(test_case: Case):
     """Test that Case.surfaces has the correct size"""
     # filter on iteration stage
     agg_surfs = test_case.surfaces.filter(stage="iteration")
-    assert len(agg_surfs) == 7
+    assert len(agg_surfs) == 59
 
     agg_surfs = test_case.surfaces.filter(aggregation=True)
     assert len(agg_surfs)
