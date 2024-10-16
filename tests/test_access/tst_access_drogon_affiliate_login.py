@@ -203,9 +203,9 @@ def test_read_restricted_classification_data(explorer: Explorer):
     print("Hits on restricted:", hits)
     assert hits >= 1
 
-@pytest.skipif(not (sys.platform == "linux" and
-                    sys.version_info[:2] == (3, 11)),
-               reason="Test only on single platform/version.")
+@pytest.mark.skipif(not (sys.platform == "linux" and
+                         sys.version_info[:2] == (3, 11)),
+                    reason="Test only on single platform/version.")
 def test_aggregate_bulk(explorer: Explorer):
     """Test a bulk aggregation method"""
     print("Running test:", inspect.currentframe().f_code.co_name)
