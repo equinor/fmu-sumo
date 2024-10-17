@@ -3,6 +3,7 @@
     specific access rights. Running this test with your personal login
     will fail."""
 import os
+import sys
 import json
 import inspect
 import pytest
@@ -150,6 +151,9 @@ def test_aggregations_fast(explorer: Explorer):
     print("Length of returned aggregate object:", len(response.text))
 
 
+@pytest.mark.skipif(not (sys.platform == "linux" and
+                         sys.version_info[:2] == (3, 11)),
+                    reason="Test only on single platform/version.")
 def test_aggregate_bulk(explorer: Explorer):
     """Test a bulk aggregation method"""
     print("Running test:", inspect.currentframe().f_code.co_name)

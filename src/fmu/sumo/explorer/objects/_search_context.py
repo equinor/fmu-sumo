@@ -784,6 +784,11 @@ class SearchContext:
         return objects.Realizations(self)
 
     @property
+    def metrics(self):
+        """Metrics for current search context."""
+        return objects.Metrics(self)
+
+    @property
     def timestamps(self) -> List[str]:
         """List of unique timestamps in SearchContext"""
         ts = self.filter(complex=self._timestamp_query)._get_field_values(

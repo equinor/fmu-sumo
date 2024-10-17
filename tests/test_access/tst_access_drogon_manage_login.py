@@ -4,6 +4,7 @@
     will fail."""
 
 import os
+import sys
 import json
 import inspect
 import pytest
@@ -65,7 +66,7 @@ def test_get_cases(explorer: Explorer):
 def test_write(explorer: Explorer):
     """Test a write method"""
     print("Running test:", inspect.currentframe().f_code.co_name)
-    cases = explorer.cases
+    cases = explorer.cases.filter(status="scratch")
     print("Number of cases: ", len(cases))
     assert len(cases) > 0
     case = cases[0]
@@ -96,10 +97,13 @@ def test_read_restricted_classification_data(explorer: Explorer):
     assert hits > 0
 
 
+@pytest.mark.skipif(not (sys.platform == "linux" and
+                         sys.version_info[:2] == (3, 11)),
+                    reason="Test only on single platform/version.")
 def test_aggregations_bulk(explorer: Explorer):
     """Test a bulk aggregation method"""
     print("Running test:", inspect.currentframe().f_code.co_name)
-    cases = explorer.cases
+    cases = explorer.cases.filter(status="scratch")
     print("Number of cases: ", len(cases))
     assert len(cases) > 0
     case = None
