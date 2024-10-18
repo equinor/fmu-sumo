@@ -95,7 +95,7 @@ full list of filter parameters, try `help(exp.filter)`:
     sumo = Explorer()
     help(explorer.filter)
 
-Note that this full set of filters may not make sense for all objetcs;
+Note that this full set of filters may not make sense for all objects;
 for instance, `content` will not be useful for `Case` objects.
 
 There are shortcut methods for narrowing to specific object classes:
