@@ -432,12 +432,12 @@ class SearchContext:
 
     def __iter__(self):
         self._curr_index = 0
-        if self._hits is None:
-            self._hits = self._search_all()
-            pass
         return self
 
     def __next__(self):
+        if self._hits is None:
+            self._hits = self._search_all()
+            pass
         if self._curr_index < len(self._hits):
             uuid = self._hits[self._curr_index]
             self._maybe_prefetch(self._curr_index)
@@ -446,21 +446,21 @@ class SearchContext:
         else:
             raise StopIteration
 
-    async def __aiter__(self):
+    def __aiter__(self):
         self._curr_index = 0
-        if self._hits is None:
-            self._hits = await self._search_all_async()
-            pass
         return self
 
     async def __anext__(self):
+        if self._hits is None:
+            self._hits = await self._search_all_async()
+            pass
         if self._curr_index < len(self._hits):
             uuid = self._hits[self._curr_index]
             await self._maybe_prefetch_async(self._curr_index)
             self._curr_index += 1
             return await self.get_object_async(uuid)
         else:
-            raise StopIteration
+            raise StopAsyncIteration
 
     def __getitem__(self, index):
         if self._hits is None:
