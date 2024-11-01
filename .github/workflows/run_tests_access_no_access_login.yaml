@@ -1,8 +1,6 @@
 name: Test access NO-ACCESS login
 
 on:
-  pull_request:
-    branches: [main]
   schedule:
     - cron: "54 4 * * *"
   workflow_dispatch:

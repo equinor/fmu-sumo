@@ -1,8 +1,6 @@
 name: Test access DROGON-MANAGE login
 
 on:
-  pull_request:
-    branches: [main]
   schedule:
     - cron: "44 4 * * *"
   workflow_dispatch:

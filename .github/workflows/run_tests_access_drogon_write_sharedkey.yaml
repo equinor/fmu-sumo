@@ -1,8 +1,6 @@
 name: Test access DROGON-WRITE shared-key
 
 on:
-  pull_request:
-    branches: [main]
   schedule:
     - cron: "48 4 * * *"
   workflow_dispatch:

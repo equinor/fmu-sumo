@@ -1,8 +1,6 @@
 name: Test access DROGON-AFFILIATE login
 
 on:
-  pull_request:
-    branches: [main]
   schedule:
     - cron: "59 4 * * *"
   workflow_dispatch:
