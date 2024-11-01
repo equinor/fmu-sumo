@@ -1,13 +1,8 @@
 """module containing class for table"""
 
 import logging
-import pandas as pd
-import pyarrow as pa
-import pyarrow.parquet as pq
-import pyarrow.feather as pf
 from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._child import Child
-from warnings import warn
 from typing import Dict
 
 
@@ -42,6 +37,9 @@ class Table(Child):
         return self._construct_table_from_blob(await self._get_blob_async())
 
     def _construct_table_from_blob(self, blob):
+        import pandas as pd
+        import pyarrow.feather as pf
+
         try:
             if self.dataformat == "csv":
                 dataframe = pd.read_csv(blob)
@@ -71,7 +69,7 @@ class Table(Child):
             pass
         return dataframe
 
-    def to_pandas(self) -> pd.DataFrame:
+    def to_pandas(self):
         """Return object as a pandas DataFrame
 
         Returns:
@@ -81,7 +79,7 @@ class Table(Child):
             self._dataframe = self._read_table()
         return self._dataframe
 
-    async def to_pandas_async(self) -> pd.DataFrame:
+    async def to_pandas_async(self):
         """Return object as a pandas DataFrame
 
         Returns:
@@ -98,6 +96,11 @@ class Table(Child):
         return self._construct_arrow_from_blob(await self._get_blob_async())
 
     def _construct_arrow_from_blob(self, blob):
+        import pandas as pd
+        import pyarrow as pa
+        import pyarrow.parquet as pq
+        import pyarrow.feather as pf
+
         try:
             if self.dataformat == "csv":
                 arrowtable = pa.Table.from_pandas(pd.read_csv(blob))
@@ -117,7 +120,7 @@ class Table(Child):
                     arrowtable = pq.read_table(blob)
                 except Exception as ex:
                     try:
-                        arrowtable = pf.read_table(selfblob)
+                        arrowtable = pf.read_table(blob)
                     except Exception as ex:
                         raise TypeError(
                             f"Unable to convert a blob of format {self.dataformat} to arrow; tried csv, parquet and feather."
@@ -127,7 +130,7 @@ class Table(Child):
             pass
         return arrowtable
 
-    def to_arrow(self) -> pa.Table:
+    def to_arrow(self):
         """Return object as an arrow Table
 
         Returns:
@@ -137,7 +140,7 @@ class Table(Child):
             self._arrowtable = self._read_arrow()
         return self._arrowtable
 
-    async def to_arrow_async(self) -> pa.Table:
+    async def to_arrow_async(self):
         """Return object as an arrow Table
 
         Returns:
