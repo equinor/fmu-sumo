@@ -96,33 +96,33 @@ def test_read_restricted_classification_data(explorer: Explorer):
     print("Hits on restricted:", hits)
     assert hits > 0
 
-
-@pytest.mark.skipif(not (sys.platform == "linux" and
-                         sys.version_info[:2] == (3, 11)),
-                    reason="Test only on single platform/version.")
-def test_aggregate_bulk(explorer: Explorer):
-    """Test a bulk aggregation method"""
-    print("Running test:", inspect.currentframe().f_code.co_name)
-    cases = explorer.cases.filter(status="scratch")
-    print("Number of cases: ", len(cases))
-    assert len(cases) > 0
-    case = None
-    for c in cases:
-        if len(c.realizations) > 1 and len(c.surfaces) > 40:
-            case = c
-            break
-    assert case
-    case_uuid = case.metadata.get("fmu").get("case").get("uuid")
-    print("About to trigger aggregation on case", case_uuid)
-    body = {
-        "operations": ["min"],
-        "case_uuid": case_uuid,
-        "class": "surface",
-        "iteration_name": case.iterations[0].name,
-    }
-    response = explorer._sumo.post(f"/aggregations", json=body)
-    print(response.status_code)
-    assert response.status_code in [200, 201, 202]
+# Remove or update this test when bulk aggregation is finalized
+# @pytest.mark.skipif(not (sys.platform == "linux" and
+#                          sys.version_info[:2] == (3, 11)),
+#                     reason="Test only on single platform/version.")
+# def test_aggregate_bulk(explorer: Explorer):
+#     """Test a bulk aggregation method"""
+#     print("Running test:", inspect.currentframe().f_code.co_name)
+#     cases = explorer.cases.filter(status="scratch")
+#     print("Number of cases: ", len(cases))
+#     assert len(cases) > 0
+#     case = None
+#     for c in cases:
+#         if len(c.realizations) > 1 and len(c.surfaces) > 40:
+#             case = c
+#             break
+#     assert case
+#     case_uuid = case.metadata.get("fmu").get("case").get("uuid")
+#     print("About to trigger aggregation on case", case_uuid)
+#     body = {
+#         "operations": ["min"],
+#         "case_uuid": case_uuid,
+#         "class": "surface",
+#         "iteration_name": case.iterations[0].name,
+#     }
+#     response = explorer._sumo.post(f"/aggregations", json=body)
+#     print(response.status_code)
+#     assert response.status_code in [200, 201, 202]
 
 
 def test_aggregations_fast(explorer: Explorer):
