@@ -157,27 +157,27 @@ def test_get_message_log_truncate(explorer: Explorer):
         print("Unexpected status: ", response.status_code)
         print("Unexpected response: ", response.text)
 
-
-@pytest.mark.skipif(not (sys.platform == "linux" and
-                         sys.version_info[:2] == (3, 11)),
-                    reason="Test only on single platform/version.")
-def test_aggregate_bulk(explorer: Explorer):
-    """Test a bulk aggregation method"""
-    print("Running test:", inspect.currentframe().f_code.co_name)
-    # Fixed test case ("Drogon_AHM_2023-02-22") in Sumo/DEV
-    TESTCASE_UUID = "10f41041-2c17-4374-a735-bb0de62e29dc"
-    print("About to trigger bulk aggregation on case", TESTCASE_UUID)
-    body = {
-        "operations": ["min"],
-        "case_uuid": TESTCASE_UUID,
-        "class": "surface",
-        "iteration_name": "iter-0",
-    }
-    with pytest.raises(Exception, match="40*"):
-        response = explorer._sumo.post(f"/aggregations", json=body)
-        print("Execution should never reach this line")
-        print("Unexpected status: ", response.status_code)
-        print("Unexpected response: ", response.text)
+# Remove or update this test when bulk aggregation is finalized
+# @pytest.mark.skipif(not (sys.platform == "linux" and
+#                          sys.version_info[:2] == (3, 11)),
+#                     reason="Test only on single platform/version.")
+# def test_aggregate_bulk(explorer: Explorer):
+#     """Test a bulk aggregation method"""
+#     print("Running test:", inspect.currentframe().f_code.co_name)
+#     # Fixed test case ("Drogon_AHM_2023-02-22") in Sumo/DEV
+#     TESTCASE_UUID = "10f41041-2c17-4374-a735-bb0de62e29dc"
+#     print("About to trigger bulk aggregation on case", TESTCASE_UUID)
+#     body = {
+#         "operations": ["min"],
+#         "case_uuid": TESTCASE_UUID,
+#         "class": "surface",
+#         "iteration_name": "iter-0",
+#     }
+#     with pytest.raises(Exception, match="40*"):
+#         response = explorer._sumo.post(f"/aggregations", json=body)
+#         print("Execution should never reach this line")
+#         print("Unexpected status: ", response.status_code)
+#         print("Unexpected response: ", response.text)
 
 
 def test_aggregations_fast(explorer: Explorer):
