@@ -276,10 +276,14 @@ class SearchContext:
         sumo: SumoClient,
         must: List = [],
         must_not: List = [],
+        hidden = False,
+        visible = True
     ):
         self._sumo = sumo
         self._must = must[:]
         self._must_not = must_not[:]
+        self._visible = visible
+        self._hidden = hidden
         self._field_values = {}
         self._hits = None
         self._cache = LRUCache(capacity=200)
@@ -288,17 +292,24 @@ class SearchContext:
 
     @property
     def _query(self):
-        if len(self._must_not) == 0:
-            if len(self._must) == 1:
-                return self._must[0]
+        must = self._must[:]
+        must_not = self._must_not[:]
+        if self._visible and not self._hidden:
+            must_not.append({"term": {"_sumo.hidden": True}})
+        elif not self._visible and self._hidden:
+            must.append({"term": {"_sumo.hidden": True}})
+            pass
+        if len(must_not) == 0:
+            if len(must) == 1:
+                return must[0]
             else:
-                return {"bool": {"must": self._must}}
+                return {"bool": {"must": must}}
         else:
-            if len(self._must) == 0:
-                return {"bool": {"must_not": self._must_not}}
+            if len(must) == 0:
+                return {"bool": {"must_not": must_not}}
             else:
                 return {
-                    "bool": {"must": self._must, "must_not": self._must_not}
+                    "bool": {"must": must, "must_not": must_not}
                 }
 
     def _to_sumo(self, obj, blob=None):
@@ -769,6 +780,30 @@ class SearchContext:
         return self.filter(cls=cls)
 
     @property
+    def hidden(self):
+        return SearchContext(sumo=self._sumo,
+                             must=self._must,
+                             must_not = self._must_not,
+                             hidden = True,
+                             visible = False)
+
+    @property
+    def visible(self):
+        return SearchContext(sumo=self._sumo,
+                             must=self._must,
+                             must_not = self._must_not,
+                             hidden = False,
+                             visible = True)
+
+    @property
+    def all(self):
+        return SearchContext(sumo=self._sumo,
+                             must=self._must,
+                             must_not = self._must_not,
+                             hidden = True,
+                             visible = True)
+
+    @property
     def cases(self):
         """Cases from current selection."""
         return objects.Cases(self)
@@ -874,7 +909,7 @@ class SearchContext:
             if _must_not is not None:
                 must_not.append(_must_not)
 
-        sc = SearchContext(self._sumo, must=must, must_not=must_not)
+        sc = SearchContext(self._sumo, must=must, must_not=must_not, hidden=self._hidden, visible = self._visible)
 
         if "has" in kwargs:
             # Get list of cases matched by current filter set
@@ -1161,7 +1196,7 @@ class SearchContext:
         rids = [hit["_source"]["fmu"]["realization"]["id"] for hit in hits]
         return prototype, uuids, rids
 
-    def aggregate(self, columns=None, operation=None):
+    def _aggregate(self, columns=None, operation=None):
         prototype, uuids, rids = self._verify_aggregation_operation()
         spec = {
             "object_ids": uuids,
@@ -1198,6 +1233,12 @@ class SearchContext:
         res = self._to_sumo(prototype, blob)
         res._blob = blob
         return res
+
+    def aggregate(self, columns=None, operation=None):
+        if len(self.hidden) > 0:
+            return self.hidden._aggregate(columns=columns, operation=operation)
+        else:
+            return self.visible._aggregate(columns=columns, operation=operation)
 
     @deprecation.deprecated(details="Use the method 'aggregate' instead, with parameter 'operation'.")
     def min(self):
