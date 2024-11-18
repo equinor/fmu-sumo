@@ -1,6 +1,7 @@
 import uuid
 import httpx
 import deprecation
+import warnings
 from typing import List, Dict, Tuple
 from datetime import datetime
 from io import BytesIO
@@ -324,7 +325,9 @@ class SearchContext:
             "surface": objects.Surface,
             "table": objects.Table,
         }.get(cls)
-        assert constructor is not None
+        if constructor is None:
+           warnings.warn(f"No constructor for class {cls}")
+           constructor = objects.Child
         return constructor(self._sumo, obj, blob)
 
     def __len__(self):
@@ -817,6 +820,10 @@ class SearchContext:
     def realizations(self):
         """Realizations from current selection."""
         return objects.Realizations(self)
+
+    @property
+    def template_paths(sc):
+        return set([obj.template_path for obj in sc])
 
     @property
     def metrics(self):
