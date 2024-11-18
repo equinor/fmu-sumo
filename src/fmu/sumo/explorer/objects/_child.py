@@ -85,5 +85,10 @@ class Child(Document):
 
         return None
 
+    @property
+    def template_path(self):
+        return "/".join(["{realization}", "{iteration}"] +
+                        self.relative_path.split("/")[2:])
+
 
 Child.map_properties(Child, _prop_desc)
