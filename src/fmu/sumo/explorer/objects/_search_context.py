@@ -328,8 +328,8 @@ class SearchContext:
             "cpgrid_property": objects.CPGridProperty
         }.get(cls)
         if constructor is None:
-           warnings.warn(f"No constructor for class {cls}")
-           constructor = objects.Child
+            warnings.warn(f"No constructor for class {cls}")
+            constructor = objects.Child
         return constructor(self._sumo, obj, blob)
 
     def __len__(self):
@@ -559,7 +559,7 @@ class SearchContext:
         uuid = self._hits[index]
         if self._cache.has(uuid):
             return
-        uuids = self._hits[index : min(index + 100, len(self._hits))]
+        uuids = self._hits[index:min(index + 100, len(self._hits))]
         uuids = [uuid for uuid in uuids if not self._cache.has(uuid)]
         hits = self.__search_all(
             {"ids": {"values": uuids}},
@@ -577,7 +577,7 @@ class SearchContext:
         uuid = self._hits[index]
         if self._cache.has(uuid):
             return
-        uuids = self._hits[index : min(index + 100, len(self._hits))]
+        uuids = self._hits[index:min(index + 100, len(self._hits))]
         uuids = [uuid for uuid in uuids if not self._cache.has(uuid)]
         hits = await self.__search_all_async(
             {"ids": {"values": uuids}},
@@ -811,17 +811,38 @@ class SearchContext:
     @property
     def cases(self):
         """Cases from current selection."""
-        return objects.Cases(self)
+        uuids = self._get_field_values("fmu.case.uuid.keyword")
+        return objects.Cases(self, uuids)
+
+    @property
+    async def cases_async(self):
+        """Cases from current selection."""
+        uuids = await self._get_field_values_async("fmu.case.uuid.keyword")
+        return objects.Cases(self, uuids)
 
     @property
     def iterations(self):
         """Iterations from current selection."""
-        return objects.Iterations(self)
+        uuids = self._get_field_values("fmu.iteration.uuid.keyword")
+        return objects.Iterations(self, uuids)
+
+    @property
+    async def iterations_async(self):
+        """Iterations from current selection."""
+        uuids = await self._get_field_values_async("fmu.iteration.uuid.keyword")
+        return objects.Iterations(self, uuids)
 
     @property
     def realizations(self):
         """Realizations from current selection."""
-        return objects.Realizations(self)
+        uuids = self._get_field_values("fmu.realization.uuid.keyword")
+        return objects.Realizations(self, uuids)
+
+    @property
+    async def realizations_async(self):
+        """Realizations from current selection."""
+        uuids = await self._get_field_values_async("fmu.realization.uuid.keyword")
+        return objects.Realizations(self, uuids)
 
     @property
     def template_paths(sc):
