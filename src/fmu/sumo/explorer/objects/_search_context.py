@@ -324,6 +324,7 @@ class SearchContext:
             "polygons": objects.Polygons,
             "surface": objects.Surface,
             "table": objects.Table,
+            "cpgrid": objects.CPGrid,
             "cpgrid_property": objects.CPGridProperty
         }.get(cls)
         if constructor is None:
@@ -958,6 +959,14 @@ class SearchContext:
     @property
     def dictionaries(self):
         return self._context_for_class("dictionary")
+
+    @property
+    def grids(self):
+        return self._context_for_class("cpgrid")
+
+    @property
+    def grid_properties(self):
+        return self._context_for_class("cpgrid_property")
 
     def _get_object_by_class_and_uuid(self, cls, uuid):
         obj = self.get_object(uuid)
