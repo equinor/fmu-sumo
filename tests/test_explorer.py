@@ -327,4 +327,23 @@ def test_seismic_case_by_uuid(explorer: Explorer, seismic_case_uuid: str):
     assert "Trace" in channel_list
     assert "SEGYTraceHeader" in channel_list
 
+def test_grids_and_properties(explorer: Explorer):
+    cases_with_grids = explorer.grids.cases.filter(status="keep").cases
+    cases_with_gridprops = explorer.grid_properties.cases.filter(status="keep").cases
+    cgs=set([case.uuid for case in cases_with_grids])
+    cgps=set([case.uuid for case in cases_with_gridprops])
+    assert cgs==cgps
+    case=cases_with_grids[0]
+    grids=case.grids
+    gridprops=case.grid_properties
+    xtgrid=grids[0].to_cpgrid()
+    gridspec=grids[0].metadata["data"]["spec"]
+    assert xtgrid.nlay == gridspec["nlay"]
+    assert xtgrid.nrow == gridspec["nrow"]
+    assert xtgrid.ncol == gridspec["ncol"]
+    xtgridprop=gridprops[0].to_cpgrid_property()
+    gridpropspec = gridprops[0].metadata["data"]["spec"]
+    assert xtgridprop.nlay == gridpropspec["nlay"]
+    assert xtgridprop.nrow == gridpropspec["nrow"]
+    assert xtgridprop.ncol == gridpropspec["ncol"]
 

@@ -27,7 +27,7 @@ class CPGrid(Child):
             raise RuntimeError("Unable to import xtgeo; probably not installed.")
         try:
             return grid_from_file(self.blob)
-        except TypeError as err:
+        except TypeError as type_err:
             raise TypeError(f"Unknown format: {self.format}") from type_err
 
     async def to_cpgrid_async(self):
@@ -42,5 +42,5 @@ class CPGrid(Child):
 
         try:
             return grid_from_file(await self.blob_async)
-        except TypeError as err:
+        except TypeError as type_err:
             raise TypeError(f"Unknown format: {self.format}") from type_err

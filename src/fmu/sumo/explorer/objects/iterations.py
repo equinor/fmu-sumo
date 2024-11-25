@@ -4,33 +4,10 @@ from typing import Dict, List
 from fmu.sumo.explorer.objects._search_context import SearchContext
 
 class Iterations(SearchContext):
-    def __init__(self, _search_context):
-        super().__init__(_search_context._sumo, _search_context._must, _search_context._must_not)
+    def __init__(self, sc, uuids):
+        super().__init__(sc._sumo, must=[{"terms": {"fmu.iteration.uuid.keyword": uuids}}])
+        self._hits = uuids
         return
-
-    def __len__(self):
-        if self._length is None:
-            if self._hits is None:
-                self._hits = self._search_all(select=False)
-                pass
-            self._length = len(self._hits)
-            pass
-        return self._length
-
-    async def length_async(self):
-        if self._length is None:
-            if self._hits is None:
-                self._hits = self._search_all(select=False)
-                pass
-            self._length = len(self._hits)
-            pass
-        return self._length
-    
-    def _search_all(self, select=False):
-        return self._get_field_values("fmu.iteration.uuid.keyword")
-
-    async def _search_all_async(self, select=False):
-        return await self._get_field_values_async("fmu.iteration.uuid.keyword")
 
     def _maybe_prefetch(self, index):
         return
