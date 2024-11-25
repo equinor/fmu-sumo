@@ -324,6 +324,7 @@ class SearchContext:
             "polygons": objects.Polygons,
             "surface": objects.Surface,
             "table": objects.Table,
+            "cpgrid_property": objects.CPGridProperty
         }.get(cls)
         if constructor is None:
            warnings.warn(f"No constructor for class {cls}")
