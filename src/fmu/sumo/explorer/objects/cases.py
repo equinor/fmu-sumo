@@ -13,4 +13,9 @@ class Cases(SearchContext):
 
     async def _maybe_prefetch_async(self, index):
         return
+
+    def filter(self, **kwargs):
+        sc = super().filter(**kwargs)
+        uuids = sc.uuids
+        return Cases(self, uuids)
     

@@ -53,3 +53,7 @@ class Realizations(SearchContext):
 
         return obj
 
+    def filter(self, **kwargs):
+        sc = super().filter(**kwargs)
+        uuids = sc.uuids
+        return Realizations(self, uuids)

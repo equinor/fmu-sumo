@@ -53,3 +53,7 @@ class Iterations(SearchContext):
 
         return obj
 
+    def filter(self, **kwargs):
+        sc = super().filter(**kwargs)
+        uuids = sc.uuids
+        return Iterations(self, uuids)
