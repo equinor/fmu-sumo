@@ -33,3 +33,8 @@ class LRUCache:
 
     def has(self, key):
         return key in self.cache
+
+    def clear(self):
+        with self.lock:
+            self.cache.clear()
+            self.access.clear()

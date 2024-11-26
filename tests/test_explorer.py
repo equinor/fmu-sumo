@@ -347,3 +347,19 @@ def test_grids_and_properties(explorer: Explorer):
     assert xtgridprop.nrow == gridpropspec["nrow"]
     assert xtgridprop.ncol == gridpropspec["ncol"]
 
+def test_search_context_select(test_case: Case):
+    surfs = test_case.surfaces.filter(realization=True)
+    assert "_sumo" in surfs[0].metadata
+    surfs.select("fmu")
+    assert "_sumo" not in surfs[0].metadata
+    assert "fmu" in surfs[0].metadata
+    surfs.select(["fmu"])
+    assert "_sumo" not in surfs[0].metadata
+    assert "fmu" in surfs[0].metadata
+    surfs.select({"excludes": ["fmu"]})
+    assert "_sumo" in surfs[0].metadata
+    assert "fmu" not in surfs[0].metadata
+    surfs.select({"includes": ["_sumo"], "excludes": ["_sumo.timestamp"]})
+    assert "_sumo" in surfs[0].metadata
+    assert "fmu" not in surfs[0].metadata
+    assert "timestamp" not in surfs[0].metadata["_sumo"]
