@@ -10,14 +10,6 @@ import fmu.sumo.explorer.objects as objects
 from fmu.sumo.explorer.cache import LRUCache
 
 
-_CASE_FIELDS = {"include": [], "exclude": []}
-
-_CHILD_FIELDS = {
-    "include": [],
-    "exclude": ["data.spec.columns", "fmu.realization.parameters"],
-}
-
-
 def _gen_filter_none():
     def _fn(value):
         return None, None
@@ -289,6 +281,9 @@ class SearchContext:
         self._hits = None
         self._cache = LRUCache(capacity=200)
         self._length = None
+        self._select = {
+            "excludes": ["fmu.realization.parameters"],
+        }
         return
 
     @property
@@ -492,7 +487,44 @@ class SearchContext:
         uuid = self._hits[index]
         return await self.get_object_async(uuid)
 
-    def get_object(self, uuid: str, select: List[str] = None) -> Dict:
+    def select(self, sel):
+        """Specify what should be returned from elasticsearch.
+        Has the side effect of clearing the lru cache.
+        sel is either a single string value, a list of string value,
+        or a dictionary with keys "includes" and/or "excludes" and
+        the values are lists of strings. The string values are nested
+        property names.
+
+        Args:
+            sel (str | List(str) | Dict(str, List[str]): select specification
+        Returns:
+            None
+        """
+
+        required = set(["class"])
+        def extreq(lst):
+            if isinstance(lst, str):
+                lst = [lst]
+            return list(set(lst) | required)
+        if isinstance(sel, str):
+            self._select = extreq([sel])
+        elif isinstance(sel, list):
+            self._select = extreq(sel)
+        elif isinstance(sel, dict):
+            inc = sel.get("includes")
+            exc = sel.get("excludes")
+            slct = {}
+            if inc is not None:
+                slct["includes"] = extreq(inc)
+                pass
+            if exc is not None:
+                slct["excludes"] = exc
+                pass
+            self._select = slct
+            pass
+        self._cache.clear()
+
+    def get_object(self, uuid: str) -> Dict:
         """Get metadata object by uuid
 
         Args:
@@ -507,10 +539,8 @@ class SearchContext:
             query = {
                 "query": {"ids": {"values": [uuid]}},
                 "size": 1,
+                "_source": self._select
             }
-
-            if select is not None:
-                query["_source"] = select
 
             res = self._sumo.post("/search", json=query)
             hits = res.json()["hits"]["hits"]
@@ -522,9 +552,7 @@ class SearchContext:
 
         return self._to_sumo(obj)
 
-    async def get_object_async(
-        self, uuid: str, select: List[str] = None
-    ) -> Dict:
+    async def get_object_async(self, uuid: str) -> Dict:
         """Get metadata object by uuid
 
         Args:
@@ -540,10 +568,8 @@ class SearchContext:
             query = {
                 "query": {"ids": {"values": [uuid]}},
                 "size": 1,
+                "_source": self._select
             }
-
-            if select is not None:
-                query["_source"] = select
 
             res = await self._sumo.post_async("/search", json=query)
             hits = res.json()["hits"]["hits"]
@@ -563,9 +589,7 @@ class SearchContext:
         uuids = [uuid for uuid in uuids if not self._cache.has(uuid)]
         hits = self.__search_all(
             {"ids": {"values": uuids}},
-            select={
-                "excludes": ["fmu.realization.parameters"],
-            },
+            select=self._select,
         )
         if len(hits) == 0:
             return
@@ -581,9 +605,7 @@ class SearchContext:
         uuids = [uuid for uuid in uuids if not self._cache.has(uuid)]
         hits = await self.__search_all_async(
             {"ids": {"values": uuids}},
-            select={
-                "excludes": ["fmu.realization.parameters"],
-            },
+            select=self._select,
         )
         if len(hits) == 0:
             return
@@ -1131,7 +1153,7 @@ class SearchContext:
         Returns:
             Surface: surface object
         """
-        metadata = self.get_object(uuid, _CHILD_FIELDS)
+        metadata = self.get_object(uuid)
         return objects.Surface(self._sumo, metadata)
 
     async def get_surface_by_uuid_async(self, uuid: str):
@@ -1143,7 +1165,7 @@ class SearchContext:
         Returns:
             Surface: surface object
         """
-        metadata = await self.get_object_async(uuid, _CHILD_FIELDS)
+        metadata = await self.get_object_async(uuid)
         return objects.Surface(self._sumo, metadata)
 
     def get_polygons_by_uuid(self, uuid: str):
@@ -1155,7 +1177,7 @@ class SearchContext:
         Returns:
             Polygons: polygons object
         """
-        metadata = self.get_object(uuid, _CHILD_FIELDS)
+        metadata = self.get_object(uuid)
         return objects.Polygons(self._sumo, metadata)
 
     async def get_polygons_by_uuid_async(self, uuid: str):
@@ -1167,7 +1189,7 @@ class SearchContext:
         Returns:
             Polygons: polygons object
         """
-        metadata = await self.get_object_async(uuid, _CHILD_FIELDS)
+        metadata = await self.get_object_async(uuid)
         return objects.Polygons(self._sumo, metadata)
 
     def get_table_by_uuid(self, uuid: str):
@@ -1179,7 +1201,7 @@ class SearchContext:
         Returns:
             Table: table object
         """
-        metadata = self.get_object(uuid, _CHILD_FIELDS)
+        metadata = self.get_object(uuid)
         return objects.Table(self._sumo, metadata)
 
     async def get_table_by_uuid_async(self, uuid: str):
@@ -1191,7 +1213,7 @@ class SearchContext:
         Returns:
             Table: table object
         """
-        metadata = await self.get_object_async(uuid, _CHILD_FIELDS)
+        metadata = await self.get_object_async(uuid)
         return objects.Table(self._sumo, metadata)
 
     def _verify_aggregation_operation(self):
