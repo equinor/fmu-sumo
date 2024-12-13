@@ -1,11 +1,13 @@
 import uuid
-import httpx
-import deprecation
 import warnings
-from typing import List, Dict, Tuple
 from datetime import datetime
 from io import BytesIO
+from typing import Dict, List, Tuple
+
+import deprecation
+import httpx
 from sumo.wrapper import SumoClient
+
 import fmu.sumo.explorer.objects as objects
 from fmu.sumo.explorer.cache import LRUCache
 
@@ -182,7 +184,7 @@ _bucket_spec = {
     "contents": ["data.content.keyword", "List of unique contents."],
     "columns": ["data.spec.columns.keyword", "List of unique column names."],
     "statuses": ["_sumo.status.keyword", "List of unique case statuses."],
-    "users": ["fmu.case.user.id.keyword", "List of unique user names."]
+    "users": ["fmu.case.user.id.keyword", "List of unique user names."],
 }
 
 
@@ -269,8 +271,8 @@ class SearchContext:
         sumo: SumoClient,
         must: List = [],
         must_not: List = [],
-        hidden = False,
-        visible = True
+        hidden=False,
+        visible=True,
     ):
         self._sumo = sumo
         self._must = must[:]
@@ -304,9 +306,7 @@ class SearchContext:
             if len(must) == 0:
                 return {"bool": {"must_not": must_not}}
             else:
-                return {
-                    "bool": {"must": must, "must_not": must_not}
-                }
+                return {"bool": {"must": must, "must_not": must_not}}
 
     def _to_sumo(self, obj, blob=None):
         cls = obj["_source"]["class"]
@@ -320,7 +320,7 @@ class SearchContext:
             "surface": objects.Surface,
             "table": objects.Table,
             "cpgrid": objects.CPGrid,
-            "cpgrid_property": objects.CPGridProperty
+            "cpgrid_property": objects.CPGridProperty,
         }.get(cls)
         if constructor is None:
             warnings.warn(f"No constructor for class {cls}")
@@ -502,10 +502,12 @@ class SearchContext:
         """
 
         required = set(["class"])
+
         def extreq(lst):
             if isinstance(lst, str):
                 lst = [lst]
             return list(set(lst) | required)
+
         if isinstance(sel, str):
             self._select = extreq([sel])
         elif isinstance(sel, list):
@@ -539,7 +541,7 @@ class SearchContext:
             query = {
                 "query": {"ids": {"values": [uuid]}},
                 "size": 1,
-                "_source": self._select
+                "_source": self._select,
             }
 
             res = self._sumo.post("/search", json=query)
@@ -568,7 +570,7 @@ class SearchContext:
             query = {
                 "query": {"ids": {"values": [uuid]}},
                 "size": 1,
-                "_source": self._select
+                "_source": self._select,
             }
 
             res = await self._sumo.post_async("/search", json=query)
@@ -585,7 +587,7 @@ class SearchContext:
         uuid = self._hits[index]
         if self._cache.has(uuid):
             return
-        uuids = self._hits[index:min(index + 100, len(self._hits))]
+        uuids = self._hits[index : min(index + 100, len(self._hits))]
         uuids = [uuid for uuid in uuids if not self._cache.has(uuid)]
         hits = self.__search_all(
             {"ids": {"values": uuids}},
@@ -601,7 +603,7 @@ class SearchContext:
         uuid = self._hits[index]
         if self._cache.has(uuid):
             return
-        uuids = self._hits[index:min(index + 100, len(self._hits))]
+        uuids = self._hits[index : min(index + 100, len(self._hits))]
         uuids = [uuid for uuid in uuids if not self._cache.has(uuid)]
         hits = await self.__search_all_async(
             {"ids": {"values": uuids}},
@@ -621,7 +623,9 @@ class SearchContext:
         size = (
             1000
             if select is False
-            else 100 if isinstance(select, list) else 10
+            else 100
+            if isinstance(select, list)
+            else 10
         )
         return self.__search_all(
             {"ids": {"values": uuids}}, size=size, select=select
@@ -635,7 +639,9 @@ class SearchContext:
         size = (
             1000
             if select is False
-            else 100 if isinstance(select, list) else 10
+            else 100
+            if isinstance(select, list)
+            else 10
         )
         return await self.__search_all_async(
             {"ids": {"values": uuids}}, size=size, select=select
@@ -808,27 +814,33 @@ class SearchContext:
 
     @property
     def hidden(self):
-        return SearchContext(sumo=self._sumo,
-                             must=self._must,
-                             must_not = self._must_not,
-                             hidden = True,
-                             visible = False)
+        return SearchContext(
+            sumo=self._sumo,
+            must=self._must,
+            must_not=self._must_not,
+            hidden=True,
+            visible=False,
+        )
 
     @property
     def visible(self):
-        return SearchContext(sumo=self._sumo,
-                             must=self._must,
-                             must_not = self._must_not,
-                             hidden = False,
-                             visible = True)
+        return SearchContext(
+            sumo=self._sumo,
+            must=self._must,
+            must_not=self._must_not,
+            hidden=False,
+            visible=True,
+        )
 
     @property
     def all(self):
-        return SearchContext(sumo=self._sumo,
-                             must=self._must,
-                             must_not = self._must_not,
-                             hidden = True,
-                             visible = True)
+        return SearchContext(
+            sumo=self._sumo,
+            must=self._must,
+            must_not=self._must_not,
+            hidden=True,
+            visible=True,
+        )
 
     @property
     def cases(self):
@@ -851,7 +863,9 @@ class SearchContext:
     @property
     async def iterations_async(self):
         """Iterations from current selection."""
-        uuids = await self._get_field_values_async("fmu.iteration.uuid.keyword")
+        uuids = await self._get_field_values_async(
+            "fmu.iteration.uuid.keyword"
+        )
         return objects.Iterations(self, uuids)
 
     @property
@@ -863,7 +877,9 @@ class SearchContext:
     @property
     async def realizations_async(self):
         """Realizations from current selection."""
-        uuids = await self._get_field_values_async("fmu.realization.uuid.keyword")
+        uuids = await self._get_field_values_async(
+            "fmu.realization.uuid.keyword"
+        )
         return objects.Realizations(self, uuids)
 
     @property
@@ -961,7 +977,13 @@ class SearchContext:
             if _must_not is not None:
                 must_not.append(_must_not)
 
-        sc = SearchContext(self._sumo, must=must, must_not=must_not, hidden=self._hidden, visible = self._visible)
+        sc = SearchContext(
+            self._sumo,
+            must=must,
+            must_not=must_not,
+            hidden=self._hidden,
+            visible=self._visible,
+        )
 
         if "has" in kwargs:
             # Get list of cases matched by current filter set
@@ -1278,7 +1300,11 @@ class SearchContext:
             spec["columns"] = columns
             cols = columns[:]
             table_index = prototype["_source"]["data"].get("table_index")
-            if table_index is not None and len(table_index) != 0 and table_index[0] not in cols:
+            if (
+                table_index is not None
+                and len(table_index) != 0
+                and table_index[0] not in cols
+            ):
                 cols.insert(0, table_index[0])
                 pass
             prototype["_source"]["data"]["spec"]["columns"] = cols
@@ -1298,33 +1324,49 @@ class SearchContext:
         if len(self.hidden) > 0:
             return self.hidden._aggregate(columns=columns, operation=operation)
         else:
-            return self.visible._aggregate(columns=columns, operation=operation)
+            return self.visible._aggregate(
+                columns=columns, operation=operation
+            )
 
-    @deprecation.deprecated(details="Use the method 'aggregate' instead, with parameter 'operation'.")
+    @deprecation.deprecated(
+        details="Use the method 'aggregate' instead, with parameter 'operation'."
+    )
     def min(self):
         return self.aggregate(operation="min")
 
-    @deprecation.deprecated(details="Use the method 'aggregate' instead, with parameter 'operation'.")
+    @deprecation.deprecated(
+        details="Use the method 'aggregate' instead, with parameter 'operation'."
+    )
     def max(self):
         return self.aggregate(operation="max")
 
-    @deprecation.deprecated(details="Use the method 'aggregate' instead, with parameter 'operation'.")
+    @deprecation.deprecated(
+        details="Use the method 'aggregate' instead, with parameter 'operation'."
+    )
     def mean(self):
         return self.aggregate(operation="mean")
 
-    @deprecation.deprecated(details="Use the method 'aggregate' instead, with parameter 'operation'.")
+    @deprecation.deprecated(
+        details="Use the method 'aggregate' instead, with parameter 'operation'."
+    )
     def std(self):
         return self.aggregate(operation="std")
 
-    @deprecation.deprecated(details="Use the method 'aggregate' instead, with parameter 'operation'.")
+    @deprecation.deprecated(
+        details="Use the method 'aggregate' instead, with parameter 'operation'."
+    )
     def p10(self):
         return self.aggregate(operation="p10")
 
-    @deprecation.deprecated(details="Use the method 'aggregate' instead, with parameter 'operation'.")
+    @deprecation.deprecated(
+        details="Use the method 'aggregate' instead, with parameter 'operation'."
+    )
     def p50(self):
         return self.aggregate(operation="p50")
 
-    @deprecation.deprecated(details="Use the method 'aggregate' instead, with parameter 'operation'.")
+    @deprecation.deprecated(
+        details="Use the method 'aggregate' instead, with parameter 'operation'."
+    )
     def p90(self):
         return self.aggregate(operation="p90")
 

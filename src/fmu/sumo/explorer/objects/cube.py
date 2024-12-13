@@ -1,11 +1,10 @@
 """Module containing class for cube object"""
 
-import json
 from typing import Dict
+
 from sumo.wrapper import SumoClient
+
 from fmu.sumo.explorer.objects._child import Child
-import sys
-import warnings
 
 
 class Cube(Child):
@@ -82,7 +81,9 @@ class Cube(Child):
         try:
             import openvds
         except ModuleNotFoundError:
-            raise RuntimeError("Unable to import openvds; probably not installed.")
+            raise RuntimeError(
+                "Unable to import openvds; probably not installed."
+            )
 
         if self._url is None:
             self._populate_url()
@@ -99,7 +100,9 @@ class Cube(Child):
         try:
             import openvds
         except ModuleNotFoundError:
-            raise RuntimeError("Unable to import openvds; probably not installed.")
+            raise RuntimeError(
+                "Unable to import openvds; probably not installed."
+            )
 
         if self._url is None:
             await self._populate_url_async()

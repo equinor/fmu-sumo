@@ -1,11 +1,15 @@
-""" Module for searchcontext for collection of realizations. """
+"""Module for searchcontext for collection of realizations."""
 
 from typing import Dict, List
+
 from fmu.sumo.explorer.objects._search_context import SearchContext
+
 
 class Realizations(SearchContext):
     def __init__(self, sc, uuids):
-        super().__init__(sc._sumo, must=[{"terms": {"fmu.realization.uuid.keyword": uuids}}])
+        super().__init__(
+            sc._sumo, must=[{"terms": {"fmu.realization.uuid.keyword": uuids}}]
+        )
         self._hits = uuids
         return
 
@@ -14,7 +18,7 @@ class Realizations(SearchContext):
 
     async def _maybe_prefetch_async(self, index):
         return
-    
+
     def get_object(self, uuid: str, select: List[str] = None) -> Dict:
         """Get metadata object by uuid
 

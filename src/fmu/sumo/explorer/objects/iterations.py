@@ -1,11 +1,15 @@
-""" Module for searchcontext for collection of iterations. """
+"""Module for searchcontext for collection of iterations."""
 
 from typing import Dict, List
+
 from fmu.sumo.explorer.objects._search_context import SearchContext
+
 
 class Iterations(SearchContext):
     def __init__(self, sc, uuids):
-        super().__init__(sc._sumo, must=[{"terms": {"fmu.iteration.uuid.keyword": uuids}}])
+        super().__init__(
+            sc._sumo, must=[{"terms": {"fmu.iteration.uuid.keyword": uuids}}]
+        )
         self._hits = uuids
         return
 
@@ -14,7 +18,7 @@ class Iterations(SearchContext):
 
     async def _maybe_prefetch_async(self, index):
         return
-    
+
     def get_object(self, uuid: str, select: List[str] = None) -> Dict:
         """Get metadata object by uuid
 
@@ -34,7 +38,7 @@ class Iterations(SearchContext):
         return obj
 
     async def get_object_async(
-            self, uuid: str, select: List[str] = None
+        self, uuid: str, select: List[str] = None
     ) -> Dict:
         """Get metadata object by uuid
 

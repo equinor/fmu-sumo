@@ -1,7 +1,9 @@
 """Module containg class for surface"""
 
 from typing import Dict
+
 from sumo.wrapper import SumoClient
+
 from fmu.sumo.explorer.objects._child import Child
 
 
@@ -26,7 +28,9 @@ class Surface(Child):
         try:
             from xtgeo import surface_from_file
         except ModuleNotFoundError:
-            raise RuntimeError("Unable to import xtgeo; probably not installed.")
+            raise RuntimeError(
+                "Unable to import xtgeo; probably not installed."
+            )
 
         try:
             return surface_from_file(self.blob)
@@ -42,7 +46,9 @@ class Surface(Child):
         try:
             from xtgeo import surface_from_file
         except ModuleNotFoundError:
-            raise RuntimeError("Unable to import xtgeo; probably not installed.")
+            raise RuntimeError(
+                "Unable to import xtgeo; probably not installed."
+            )
 
         try:
             return surface_from_file(await self.blob_async)

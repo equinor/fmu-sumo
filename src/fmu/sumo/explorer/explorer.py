@@ -1,9 +1,10 @@
 """Module containing class for exploring results from sumo"""
 
 import warnings
-import httpx
 
+import httpx
 from sumo.wrapper import SumoClient
+
 from fmu.sumo.explorer.objects._search_context import SearchContext
 
 
@@ -36,7 +37,12 @@ class Explorer(SearchContext):
             interactive (bool): authenticate using interactive flow (browser)
             keep_alive (str): point in time lifespan (deprecated and ignored)
         """
-        sumo = SumoClient(env, token=token, interactive=interactive, timeout=httpx.Timeout(180.0))
+        sumo = SumoClient(
+            env,
+            token=token,
+            interactive=interactive,
+            timeout=httpx.Timeout(180.0),
+        )
         SearchContext.__init__(self, sumo)
         if keep_alive:
             warnings.warn(
@@ -82,4 +88,3 @@ class Explorer(SearchContext):
                 raise PermissionError(f"No permissions for asset: {asset}")
 
         return res
-
