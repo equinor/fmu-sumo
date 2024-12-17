@@ -3,6 +3,14 @@
 import sys
 from pathlib import Path
 
+from fmu.sumo.explorer import Explorer
+from fmu.sumo.explorer.objects._document import Document
+from fmu.sumo.explorer.objects._search_context import SearchContext
+from fmu.sumo.explorer.objects.case import Case
+from fmu.sumo.explorer.objects.polygons import Polygons
+from fmu.sumo.explorer.objects.surface import Surface
+from fmu.sumo.explorer.objects.table import Table
+
 
 def add_path():
     """Way to add package path to sys.path for testing"""

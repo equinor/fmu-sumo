@@ -76,5 +76,6 @@ extend-select = [
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
+"tests/context.py" = ["F401"]
 "examples/explorer.ipynb" = ["F821"]
 
