@@ -255,16 +255,16 @@ the ``has`` filter to find cases that have ``4d-seismic`` data:
 
 .. code-block:: python
 
-    from fmu.sumo.explorer import Explorer, Filters
+    from fmu.sumo.explorer import Explorer, filters
 
     exp = Explorer(env="prod")
 
-    cases = exp.cases.filter(asset="Heidrun", has=Filters.seismic4d)
+    cases = exp.cases.filter(asset="Heidrun", has=filters.seismic4d)
 
 In this case, we have a predefined filter for ``4d-seismic``, exposed
-thorugh ``fmu.sumo.explorer.Filters``. There is no magic involved; any
+thorugh ``fmu.sumo.explorer.filters``. There is no magic involved; any
 user can create their own filters, and either use them directly or ask
-for them to be added to ``fmu.sumo.explorer.Filters``.
+for them to be added to ``fmu.sumo.explorer.filters``.
 
 It is also possible to chain filters. The previous example could also
 be handled by

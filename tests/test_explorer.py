@@ -314,7 +314,7 @@ def test_seismic_case_by_uuid(explorer: Explorer, seismic_case_uuid: str):
     cube = case.cubes[0]
     openvds_handle = cube.openvds_handle
 
-    layout = openvds.getLayout(openvds_handle)
+    layout = openvds.getLayout(openvds_handle)  # type: ignore
     channel_count = layout.getChannelCount()
     assert channel_count == 3
     channel_list = []
@@ -328,8 +328,8 @@ def test_seismic_case_by_uuid(explorer: Explorer, seismic_case_uuid: str):
 def test_grids_and_properties(explorer: Explorer):
     cases_with_grids = explorer.grids.cases.filter(status="keep")
     cases_with_gridprops = explorer.grid_properties.cases.filter(status="keep")
-    cgs = set([case.uuid for case in cases_with_grids])
-    cgps = set([case.uuid for case in cases_with_gridprops])
+    cgs = {case.uuid for case in cases_with_grids}
+    cgps = {case.uuid for case in cases_with_gridprops}
     assert cgs == cgps
     case = cases_with_grids[0]
     grids = case.grids

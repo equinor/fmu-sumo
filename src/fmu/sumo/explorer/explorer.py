@@ -65,9 +65,8 @@ class Explorer(SearchContext):
         """
         res = self._sumo.get("/userpermissions").json()
 
-        if asset is not None:
-            if asset not in res:
-                raise PermissionError(f"No permissions for asset: {asset}")
+        if asset is not None and asset not in res:
+            raise PermissionError(f"No permissions for asset: {asset}")
 
         return res
 
@@ -83,8 +82,7 @@ class Explorer(SearchContext):
         res = await self._sumo.get_async("/userpermissions")
         res = res.json()
 
-        if asset is not None:
-            if asset not in res:
-                raise PermissionError(f"No permissions for asset: {asset}")
+        if asset is not None and asset not in res:
+            raise PermissionError(f"No permissions for asset: {asset}")
 
         return res

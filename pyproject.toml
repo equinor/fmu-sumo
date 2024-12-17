@@ -53,7 +53,7 @@ exclude = [
   ".git",
   ".github",
   ".venv",
-  "venv",
+  "venv", 
 ]
 
 line-length = 79
@@ -61,6 +61,7 @@ line-length = 79
 [tool.ruff.lint]
 ignore = [
   "E501",
+  "PD901",
 ]
 
 extend-select = [
@@ -75,4 +76,5 @@ extend-select = [
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
+"examples/explorer.ipynb" = ["F821"]
 

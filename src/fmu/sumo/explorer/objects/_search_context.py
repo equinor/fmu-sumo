@@ -501,7 +501,7 @@ class SearchContext:
             None
         """
 
-        required = set(["class"])
+        required = {"class"}
 
         def extreq(lst):
             if isinstance(lst, str):
@@ -779,9 +779,7 @@ class SearchContext:
         """
         if field not in self._field_values:
             buckets = self._get_buckets(field)
-            self._field_values[field] = list(
-                map(lambda bucket: bucket["key"], buckets)
-            )
+            self._field_values[field] = [bucket["key"] for bucket in buckets]
 
         return self._field_values[field]
 
@@ -796,9 +794,7 @@ class SearchContext:
         """
         if field not in self._field_values:
             buckets = await self._get_buckets_async(field)
-            self._field_values[field] = list(
-                map(lambda bucket: bucket["key"], buckets)
-            )
+            self._field_values[field] = [bucket["key"] for bucket in buckets]
 
         return self._field_values[field]
 
@@ -883,8 +879,8 @@ class SearchContext:
         return objects.Realizations(self, uuids)
 
     @property
-    def template_paths(sc):
-        return set([obj.template_path for obj in sc])
+    def template_paths(search_context):  # noqa: N805
+        return {obj.template_path for obj in search_context}
 
     @property
     def metrics(self):
@@ -1270,7 +1266,7 @@ class SearchContext:
         hits = self._search_all(select=["fmu.realization.id"])
 
         if any(
-            [hit["_source"]["fmu"].get("realization") is None for hit in hits]
+            hit["_source"]["fmu"].get("realization") is None for hit in hits
         ):
             raise Exception("Selection contains non-realization data.")
 

@@ -191,17 +191,17 @@ def test_aggregations_fast(explorer: Explorer):
     """Test a fast aggregation method"""
     print("Running test:", inspect.currentframe().f_code.co_name)
     # Fixed test case ("Drogon_AHM_2023-02-22") in Sumo/DEV
-    TESTCASE_UUID = "10f41041-2c17-4374-a735-bb0de62e29dc"
-    print("About to trigger fast-aggregation on case", TESTCASE_UUID)
-    SURFACE_UUID_1 = "ae6cf480-12ba-77ca-848e-92e707556b63"
-    SURFACE_UUID_2 = "7189835b-cc8a-2a8e-4a34-dde2ceb2a69c"
+    testcase_uuid = "10f41041-2c17-4374-a735-bb0de62e29dc"
+    print("About to trigger fast-aggregation on case", testcase_uuid)
+    surface_uuid_1 = "ae6cf480-12ba-77ca-848e-92e707556b63"
+    surface_uuid_2 = "7189835b-cc8a-2a8e-4a34-dde2ceb2a69c"
     body = {
         "operations": ["min"],
-        "object_ids": [SURFACE_UUID_1, SURFACE_UUID_2],
+        "object_ids": [surface_uuid_1, surface_uuid_2],
         "class": "surface",
         "iteration_name": "iter-0",
     }
-    print("About to trigger fast-aggregation on hardcoded case", TESTCASE_UUID)
+    print("About to trigger fast-aggregation on hardcoded case", testcase_uuid)
     print("using body", body)
     with pytest.raises(Exception, match="40*"):
         response = explorer._sumo.post("/aggregations", json=body)
