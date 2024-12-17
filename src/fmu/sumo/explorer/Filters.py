@@ -1,4 +1,4 @@
-# Filter that matches 4d-seismic objects.
+# Filter that matches 4d-seismic objects.  # noqa: N999
 seismic4d = {
     "bool": {
         "must": [
