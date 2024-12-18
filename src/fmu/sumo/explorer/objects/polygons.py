@@ -1,7 +1,9 @@
 """Module containing class for polygons object"""
 
 from typing import Dict
+
 from sumo.wrapper import SumoClient
+
 from fmu.sumo.explorer.objects._child import Child
 
 
@@ -24,6 +26,7 @@ class Polygons(Child):
         """
 
         import pandas as pd
+
         try:
             return pd.read_csv(self.blob)
         except TypeError as type_err:
@@ -37,6 +40,7 @@ class Polygons(Child):
         """
 
         import pandas as pd
+
         try:
             return pd.read_csv(await self.blob_async)
         except TypeError as type_err:

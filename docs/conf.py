@@ -39,9 +39,9 @@ autodoc_mock_imports = [
     "pandas",
 ]
 
-os.environ[
-    "SPHINX_APIDOC_OPTIONS"
-] = "members,show-inheritance,inherited-members"
+os.environ["SPHINX_APIDOC_OPTIONS"] = (
+    "members,show-inheritance,inherited-members"
+)
 
 apidoc_module_dir = "../src/fmu"
 apidoc_output_dir = "apiref"

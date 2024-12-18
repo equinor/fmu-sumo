@@ -1,7 +1,7 @@
 """Contains class for one document"""
 
 import re
-from typing import List, Dict
+from typing import Dict, List
 
 _path_split_rx = re.compile(r"\]\.|\.|\[")
 

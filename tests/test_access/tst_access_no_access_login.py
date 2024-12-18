@@ -1,12 +1,12 @@
 """Test access to SUMO using a no-access login.
-    Shall only run in Github Actions as a specific user with 
-    specific access rights. Running this test with your personal login
-    will fail."""
+Shall only run in Github Actions as a specific user with
+specific access rights. Running this test with your personal login
+will fail."""
 
-import os
-import sys
-import json
 import inspect
+import json
+import os
+
 import pytest
 from context import (
     Explorer,
@@ -36,7 +36,7 @@ def test_admin_access(explorer: Explorer):
     with pytest.raises(Exception, match="403*"):
         print("About to call an admin endpoint which should raise exception")
         explorer._sumo.get(
-            f"/admin/make-shared-access-key?user=noreply%40equinor.com&roles=DROGON-READ&duration=111"
+            "/admin/make-shared-access-key?user=noreply%40equinor.com&roles=DROGON-READ&duration=111"
         )
         print("Execution should never reach this line")
 
@@ -44,11 +44,11 @@ def test_admin_access(explorer: Explorer):
 def test_get_userpermissions(explorer: Explorer):
     """Test the userpermissions"""
     print("Running test:", inspect.currentframe().f_code.co_name)
-    response = explorer._sumo.get(f"/userpermissions")
+    response = explorer._sumo.get("/userpermissions")
     print("/Userpermissions response: ", response.text)
     userperms = json.loads(response.text)
     assert "Drogon" not in userperms
-    assert 0 == len(userperms)
+    assert len(userperms) == 0
 
 
 def test_get_cases(explorer: Explorer):
@@ -78,21 +78,27 @@ def test_write(explorer: Explorer):
             print("Unexpected status: ", response.status_code)
             print("Unexpected response: ", response.text)
 
+
 def test_delete(explorer: Explorer):
     """Test a delete method"""
     print("Running test:", inspect.currentframe().f_code.co_name)
 
     with pytest.raises(Exception, match="403*"):
-        res = explorer._sumo.delete(f"/objects('dcff880f-b35b-3598-08bc-2a408c85d204')")
+        res = explorer._sumo.delete(
+            "/objects('dcff880f-b35b-3598-08bc-2a408c85d204')"
+        )
         print("Execution should never reach this line")
         print("Unexpected status: ", res.status_code)
         print("Unexpected response: ", res.text)
 
     with pytest.raises(Exception, match="403*"):
-        res = explorer._sumo.delete(f"/objects('392c3c70-dd1a-41b5-ac49-0e369a0ac4eb')")
+        res = explorer._sumo.delete(
+            "/objects('392c3c70-dd1a-41b5-ac49-0e369a0ac4eb')"
+        )
         print("Execution should never reach this line")
         print("Unexpected status: ", res.status_code)
         print("Unexpected response: ", res.text)
+
 
 def test_read_restricted_classification_data(explorer: Explorer):
     """Test if can read restriced data aka 'access:classification: restricted'"""
@@ -157,6 +163,7 @@ def test_get_message_log_truncate(explorer: Explorer):
         print("Unexpected status: ", response.status_code)
         print("Unexpected response: ", response.text)
 
+
 # Remove or update this test when bulk aggregation is finalized
 # @pytest.mark.skipif(not (sys.platform == "linux" and
 #                          sys.version_info[:2] == (3, 11)),
@@ -184,20 +191,20 @@ def test_aggregations_fast(explorer: Explorer):
     """Test a fast aggregation method"""
     print("Running test:", inspect.currentframe().f_code.co_name)
     # Fixed test case ("Drogon_AHM_2023-02-22") in Sumo/DEV
-    TESTCASE_UUID = "10f41041-2c17-4374-a735-bb0de62e29dc"
-    print("About to trigger fast-aggregation on case", TESTCASE_UUID)
-    SURFACE_UUID_1 = "ae6cf480-12ba-77ca-848e-92e707556b63"
-    SURFACE_UUID_2 = "7189835b-cc8a-2a8e-4a34-dde2ceb2a69c"
+    testcase_uuid = "10f41041-2c17-4374-a735-bb0de62e29dc"
+    print("About to trigger fast-aggregation on case", testcase_uuid)
+    surface_uuid_1 = "ae6cf480-12ba-77ca-848e-92e707556b63"
+    surface_uuid_2 = "7189835b-cc8a-2a8e-4a34-dde2ceb2a69c"
     body = {
         "operations": ["min"],
-        "object_ids": [SURFACE_UUID_1, SURFACE_UUID_2],
+        "object_ids": [surface_uuid_1, surface_uuid_2],
         "class": "surface",
         "iteration_name": "iter-0",
     }
-    print("About to trigger fast-aggregation on hardcoded case", TESTCASE_UUID)
+    print("About to trigger fast-aggregation on hardcoded case", testcase_uuid)
     print("using body", body)
     with pytest.raises(Exception, match="40*"):
-        response = explorer._sumo.post(f"/aggregations", json=body)
+        response = explorer._sumo.post("/aggregations", json=body)
         print("Execution should never reach this line")
         print("Unexpected status: ", response.status_code)
         print("Unexpected response: ", response.text)

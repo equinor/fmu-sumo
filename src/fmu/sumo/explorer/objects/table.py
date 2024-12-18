@@ -1,9 +1,11 @@
 """module containing class for table"""
 
 import logging
-from sumo.wrapper import SumoClient
-from fmu.sumo.explorer.objects._child import Child
 from typing import Dict
+
+from sumo.wrapper import SumoClient
+
+from fmu.sumo.explorer.objects._child import Child
 
 
 class Table(Child):
@@ -51,16 +53,16 @@ class Table(Child):
                 raise TypeError(
                     f"Don't know how to convert a blob of format {self.dataformat} to a pandas table."
                 )
-        except Exception as ex0:
+        except Exception:
             try:
                 dataframe = pd.read_csv(blob)
-            except Exception as ex:
+            except Exception:
                 try:
                     dataframe = pd.read_parquet(blob)
-                except Exception as ex:
+                except Exception:
                     try:
                         dataframe = pf.read_feather(blob)
-                    except Exception as ex:
+                    except Exception:
                         raise TypeError(
                             f"Unable to convert a blob of format {self.dataformat} to pandas table; tried csv, parquet and feather."
                         )
@@ -98,8 +100,8 @@ class Table(Child):
     def _construct_arrow_from_blob(self, blob):
         import pandas as pd
         import pyarrow as pa
-        import pyarrow.parquet as pq
         import pyarrow.feather as pf
+        import pyarrow.parquet as pq
 
         try:
             if self.dataformat == "csv":
@@ -112,16 +114,16 @@ class Table(Child):
                 raise TypeError(
                     f"Don't know how to convert a blob of format {self.dataformat} to a pandas table."
                 )
-        except Exception as ex0:
+        except Exception:
             try:
                 arrowtable = pa.Table.from_pandas(pd.read_csv(blob))
-            except Exception as ex:
+            except Exception:
                 try:
                     arrowtable = pq.read_table(blob)
-                except Exception as ex:
+                except Exception:
                     try:
                         arrowtable = pf.read_table(blob)
-                    except Exception as ex:
+                    except Exception:
                         raise TypeError(
                             f"Unable to convert a blob of format {self.dataformat} to arrow; tried csv, parquet and feather."
                         )

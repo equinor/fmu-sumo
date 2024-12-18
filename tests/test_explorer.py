@@ -1,24 +1,22 @@
 """Tests explorer"""
 
-from platform import python_version
 import sys
 
 if not sys.platform.startswith("darwin") and sys.version_info < (3, 12):
     import openvds
-import logging
 import json
+import logging
 from pathlib import Path
 from uuid import UUID
+
 import pytest
-from xtgeo import RegularSurface
 from context import (
+    Case,
     Explorer,
     SearchContext,
-    Case,
 )
-
 from sumo.wrapper import SumoClient
-
+from xtgeo import RegularSurface
 
 TEST_DATA = Path("data")
 logging.basicConfig(level="DEBUG")
@@ -219,7 +217,6 @@ def test_case_surfaces_filter(test_case: Case):
     real_surfs = real_surfs.filter(iteration="iter-0")
     assert len(real_surfs) == 212
 
-
     # for surf in real_surfs:
     #     assert surf.iteration == "iter-0"
     its = real_surfs._get_field_values("fmu.iteration.name.keyword")
@@ -239,7 +236,7 @@ def test_case_surfaces_filter(test_case: Case):
     assert len(its) == 1 and its[0] == "iter-0"
     names = real_surfs._get_field_values("data.name.keyword")
     assert len(names) == 1 and names[0] == "Valysar Fm."
-    
+
     # filter on content
     non_valid_content_surfs = real_surfs.filter(content="___not_valid")
     assert len(non_valid_content_surfs) == 0
@@ -264,7 +261,7 @@ def test_case_surfaces_filter(test_case: Case):
     assert len(names) == 1 and names[0] == "Valysar Fm."
     tagnames = real_surfs._get_field_values("data.tagname.keyword")
     assert len(tagnames) == 1 and tagnames[0] == "FACIES_Fraction_Channel"
-    
+
     # filter on data format
     non_valid_format_surfs = real_surfs.filter(dataformat="___not_valid")
     assert len(non_valid_format_surfs) == 0
@@ -317,7 +314,7 @@ def test_seismic_case_by_uuid(explorer: Explorer, seismic_case_uuid: str):
     cube = case.cubes[0]
     openvds_handle = cube.openvds_handle
 
-    layout = openvds.getLayout(openvds_handle)
+    layout = openvds.getLayout(openvds_handle)  # type: ignore
     channel_count = layout.getChannelCount()
     assert channel_count == 3
     channel_list = []
@@ -327,25 +324,27 @@ def test_seismic_case_by_uuid(explorer: Explorer, seismic_case_uuid: str):
     assert "Trace" in channel_list
     assert "SEGYTraceHeader" in channel_list
 
+
 def test_grids_and_properties(explorer: Explorer):
     cases_with_grids = explorer.grids.cases.filter(status="keep")
     cases_with_gridprops = explorer.grid_properties.cases.filter(status="keep")
-    cgs=set([case.uuid for case in cases_with_grids])
-    cgps=set([case.uuid for case in cases_with_gridprops])
-    assert cgs==cgps
-    case=cases_with_grids[0]
-    grids=case.grids
-    gridprops=case.grid_properties
-    xtgrid=grids[0].to_cpgrid()
-    gridspec=grids[0].metadata["data"]["spec"]
+    cgs = {case.uuid for case in cases_with_grids}
+    cgps = {case.uuid for case in cases_with_gridprops}
+    assert cgs == cgps
+    case = cases_with_grids[0]
+    grids = case.grids
+    gridprops = case.grid_properties
+    xtgrid = grids[0].to_cpgrid()
+    gridspec = grids[0].metadata["data"]["spec"]
     assert xtgrid.nlay == gridspec["nlay"]
     assert xtgrid.nrow == gridspec["nrow"]
     assert xtgrid.ncol == gridspec["ncol"]
-    xtgridprop=gridprops[0].to_cpgrid_property()
+    xtgridprop = gridprops[0].to_cpgrid_property()
     gridpropspec = gridprops[0].metadata["data"]["spec"]
     assert xtgridprop.nlay == gridpropspec["nlay"]
     assert xtgridprop.nrow == gridpropspec["nrow"]
     assert xtgridprop.ncol == gridpropspec["ncol"]
+
 
 def test_search_context_select(test_case: Case):
     surfs = test_case.surfaces.filter(realization=True)

@@ -5,9 +5,8 @@ from threading import Lock
 
 
 class LRUCache:
-
     def __init__(self, capacity):
-        self.cache = dict()
+        self.cache = {}
         self.capacity = capacity
         self.access = deque()
         self.lock = Lock()

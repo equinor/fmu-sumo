@@ -1,8 +1,11 @@
 """Module containing class for cpgrid"""
 
 from typing import Dict
+
 from sumo.wrapper import SumoClient
+
 from fmu.sumo.explorer.objects._child import Child
+
 
 class CPGrid(Child):
     """Class representing a cpgrid object in Sumo."""
@@ -24,7 +27,9 @@ class CPGrid(Child):
         try:
             from xtgeo import grid_from_file
         except ModuleNotFoundError:
-            raise RuntimeError("Unable to import xtgeo; probably not installed.")
+            raise RuntimeError(
+                "Unable to import xtgeo; probably not installed."
+            )
         try:
             return grid_from_file(self.blob)
         except TypeError as type_err:
@@ -38,7 +43,9 @@ class CPGrid(Child):
         try:
             from xtgeo import grid_from_file
         except ModuleNotFoundError:
-            raise RuntimeError("Unable to import xtgeo; probably not installed.")
+            raise RuntimeError(
+                "Unable to import xtgeo; probably not installed."
+            )
 
         try:
             return grid_from_file(await self.blob_async)

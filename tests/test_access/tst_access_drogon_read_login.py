@@ -1,11 +1,12 @@
 """Test access to SUMO using a DROGON-READ login.
-    Shall only run in Github Actions as a specific user with 
-    specific access rights. Running this test with your personal login
-    will fail."""
-import os
-import sys
-import json
+Shall only run in Github Actions as a specific user with
+specific access rights. Running this test with your personal login
+will fail."""
+
 import inspect
+import json
+import os
+
 import pytest
 from context import (
     Explorer,
@@ -35,7 +36,7 @@ def test_admin_access(explorer: Explorer):
     with pytest.raises(Exception, match="403*"):
         print("About to call an admin endpoint which should raise exception")
         explorer._sumo.get(
-            f"/admin/make-shared-access-key?user=noreply%40equinor.com&roles=DROGON-READ&duration=111"
+            "/admin/make-shared-access-key?user=noreply%40equinor.com&roles=DROGON-READ&duration=111"
         )
         print("Execution should never reach this line")
 
@@ -43,13 +44,13 @@ def test_admin_access(explorer: Explorer):
 def test_get_userpermissions(explorer: Explorer):
     """Test the userpermissions"""
     print("Running test:", inspect.currentframe().f_code.co_name)
-    response = explorer._sumo.get(f"/userpermissions")
+    response = explorer._sumo.get("/userpermissions")
     print("/Userpermissions response: ", response.text)
     userperms = json.loads(response.text)
     assert "Drogon" in userperms
     assert "read" in userperms.get("Drogon")
-    assert 1 == len(userperms.get("Drogon"))
-    assert 1 == len(userperms)
+    assert len(userperms.get("Drogon")) == 1
+    assert len(userperms) == 1
 
 
 def test_get_cases(explorer: Explorer):
@@ -72,7 +73,7 @@ def test_write(explorer: Explorer):
     print("case uuid:", case.metadata.get("fmu").get("case").get("uuid"))
     with pytest.raises(Exception, match="403*"):
         print("About to write a case which should raise exception")
-        explorer._sumo.post(f"/objects", json=case.metadata)
+        explorer._sumo.post("/objects", json=case.metadata)
         print("Execution should never reach this line")
 
 
@@ -81,13 +82,17 @@ def test_delete(explorer: Explorer):
     print("Running test:", inspect.currentframe().f_code.co_name)
 
     with pytest.raises(Exception, match="403*"):
-        res = explorer._sumo.delete(f"/objects('dcff880f-b35b-3598-08bc-2a408c85d204')")
+        res = explorer._sumo.delete(
+            "/objects('dcff880f-b35b-3598-08bc-2a408c85d204')"
+        )
         print("Execution should never reach this line")
         print("Unexpected status: ", res.status_code)
         print("Unexpected response: ", res.text)
 
     with pytest.raises(Exception, match="403*"):
-        res = explorer._sumo.delete(f"/objects('392c3c70-dd1a-41b5-ac49-0e369a0ac4eb')")
+        res = explorer._sumo.delete(
+            "/objects('392c3c70-dd1a-41b5-ac49-0e369a0ac4eb')"
+        )
         print("Execution should never reach this line")
         print("Unexpected status: ", res.status_code)
         print("Unexpected response: ", res.text)
@@ -121,18 +126,29 @@ def test_aggregations_fast(explorer: Explorer):
     assert len(cases) > 0
     case = None
     for c in cases:
-        if (len(c.realizations) > 1 and
-            len(c.surfaces) > 40 and
-            len(c.iterations) == 1 and
-            len(c.surfaces.filter(name="Therys Fm.", tagname="FACIES_Fraction_Calcite")) > 2):
+        if (
+            len(c.realizations) > 1
+            and len(c.surfaces) > 40
+            and len(c.iterations) == 1
+            and len(
+                c.surfaces.filter(
+                    name="Therys Fm.", tagname="FACIES_Fraction_Calcite"
+                )
+            )
+            > 2
+        ):
             case = c
             break
     assert case
     case_uuid = case.metadata.get("fmu").get("case").get("uuid")
-    surface1 = case.surfaces.filter(name="Therys Fm.", realization=0, tagname="FACIES_Fraction_Calcite")
-    surface2 = case.surfaces.filter(name="Therys Fm.", realization=1, tagname="FACIES_Fraction_Calcite")
-    print ("Len filtered: ", len(surface1))
-    print ("Len filtered: ", len(surface2))
+    surface1 = case.surfaces.filter(
+        name="Therys Fm.", realization=0, tagname="FACIES_Fraction_Calcite"
+    )
+    surface2 = case.surfaces.filter(
+        name="Therys Fm.", realization=1, tagname="FACIES_Fraction_Calcite"
+    )
+    print("Len filtered: ", len(surface1))
+    print("Len filtered: ", len(surface2))
     assert len(surface1) == 1
     assert len(surface2) == 1
     surface_uuids = [surface1[0].uuid, surface2[0].uuid]
@@ -145,10 +161,11 @@ def test_aggregations_fast(explorer: Explorer):
     print("About to trigger fast-aggregation on case", case_uuid)
     print("using body", body)
     # A READ role user shall be allowed to use FAST aggregation (but not bulk aggr)
-    response = explorer._sumo.post(f"/aggregations", json=body)
+    response = explorer._sumo.post("/aggregations", json=body)
     print("Response status code:", response.status_code)
     assert response.status_code in [200, 201, 202]
     print("Length of returned aggregate object:", len(response.text))
+
 
 # Remove or update this test when bulk aggregation is finalized
 # @pytest.mark.skipif(not (sys.platform == "linux" and
@@ -225,4 +242,3 @@ def test_get_message_log_truncate(explorer: Explorer):
         print("Execution should never reach this line")
         print("Unexpected status: ", response.status_code)
         print("Unexpected response: ", response.text)
-

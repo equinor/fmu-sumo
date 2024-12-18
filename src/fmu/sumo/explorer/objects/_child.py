@@ -1,8 +1,10 @@
 """module containing class for child object"""
 
-from typing import Dict
 from io import BytesIO
+from typing import Dict
+
 from sumo.wrapper import SumoClient
+
 from fmu.sumo.explorer.objects._document import Document
 
 _prop_desc = [
@@ -87,8 +89,10 @@ class Child(Document):
 
     @property
     def template_path(self):
-        return "/".join(["{realization}", "{iteration}"] +
-                        self.relative_path.split("/")[2:])
+        return "/".join(
+            ["{realization}", "{iteration}"]
+            + self.relative_path.split("/")[2:]
+        )
 
 
 Child.map_properties(Child, _prop_desc)

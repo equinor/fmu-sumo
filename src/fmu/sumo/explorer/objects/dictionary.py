@@ -2,7 +2,9 @@
 
 import json
 from typing import Dict
+
 from sumo.wrapper import SumoClient
+
 from fmu.sumo.explorer.objects._child import Child
 
 

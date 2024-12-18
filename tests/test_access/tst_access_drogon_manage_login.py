@@ -1,12 +1,12 @@
 """Test access to SUMO using a DROGON-MANAGE login.
-    Shall only run in Github Actions as a specific user with 
-    specific access rights. Running this test with your personal login
-    will fail."""
+Shall only run in Github Actions as a specific user with
+specific access rights. Running this test with your personal login
+will fail."""
 
-import os
-import sys
-import json
 import inspect
+import json
+import os
+
 import pytest
 from context import (
     Explorer,
@@ -36,7 +36,7 @@ def test_admin_access(explorer: Explorer):
     with pytest.raises(Exception, match="403*"):
         print("About to call an admin endpoint which should raise exception")
         explorer._sumo.get(
-            f"/admin/make-shared-access-key?user=noreply%40equinor.com&roles=DROGON-READ&duration=111"
+            "/admin/make-shared-access-key?user=noreply%40equinor.com&roles=DROGON-READ&duration=111"
         )
         print("Execution should never reach this line")
 
@@ -44,13 +44,13 @@ def test_admin_access(explorer: Explorer):
 def test_get_userpermissions(explorer: Explorer):
     """Test the userpermissions"""
     print("Running test:", inspect.currentframe().f_code.co_name)
-    response = explorer._sumo.get(f"/userpermissions")
+    response = explorer._sumo.get("/userpermissions")
     print("/Userpermissions response: ", response.text)
     userperms = json.loads(response.text)
     assert "Drogon" in userperms
     assert "manage" in userperms.get("Drogon")
-    assert 1 == len(userperms.get("Drogon"))
-    assert 1 == len(userperms)
+    assert len(userperms.get("Drogon")) == 1
+    assert len(userperms) == 1
 
 
 def test_get_cases(explorer: Explorer):
@@ -72,7 +72,7 @@ def test_write(explorer: Explorer):
     case = cases[0]
     print("case uuid:", case.metadata.get("fmu").get("case").get("uuid"))
     print("About to write to a case")
-    response = explorer._sumo.post(f"/objects", json=case.metadata)
+    response = explorer._sumo.post("/objects", json=case.metadata)
     print(response.status_code)
     print(response.text)
     assert response.status_code == 200
@@ -95,6 +95,7 @@ def test_read_restricted_classification_data(explorer: Explorer):
     hits = response_json.get("hits").get("total").get("value")
     print("Hits on restricted:", hits)
     assert hits > 0
+
 
 # Remove or update this test when bulk aggregation is finalized
 # @pytest.mark.skipif(not (sys.platform == "linux" and
@@ -166,7 +167,7 @@ def test_aggregations_fast(explorer: Explorer):
         "class": "surface",
         "iteration_name": case.iterations[0].name,
     }
-    response = explorer._sumo.post(f"/aggregations", json=body)
+    response = explorer._sumo.post("/aggregations", json=body)
     print("Response status code:", response.status_code)
     assert response.status_code == 200
     print("Length of returned aggregate object:", len(response.text))
