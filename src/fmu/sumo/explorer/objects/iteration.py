@@ -1,7 +1,9 @@
-""" Module for (pseudo) iteration class. """
+"""Module for (pseudo) iteration class."""
 
 from typing import Dict
+
 from sumo.wrapper import SumoClient
+
 from fmu.sumo.explorer.objects._document import Document
 from fmu.sumo.explorer.objects._search_context import SearchContext
 
@@ -20,7 +22,11 @@ class Iteration(Document, SearchContext):
 
     def __init__(self, sumo: SumoClient, metadata: Dict):
         Document.__init__(self, metadata)
-        SearchContext.__init__(self, sumo, must=[{"term": {"fmu.iteration.uuid.keyword": self.uuid}}])
+        SearchContext.__init__(
+            self,
+            sumo,
+            must=[{"term": {"fmu.iteration.uuid.keyword": self.uuid}}],
+        )
 
 
 Iteration.map_properties(Iteration, _prop_desc)

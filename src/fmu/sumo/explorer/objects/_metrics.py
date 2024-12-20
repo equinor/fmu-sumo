@@ -4,10 +4,10 @@ class Metrics:
         return
 
     def _aggregate(self, op, **kwargs):
-        aggs = {"agg": {op: {k: v for k, v in kwargs.items() if v is not None}}}
-        qdoc = {"query": self._search_context._query,
-                "aggs": aggs,
-                "size": 0}
+        aggs = {
+            "agg": {op: {k: v for k, v in kwargs.items() if v is not None}}
+        }
+        qdoc = {"query": self._search_context._query, "aggs": aggs, "size": 0}
         res = self._search_context._sumo.post("/search", json=qdoc).json()
         return res["aggregations"]["agg"]
 
@@ -130,5 +130,6 @@ class Metrics:
             A dictionary of percentiles.
 
         """
-        return self._aggregate("percentiles", field=field,
-                               percents=percents)["values"]
+        return self._aggregate("percentiles", field=field, percents=percents)[
+            "values"
+        ]
