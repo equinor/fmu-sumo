@@ -55,21 +55,31 @@ class CPGridProperty(Child):
 
     @property
     def grid(self):
-        sc = SearchContext(self._sumo).filter(complex={
-            "bool": {
-                "must": [
-                    {
-                        "term": {
-                            "file.relative_path.keyword": self._metadata["data"]["geometry"]["relative_path"]
-                        }
-                    },
-                    {
-                        "term": {
-                            "fmu.case.uuid.keyword": self._metadata["fmu"]["case"]["uuid"]
-                        }
-                    }
-                ]
+        """Get cpgrid object associated with this cpgrid_property instances.
+        Returns:
+            Grid: a Grid object (an instance of class CPGrid).
+        """
+        sc = SearchContext(self._sumo).filter(
+            complex={
+                "bool": {
+                    "must": [
+                        {
+                            "term": {
+                                "file.relative_path.keyword": self._metadata[
+                                    "data"
+                                ]["geometry"]["relative_path"]
+                            }
+                        },
+                        {
+                            "term": {
+                                "fmu.case.uuid.keyword": self._metadata["fmu"][
+                                    "case"
+                                ]["uuid"]
+                            }
+                        },
+                    ]
+                }
             }
-        })
+        )
         assert len(sc) == 1
         return sc[0]

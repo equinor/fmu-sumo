@@ -55,20 +55,30 @@ class CPGrid(Child):
 
     @property
     def grid_properties(self):
+        """Get cpgrid_property instances that use this cpgrid instance.
+        Returns:
+            GridProperties: a SearchContext that holds the linked CPGridProperty instances.
+        """
         sc = SearchContext(self._sumo)
-        return sc.filter(complex={
-            "bool": {
-                "must": [
-                    {
-                        "term": {
-                            "data.geometry.relative_path.keyword": self._metadata["file"]["relative_path"]
-                        }
-                    },
-                    {
-                        "term": {
-                            "fmu.case.uuid.keyword": self._metadata["fmu"]["case"]["uuid"]
-                        }
-                    }
-                ]
+        return sc.filter(
+            complex={
+                "bool": {
+                    "must": [
+                        {
+                            "term": {
+                                "data.geometry.relative_path.keyword": self._metadata[
+                                    "file"
+                                ]["relative_path"]
+                            }
+                        },
+                        {
+                            "term": {
+                                "fmu.case.uuid.keyword": self._metadata["fmu"][
+                                    "case"
+                                ]["uuid"]
+                            }
+                        },
+                    ]
+                }
             }
-        })
+        )
