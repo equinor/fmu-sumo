@@ -331,18 +331,18 @@ class SearchContext:
         if self._hits is not None:
             return len(self._hits)
         if self._length is None:
-            query = {"query": self._query, "size": 0, "track_total_hits": True}
-            res = self._sumo.post("/search", json=query).json()
-            self._length = res["hits"]["total"]["value"]
+            query = {"query": self._query}
+            res = self._sumo.post("/count", json=query).json()
+            self._length = res["count"]
         return self._length
 
     async def length_async(self):
         if self._hits is not None:
             return len(self._hits)
         if self._length is None:
-            query = {"query": self._query, "size": 0, "track_total_hits": True}
-            res = (await self._sumo.post_async("/search", json=query)).json()
-            self._length = res["hits"]["total"]["value"]
+            query = {"query": self._query}
+            res = (await self._sumo.post_async("/count", json=query)).json()
+            self._length = res["count"]
         return self._length
 
     def __search_all(self, query, size=1000, select=False):
