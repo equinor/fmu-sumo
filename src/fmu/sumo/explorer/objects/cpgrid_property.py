@@ -5,6 +5,7 @@ from typing import Dict
 from sumo.wrapper import SumoClient
 
 from fmu.sumo.explorer.objects._child import Child
+from fmu.sumo.explorer.objects._search_context import SearchContext
 
 
 class CPGridProperty(Child):
@@ -51,3 +52,34 @@ class CPGridProperty(Child):
             return gridproperty_from_file(await self.blob_async)
         except TypeError as type_err:
             raise TypeError(f"Unknown format: {self.format}") from type_err
+
+    @property
+    def grid(self):
+        """Get cpgrid object associated with this cpgrid_property instances.
+        Returns:
+            Grid: a Grid object (an instance of class CPGrid).
+        """
+        sc = SearchContext(self._sumo).filter(
+            complex={
+                "bool": {
+                    "must": [
+                        {
+                            "term": {
+                                "file.relative_path.keyword": self._metadata[
+                                    "data"
+                                ]["geometry"]["relative_path"]
+                            }
+                        },
+                        {
+                            "term": {
+                                "fmu.case.uuid.keyword": self._metadata["fmu"][
+                                    "case"
+                                ]["uuid"]
+                            }
+                        },
+                    ]
+                }
+            }
+        )
+        assert len(sc) == 1
+        return sc[0]
