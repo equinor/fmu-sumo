@@ -1324,6 +1324,102 @@ class SearchContext:
                 columns=columns, operation=operation
             )
 
+    async def _verify_aggregation_operation_async(self):
+        query = {
+            "query": self._query,
+            "size": 1,
+            "track_total_hits": True,
+            "aggs": {
+                k: {"terms": {"field": k + ".keyword", "size": 1}}
+                for k in [
+                    "fmu.case.uuid",
+                    "class",
+                    "fmu.iteration.name",
+                    "data.name",
+                    "data.tagname",
+                    "data.content",
+                ]
+            },
+        }
+        sres = (await self._sumo.post_async("/search", json=query)).json()
+        prototype = sres["hits"]["hits"][0]
+        conflicts = [
+            k
+            for (k, v) in sres["aggregations"].items()
+            if (
+                ("sum_other_doc_count" in v) and (v["sum_other_doc_count"] > 0)
+            )
+        ]
+        if len(conflicts) > 0:
+            raise Exception(f"Conflicting values for {conflicts}")
+
+        hits = await self._search_all_async(select=["fmu.realization.id"])
+
+        if any(
+            hit["_source"]["fmu"].get("realization") is None for hit in hits
+        ):
+            raise Exception("Selection contains non-realization data.")
+
+        uuids = [hit["_id"] for hit in hits]
+        rids = [hit["_source"]["fmu"]["realization"]["id"] for hit in hits]
+        return prototype, uuids, rids
+
+    async def _aggregate_async(self, columns=None, operation=None):
+        (
+            prototype,
+            uuids,
+            rids,
+        ) = await self._verify_aggregation_operation_async()
+        spec = {
+            "object_ids": uuids,
+            "operations": [operation],
+        }
+        del prototype["_source"]["fmu"]["realization"]
+        del prototype["_source"]["_sumo"]
+        del prototype["_source"]["file"]
+        del prototype["_source"]["access"]
+        if "context" in prototype["_source"]["fmu"]:
+            prototype["_source"]["fmu"]["context"]["stage"] = "iteration"
+            pass
+        prototype["_source"]["fmu"]["aggregation"] = {
+            "id": str(uuid.uuid4()),
+            "realization_ids": rids,
+            "operation": operation,
+        }
+        if columns is not None:
+            spec["columns"] = columns
+            cols = columns[:]
+            table_index = prototype["_source"]["data"].get("table_index")
+            if (
+                table_index is not None
+                and len(table_index) != 0
+                and table_index[0] not in cols
+            ):
+                cols.insert(0, table_index[0])
+                pass
+            prototype["_source"]["data"]["spec"]["columns"] = cols
+            pass
+        try:
+            res = await self._sumo.post_async("/aggregations", json=spec)
+        except httpx.HTTPStatusError as ex:
+            print(ex.response.reason_phrase)
+            print(ex.response.text)
+            raise ex
+        blob = BytesIO(res.content)
+        res = self._to_sumo(prototype, blob)
+        res._blob = blob
+        return res
+
+    async def aggregate_async(self, columns=None, operation=None):
+        if len(self.hidden) > 0:
+            return await self.hidden._aggregate_async(
+                columns=columns, operation=operation
+            )
+        else:
+            return await self.visible._aggregate_async(
+                columns=columns, operation=operation
+            )
+
     @deprecation.deprecated(
         details="Use the method 'aggregate' instead, with parameter 'operation'."
     )
