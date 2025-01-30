@@ -1036,7 +1036,7 @@ class SearchContext:
         return obj
 
     async def _get_object_by_class_and_uuid_async(self, cls, uuid):
-        obj = self.get_object_async(uuid)
+        obj = await self.get_object_async(uuid)
         if obj.metadata["class"] != cls:
             raise Exception(f"Document of type {cls} not found: {uuid}")
         return obj
