@@ -1365,7 +1365,11 @@ class SearchContext:
         return prototype, uuids, rids
 
     async def _aggregate_async(self, columns=None, operation=None):
-        prototype, uuids, rids = await self._verify_aggregation_operation_async()
+        (
+            prototype,
+            uuids,
+            rids,
+        ) = await self._verify_aggregation_operation_async()
         spec = {
             "object_ids": uuids,
             "operations": [operation],
@@ -1408,9 +1412,11 @@ class SearchContext:
 
     async def aggregate_async(self, columns=None, operation=None):
         if len(self.hidden) > 0:
-            return self.hidden._aggregate_async(columns=columns, operation=operation)
+            return await self.hidden._aggregate_async(
+                columns=columns, operation=operation
+            )
         else:
-            return self.visible._aggregate_async(
+            return await self.visible._aggregate_async(
                 columns=columns, operation=operation
             )
 
