@@ -1236,7 +1236,10 @@ class SearchContext:
         return objects.Table(self._sumo, metadata)
 
     def aggregate(self, columns=None, operation=None):
-        return asyncio.run(self.aggregate_async(columns=columns, operation=operation))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self.aggregate_async(columns=columns, operation=operation)
+        )
 
     async def _verify_aggregation_operation_async(self):
         query = {
@@ -1333,6 +1336,25 @@ class SearchContext:
             return await self.visible._aggregate_async(
                 columns=columns, operation=operation
             )
+
+    async def aggregation_async(self, column=None, operation=None):
+        assert operation is not None
+        assert column is None or isinstance(column, str)
+        sc = self.filter(aggregation=operation, column=column)
+        assert (await sc.length_async()) <= 1
+        if len(sc) == 1:
+            return sc[0]
+        else:
+            return await self.filter(realization=True).aggregate_async(
+                columns=[column] if column is not None else None,
+                operation=operation,
+            )
+
+    def aggregation(self, column=None, operation=None):
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self.aggregation_async(column=column, operation=operation)
+        )
 
     @deprecation.deprecated(
         details="Use the method 'aggregate' instead, with parameter 'operation'."
