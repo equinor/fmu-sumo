@@ -1341,8 +1341,9 @@ class SearchContext:
         assert operation is not None
         assert column is None or isinstance(column, str)
         sc = self.filter(aggregation=operation, column=column)
-        assert (await sc.length_async()) <= 1
-        if len(sc) == 1:
+        numaggs = await sc.length_async()
+        assert numaggs <= 1
+        if numaggs == 1:
             return sc[0]
         else:
             return await self.filter(realization=True).aggregate_async(
