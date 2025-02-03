@@ -1344,7 +1344,7 @@ class SearchContext:
         numaggs = await sc.length_async()
         assert numaggs <= 1
         if numaggs == 1:
-            return sc[0]
+            return await sc.getitem_async(0)
         else:
             return await self.filter(realization=True).aggregate_async(
                 columns=[column] if column is not None else None,
