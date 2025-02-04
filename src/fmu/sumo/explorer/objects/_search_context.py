@@ -1,4 +1,3 @@
-import asyncio
 import uuid
 import warnings
 from datetime import datetime
@@ -1235,11 +1234,95 @@ class SearchContext:
         metadata = await self.get_object_async(uuid)
         return objects.Table(self._sumo, metadata)
 
+    def _verify_aggregation_operation(self):
+        query = {
+            "query": self._query,
+            "size": 1,
+            "track_total_hits": True,
+            "aggs": {
+                k: {"terms": {"field": k + ".keyword", "size": 1}}
+                for k in [
+                    "fmu.case.uuid",
+                    "class",
+                    "fmu.iteration.name",
+                    "data.name",
+                    "data.tagname",
+                    "data.content",
+                ]
+            },
+        }
+        sres = self._sumo.post("/search", json=query).json()
+        prototype = sres["hits"]["hits"][0]
+        conflicts = [
+            k
+            for (k, v) in sres["aggregations"].items()
+            if (
+                ("sum_other_doc_count" in v) and (v["sum_other_doc_count"] > 0)
+            )
+        ]
+        if len(conflicts) > 0:
+            raise Exception(f"Conflicting values for {conflicts}")
+
+        hits = self._search_all(select=["fmu.realization.id"])
+
+        if any(
+            hit["_source"]["fmu"].get("realization") is None for hit in hits
+        ):
+            raise Exception("Selection contains non-realization data.")
+
+        uuids = [hit["_id"] for hit in hits]
+        rids = [hit["_source"]["fmu"]["realization"]["id"] for hit in hits]
+        return prototype, uuids, rids
+
+    def _aggregate(self, columns=None, operation=None):
+        prototype, uuids, rids = self._verify_aggregation_operation()
+        spec = {
+            "object_ids": uuids,
+            "operations": [operation],
+        }
+        del prototype["_source"]["fmu"]["realization"]
+        del prototype["_source"]["_sumo"]
+        del prototype["_source"]["file"]
+        del prototype["_source"]["access"]
+        if "context" in prototype["_source"]["fmu"]:
+            prototype["_source"]["fmu"]["context"]["stage"] = "iteration"
+            pass
+        prototype["_source"]["fmu"]["aggregation"] = {
+            "id": str(uuid.uuid4()),
+            "realization_ids": rids,
+            "operation": operation,
+        }
+        if columns is not None:
+            spec["columns"] = columns
+            cols = columns[:]
+            table_index = prototype["_source"]["data"].get("table_index")
+            if (
+                table_index is not None
+                and len(table_index) != 0
+                and table_index[0] not in cols
+            ):
+                cols.insert(0, table_index[0])
+                pass
+            prototype["_source"]["data"]["spec"]["columns"] = cols
+            pass
+        try:
+            res = self._sumo.post("/aggregations", json=spec)
+        except httpx.HTTPStatusError as ex:
+            print(ex.response.reason_phrase)
+            print(ex.response.text)
+            raise ex
+        blob = BytesIO(res.content)
+        res = self._to_sumo(prototype, blob)
+        res._blob = blob
+        return res
+
     def aggregate(self, columns=None, operation=None):
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
-            self.aggregate_async(columns=columns, operation=operation)
-        )
+        if len(self.hidden) > 0:
+            return self.hidden._aggregate(columns=columns, operation=operation)
+        else:
+            return self.visible._aggregate(
+                columns=columns, operation=operation
+            )
 
     async def _verify_aggregation_operation_async(self):
         query = {
@@ -1337,6 +1420,20 @@ class SearchContext:
                 columns=columns, operation=operation
             )
 
+    def aggregation(self, column=None, operation=None):
+        assert operation is not None
+        assert column is None or isinstance(column, str)
+        sc = self.filter(aggregation=operation, column=column)
+        numaggs = len(sc)
+        assert numaggs <= 1
+        if numaggs == 1:
+            return sc[0]
+        else:
+            return self.filter(realization=True).aggregate(
+                columns=[column] if column is not None else None,
+                operation=operation,
+            )
+
     async def aggregation_async(self, column=None, operation=None):
         assert operation is not None
         assert column is None or isinstance(column, str)
@@ -1350,12 +1447,6 @@ class SearchContext:
                 columns=[column] if column is not None else None,
                 operation=operation,
             )
-
-    def aggregation(self, column=None, operation=None):
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
-            self.aggregation_async(column=column, operation=operation)
-        )
 
     @deprecation.deprecated(
         details="Use the method 'aggregate' instead, with parameter 'operation'."
