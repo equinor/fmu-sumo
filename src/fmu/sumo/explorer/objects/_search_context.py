@@ -1420,6 +1420,34 @@ class SearchContext:
                 columns=columns, operation=operation
             )
 
+    def aggregation(self, column=None, operation=None):
+        assert operation is not None
+        assert column is None or isinstance(column, str)
+        sc = self.filter(aggregation=operation, column=column)
+        numaggs = len(sc)
+        assert numaggs <= 1
+        if numaggs == 1:
+            return sc[0]
+        else:
+            return self.filter(realization=True).aggregate(
+                columns=[column] if column is not None else None,
+                operation=operation,
+            )
+
+    async def aggregation_async(self, column=None, operation=None):
+        assert operation is not None
+        assert column is None or isinstance(column, str)
+        sc = self.filter(aggregation=operation, column=column)
+        numaggs = await sc.length_async()
+        assert numaggs <= 1
+        if numaggs == 1:
+            return await sc.getitem_async(0)
+        else:
+            return await self.filter(realization=True).aggregate_async(
+                columns=[column] if column is not None else None,
+                operation=operation,
+            )
+
     @deprecation.deprecated(
         details="Use the method 'aggregate' instead, with parameter 'operation'."
     )
