@@ -28,8 +28,8 @@ class Explorer(SearchContext):
         token: str = None,
         interactive: bool = True,
         keep_alive: str = None,
-        http_client = None,
-        async_http_client = None,
+        http_client=None,
+        async_http_client=None,
     ):
         """Initialize the Explorer class
 
@@ -44,8 +44,8 @@ class Explorer(SearchContext):
             token=token,
             interactive=interactive,
             timeout=httpx.Timeout(180.0),
-            http_client = http_client,
-            async_http_client = async_http_client,
+            http_client=http_client,
+            async_http_client=async_http_client,
         )
         SearchContext.__init__(self, sumo)
         if keep_alive:
