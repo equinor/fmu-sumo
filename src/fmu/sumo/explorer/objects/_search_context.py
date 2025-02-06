@@ -1171,8 +1171,7 @@ class SearchContext:
         Returns:
             Surface: surface object
         """
-        metadata = self.get_object(uuid)
-        return objects.Surface(self._sumo, metadata)
+        return self._get_object_by_class_and_uuid("surface", uuid)
 
     async def get_surface_by_uuid_async(self, uuid: str):
         """Get surface object by uuid
@@ -1183,8 +1182,7 @@ class SearchContext:
         Returns:
             Surface: surface object
         """
-        metadata = await self.get_object_async(uuid)
-        return objects.Surface(self._sumo, metadata)
+        return await self._get_object_by_class_and_uuid_async("surface", uuid)
 
     def get_polygons_by_uuid(self, uuid: str):
         """Get polygons object by uuid
@@ -1195,8 +1193,7 @@ class SearchContext:
         Returns:
             Polygons: polygons object
         """
-        metadata = self.get_object(uuid)
-        return objects.Polygons(self._sumo, metadata)
+        return self._get_object_by_class_and_uuid("polygons", uuid)
 
     async def get_polygons_by_uuid_async(self, uuid: str):
         """Get polygons object by uuid
@@ -1207,8 +1204,7 @@ class SearchContext:
         Returns:
             Polygons: polygons object
         """
-        metadata = await self.get_object_async(uuid)
-        return objects.Polygons(self._sumo, metadata)
+        return await self._get_object_by_class_and_uuid_async("polygons", uuid)
 
     def get_table_by_uuid(self, uuid: str):
         """Get table object by uuid
@@ -1219,8 +1215,7 @@ class SearchContext:
         Returns:
             Table: table object
         """
-        metadata = self.get_object(uuid)
-        return objects.Table(self._sumo, metadata)
+        return self._get_object_by_class_and_uuid("table", uuid)
 
     async def get_table_by_uuid_async(self, uuid: str):
         """Get table object by uuid
@@ -1231,8 +1226,7 @@ class SearchContext:
         Returns:
             Table: table object
         """
-        metadata = await self.get_object_async(uuid)
-        return objects.Table(self._sumo, metadata)
+        return await self._get_object_by_class_and_uuid_async("table", uuid)
 
     def _verify_aggregation_operation(self):
         query = {
