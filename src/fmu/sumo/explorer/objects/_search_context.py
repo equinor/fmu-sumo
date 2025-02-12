@@ -1104,7 +1104,9 @@ class SearchContext:
         Returns: iteration object
         """
         res = (
-            await self._sumo.post("/search", json=self._iteration_query(uuid))
+            await self._sumo.post_async(
+                "/search", json=self._iteration_query(uuid)
+            )
         ).json()
         obj = res["hits"]["hits"][0]
         obj["_id"] = uuid
