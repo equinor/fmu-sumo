@@ -1405,7 +1405,8 @@ class SearchContext:
         return res
 
     async def aggregate_async(self, columns=None, operation=None):
-        if len(self.hidden) > 0:
+        length_hidden = await self.hidden.length_async()
+        if length_hidden > 0:
             return await self.hidden._aggregate_async(
                 columns=columns, operation=operation
             )
