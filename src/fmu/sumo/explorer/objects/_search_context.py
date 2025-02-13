@@ -495,10 +495,14 @@ class SearchContext:
         the values are lists of strings. The string values are nested
         property names.
 
+        This method returns itself, so it is chainable, but the select
+        settings will not propagate into a new SearchContext
+        (specifically, it will not be passed into the result of .filter()).
+
         Args:
             sel (str | List(str) | Dict(str, List[str]): select specification
         Returns:
-            None
+            itself (SearchContext)
         """
 
         required = {"class"}
@@ -525,6 +529,7 @@ class SearchContext:
             self._select = slct
             pass
         self._cache.clear()
+        return self
 
     def get_object(self, uuid: str) -> Dict:
         """Get metadata object by uuid
