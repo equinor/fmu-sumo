@@ -4,8 +4,8 @@ class Filters:
         "bool": {
             "must": [
                 {"term": {"data.content.keyword": "seismic"}},
-                {"term": {"data.time.t0.label.keyword": "base"}},
-                {"term": {"data.time.t1.label.keyword": "monitor"}},
+                {"exists": {"field": "data.time.t0.label"}},
+                {"exists": {"field": "data.time.t1.label"}},
             ]
         }
     }
