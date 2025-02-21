@@ -9,7 +9,7 @@ from fmu.sumo.explorer.objects._child import Child
 
 
 class Dictionary(Child):
-    """Class representig a dictionary object in Sumo"""
+    """Class representing a dictionary object in Sumo"""
 
     _parsed: dict
 
@@ -25,6 +25,13 @@ class Dictionary(Child):
 
     def parse(self) -> Dict:
         if self._parsed is None:
-            self._parsed = json.loads(self.blob.decode("utf-8"))
+            self._parsed = json.loads(self.blob.read().decode("utf-8"))
 
         return self._parsed
+
+    async def parse_async(self) -> Dict:
+        if self._parsed is None:
+            self._parsed = json.loads(self.blob_async.read().decode("utf-8"))
+
+        return self._parsed
+    
