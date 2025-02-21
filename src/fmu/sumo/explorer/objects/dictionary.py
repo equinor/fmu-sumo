@@ -34,4 +34,3 @@ class Dictionary(Child):
             self._parsed = json.loads(self.blob_async.read().decode("utf-8"))
 
         return self._parsed
-    
