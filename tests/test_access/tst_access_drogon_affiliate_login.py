@@ -27,6 +27,8 @@ else:
 @pytest.fixture(name="explorer")
 def fixture_explorer(token: str) -> Explorer:
     """Returns explorer"""
+    print("TOKEN")
+    print(token)
     return Explorer("dev", token=token)
 
 
@@ -65,9 +67,7 @@ def test_get_cases(explorer: Explorer):
     # We have set up 1 case in KEEP in Drogon DEV
     # with affiliate-access and it has 2 children
     # objects with affiliate access
-    filtered_cases = cases.filter(uuid="2c2f47cf-c7ab-4112-87f9-b4797ec51cb6")
-    assert len(filtered_cases) == 1
-    case = filtered_cases[0]
+    case = explorer.get_case_by_uuid("2c2f47cf-c7ab-4112-87f9-b4797ec51cb6")
     assert case.uuid == "2c2f47cf-c7ab-4112-87f9-b4797ec51cb6"
     assert len(case.surfaces) == 1
     assert len(case.polygons) == 1

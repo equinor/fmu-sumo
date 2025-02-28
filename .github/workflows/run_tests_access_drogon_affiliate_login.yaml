@@ -1,6 +1,8 @@
 name: Test access DROGON-AFFILIATE login
 
 on:
+  pull_request:
+    branches: [main]
   schedule:
     - cron: "59 4 * * *"
   workflow_dispatch:
@@ -46,4 +48,3 @@ jobs:
           export ACCESS_TOKEN=$access_token
 
           pytest -s --timeout=300 tests/test_access/tst_access_drogon_affiliate_login.py
-
