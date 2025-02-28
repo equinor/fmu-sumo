@@ -128,7 +128,6 @@ def test_get_object(explorer: Explorer):
     case_object_uuid = "2c2f47cf-c7ab-4112-87f9-b4797ec51cb6"
     response = explorer._sumo.get(f"/objects('{case_object_uuid}')")
     print("case retval:", response)
-    print("case retval.content:", response.content)
     assert response.status_code == 200
     response_json = json.loads(response.text)
     case_uuid = response_json.get("_id")
