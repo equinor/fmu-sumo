@@ -7,9 +7,7 @@ from fmu.sumo.explorer.objects._search_context import SearchContext
 
 class Realizations(SearchContext):
     def __init__(self, sc, uuids):
-        super().__init__(
-            sc._sumo, must=[{"ids": {"values": uuids}}]
-        )
+        super().__init__(sc._sumo, must=[{"ids": {"values": uuids}}])
         self._hits = uuids
         return
 
