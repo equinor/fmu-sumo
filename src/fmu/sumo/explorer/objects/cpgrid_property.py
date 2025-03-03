@@ -64,18 +64,30 @@ class CPGridProperty(Child):
             iteration=self.iteration,
             realization=self.realization,
         )
+        should = [
+            {"term": {"data.name.keyword": self.tagname}},
+        ]
+        if (
+            self.metadata.get("data", {})
+            .get("geometry", {})
+            .get("relative_path", None)
+            is not None
+        ):
+            should.append(
+                {
+                    "term": {
+                        "file.relative_path.keyword": self._metadata["data"][
+                            "geometry"
+                        ]["relative_path"]
+                    }
+                }
+            )
+            pass
         sc = sc.filter(
             complex={
                 "bool": {
                     "minimum_should_match": 1,
-                    "should": [
-                        {
-                            "term": {
-                                "file.relative_path.keyword": self._metadata["data"]["geometry"]["relative_path"]
-                            }
-                        },
-                        {"term": {"data.name.keyword": self.tagname}},
-                    ],
+                    "should": should,
                 }
             }
         )
