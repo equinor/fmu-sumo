@@ -12,6 +12,7 @@ _prop_desc = [
     ("dataname", "data.name", "Object name"),
     ("classname", "class.name", "Object class name"),
     ("casename", "fmu.case.name", "Object case name"),
+    ("caseuuid", "fmu.case.uuid", "Object case uuid"),
     ("content", "data.content", "Content"),
     ("tagname", "data.tagname", "Object tagname"),
     ("columns", "data.spec.columns", "Object table columns"),
