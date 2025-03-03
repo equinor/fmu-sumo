@@ -67,21 +67,13 @@ class CPGridProperty(Child):
         should = [
             {"term": {"data.name.keyword": self.tagname}},
         ]
-        if (
+        dgrp = (
             self.metadata.get("data", {})
             .get("geometry", {})
             .get("relative_path", None)
-            is not None
-        ):
-            should.append(
-                {
-                    "term": {
-                        "file.relative_path.keyword": self._metadata["data"][
-                            "geometry"
-                        ]["relative_path"]
-                    }
-                }
-            )
+        )
+        if dgrp is not None:
+            should.append({"term": {"file.relative_path.keyword": dgrp}})
             pass
         sc = sc.filter(
             complex={
