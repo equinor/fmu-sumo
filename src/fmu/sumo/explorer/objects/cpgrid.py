@@ -59,26 +59,23 @@ class CPGrid(Child):
         Returns:
             GridProperties: a SearchContext that holds the linked CPGridProperty instances.
         """
-        sc = SearchContext(self._sumo)
+        sc = SearchContext(self._sumo).grid_properties.filter(
+            uuid=self.caseuuid,
+            iteration=self.iteration,
+            realization=self.realization,
+        )
         return sc.filter(
             complex={
                 "bool": {
-                    "must": [
+                    "minimum_should_match": 1,
+                    "should": [
                         {
                             "term": {
-                                "data.geometry.relative_path.keyword": self._metadata[
-                                    "file"
-                                ]["relative_path"]
+                                "data.geometry.relative_path.keyword": self.relative_path
                             }
                         },
-                        {
-                            "term": {
-                                "fmu.case.uuid.keyword": self._metadata["fmu"][
-                                    "case"
-                                ]["uuid"]
-                            }
-                        },
-                    ]
+                        {"term": {"data.tagname.keyword": self.name}},
+                    ],
                 }
-            }
+            },
         )
