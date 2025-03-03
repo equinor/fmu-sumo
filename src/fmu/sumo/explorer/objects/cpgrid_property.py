@@ -59,25 +59,23 @@ class CPGridProperty(Child):
         Returns:
             Grid: a Grid object (an instance of class CPGrid).
         """
-        sc = SearchContext(self._sumo).filter(
+        sc = SearchContext(self._sumo).grids.filter(
+            uuid=self.caseuuid,
+            iteration=self.iteration,
+            realization=self.realization,
+        )
+        sc = sc.filter(
             complex={
                 "bool": {
-                    "must": [
+                    "minimum_should_match": 1,
+                    "should": [
                         {
                             "term": {
-                                "file.relative_path.keyword": self._metadata[
-                                    "data"
-                                ]["geometry"]["relative_path"]
+                                "file.relative_path.keyword": self._metadata["data"]["geometry"]["relative_path"]
                             }
                         },
-                        {
-                            "term": {
-                                "fmu.case.uuid.keyword": self._metadata["fmu"][
-                                    "case"
-                                ]["uuid"]
-                            }
-                        },
-                    ]
+                        {"term": {"data.name.keyword": self.tagname}},
+                    ],
                 }
             }
         )
