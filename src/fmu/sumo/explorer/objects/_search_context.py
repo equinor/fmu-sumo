@@ -125,6 +125,7 @@ _filterspec = {
     "time": [_gen_filter_time, None],
     "name": [_gen_filter_name, None],
     "uuid": [_gen_filter_gen, "fmu.case.uuid.keyword"],
+    "relative_path": [_gen_filter_gen, "file.relative_path.keyword"],
     "tagname": [_gen_filter_gen, "data.tagname.keyword"],
     "dataformat": [_gen_filter_gen, "data.format.keyword"],
     "iteration": [_gen_filter_gen, "fmu.iteration.name.keyword"],
