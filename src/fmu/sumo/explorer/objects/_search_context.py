@@ -502,11 +502,17 @@ class SearchContext:
 
     @property
     def single(self):
+        """Verifies that SearchContext contains exactly one object,
+        and returns it.
+        """
         assert len(self) == 1
         return self[0]
 
     @property
     async def single_async(self):
+        """Verifies that SearchContext contains exactly one object,
+        and returns it.
+        """
         assert await self.length_async() == 1
         return await self.getitem_async(0)
 
