@@ -186,6 +186,18 @@ _bucket_spec = {
     "columns": ["data.spec.columns.keyword", "List of unique column names."],
     "statuses": ["_sumo.status.keyword", "List of unique case statuses."],
     "users": ["fmu.case.user.id.keyword", "List of unique user names."],
+    "fieldidentifiers": [
+        "masterdata.smda.field.identifier.keyword",
+        "List of unique field names.",
+    ],
+    "stratcolumnidentifiers": [
+        "masterdata.smda.stratigraphic_column.identifier.keyword",
+        "List of unique stratigraphic column names.",
+    ],
+    "realizationids": [
+        "fmu.realization.id",
+        "List of unique realization ids.",
+    ],
 }
 
 
@@ -774,7 +786,7 @@ class SearchContext:
 
         return all_buckets
 
-    def _get_field_values(self, field: str) -> List:
+    def get_field_values(self, field: str) -> List:
         """Get List of unique values for a given field
 
         Arguments:
@@ -789,7 +801,21 @@ class SearchContext:
 
         return self._field_values[field]
 
-    async def _get_field_values_async(self, field: str) -> List:
+    @deprecation.deprecated(
+        details="Use the method 'get_field_values' instead."
+    )
+    def _get_field_values(self, field: str) -> List:
+        """Get List of unique values for a given field
+
+        Arguments:
+            - field (str): a metadata field
+
+        Returns:
+            A List of unique values for the given field
+        """
+        return self.get_field_values(field)
+
+    async def get_field_values_async(self, field: str) -> List:
         """Get List of unique values for a given field
 
         Arguments:
@@ -803,6 +829,20 @@ class SearchContext:
             self._field_values[field] = [bucket["key"] for bucket in buckets]
 
         return self._field_values[field]
+
+    @deprecation.deprecated(
+        details="Use the method 'get_field_values' instead."
+    )
+    async def _get_field_values_async(self, field: str) -> List:
+        """Get List of unique values for a given field
+
+        Arguments:
+            - field (str): a metadata field
+
+        Returns:
+            A List of unique values for the given field
+        """
+        return await self.get_field_values_async(field)
 
     _timestamp_query = {
         "bool": {
@@ -847,39 +887,37 @@ class SearchContext:
     @property
     def cases(self):
         """Cases from current selection."""
-        uuids = self._get_field_values("fmu.case.uuid.keyword")
+        uuids = self.get_field_values("fmu.case.uuid.keyword")
         return objects.Cases(self, uuids)
 
     @property
     async def cases_async(self):
         """Cases from current selection."""
-        uuids = await self._get_field_values_async("fmu.case.uuid.keyword")
+        uuids = await self.get_field_values_async("fmu.case.uuid.keyword")
         return objects.Cases(self, uuids)
 
     @property
     def iterations(self):
         """Iterations from current selection."""
-        uuids = self._get_field_values("fmu.iteration.uuid.keyword")
+        uuids = self.get_field_values("fmu.iteration.uuid.keyword")
         return objects.Iterations(self, uuids)
 
     @property
     async def iterations_async(self):
         """Iterations from current selection."""
-        uuids = await self._get_field_values_async(
-            "fmu.iteration.uuid.keyword"
-        )
+        uuids = await self.get_field_values_async("fmu.iteration.uuid.keyword")
         return objects.Iterations(self, uuids)
 
     @property
     def realizations(self):
         """Realizations from current selection."""
-        uuids = self._get_field_values("fmu.realization.uuid.keyword")
+        uuids = self.get_field_values("fmu.realization.uuid.keyword")
         return objects.Realizations(self, uuids)
 
     @property
     async def realizations_async(self):
         """Realizations from current selection."""
-        uuids = await self._get_field_values_async(
+        uuids = await self.get_field_values_async(
             "fmu.realization.uuid.keyword"
         )
         return objects.Realizations(self, uuids)
@@ -896,7 +934,7 @@ class SearchContext:
     @property
     def timestamps(self) -> List[str]:
         """List of unique timestamps in SearchContext"""
-        ts = self.filter(complex=self._timestamp_query)._get_field_values(
+        ts = self.filter(complex=self._timestamp_query).get_field_values(
             "data.time.t0.value"
         )
         return [datetime.fromtimestamp(t / 1000).isoformat() for t in ts]
@@ -904,7 +942,7 @@ class SearchContext:
     @property
     async def timestamps_async(self) -> List[str]:
         """List of unique timestamps in SearchContext"""
-        ts = await self._get_field_values_async(
+        ts = await self.get_field_values_async(
             "data.time.t0.value", self._timestamp_query
         )
         return [datetime.fromtimestamp(t / 1000).isoformat() for t in ts]
@@ -989,7 +1027,7 @@ class SearchContext:
 
         if "has" in kwargs:
             # Get list of cases matched by current filter set
-            uuids = sc._get_field_values("fmu.case.uuid.keyword")
+            uuids = sc.get_field_values("fmu.case.uuid.keyword")
             # Generate new searchcontext for objects that match the uuids
             # and also satisfy the "has" filter
             sc = SearchContext(
@@ -999,7 +1037,7 @@ class SearchContext:
                     kwargs["has"],
                 ],
             )
-            uuids = sc._get_field_values("fmu.case.uuid.keyword")
+            uuids = sc.get_field_values("fmu.case.uuid.keyword")
             sc = SearchContext(
                 self._sumo,
                 must=[{"ids": {"values": uuids}}],
@@ -1585,14 +1623,14 @@ SearchContext.filter.__doc__ = _gen_filter_doc(_filterspec)
 
 def _build_bucket_fn(property, docstring):
     def fn(self):
-        return self._get_field_values(property)
+        return self.get_field_values(property)
 
     return fn
 
 
 def _build_bucket_fn_async(property, docstring):
     async def fn(self):
-        return await self._get_field_values_async(property)
+        return await self.get_field_values_async(property)
 
     return fn
 
