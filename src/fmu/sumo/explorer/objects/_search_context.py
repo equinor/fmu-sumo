@@ -500,6 +500,16 @@ class SearchContext:
         uuid = self._hits[index]
         return await self.get_object_async(uuid)
 
+    @property
+    def single(self):
+        assert len(self) == 1
+        return self[0]
+
+    @property
+    async def single_async(self):
+        assert await self.length_async() == 1
+        return await self.getitem_async(0)
+
     def select(self, sel):
         """Specify what should be returned from elasticsearch.
         Has the side effect of clearing the lru cache.
