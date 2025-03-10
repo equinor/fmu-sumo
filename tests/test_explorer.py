@@ -187,7 +187,7 @@ def test_get_cases_combinations(explorer: Explorer):
 def test_case_surfaces_type(test_case: Case):
     """Test that all objects in Case.surfaces class surface"""
     # assert all([x.metadata["class"] == "surface" for x in test_case.surfaces])
-    classes = test_case.surfaces._get_field_values("class.keyword")
+    classes = test_case.surfaces.get_field_values("class.keyword")
     assert len(classes) == 1
     assert classes[0] == "surface"
 
@@ -219,7 +219,7 @@ def test_case_surfaces_filter(test_case: Case):
 
     # for surf in real_surfs:
     #     assert surf.iteration == "iter-0"
-    its = real_surfs._get_field_values("fmu.iteration.name.keyword")
+    its = real_surfs.get_field_values("fmu.iteration.name.keyword")
     assert len(its) == 1 and its[0] == "iter-0"
 
     # filter on name
@@ -232,9 +232,9 @@ def test_case_surfaces_filter(test_case: Case):
     # for surf in real_surfs:
     #     assert surf.iteration == "iter-0"
     #     assert surf.name == "Valysar Fm."
-    its = real_surfs._get_field_values("fmu.iteration.name.keyword")
+    its = real_surfs.get_field_values("fmu.iteration.name.keyword")
     assert len(its) == 1 and its[0] == "iter-0"
-    names = real_surfs._get_field_values("data.name.keyword")
+    names = real_surfs.get_field_values("data.name.keyword")
     assert len(names) == 1 and names[0] == "Valysar Fm."
 
     # filter on content
@@ -255,11 +255,11 @@ def test_case_surfaces_filter(test_case: Case):
     #     assert surf.iteration == "iter-0"
     #     assert surf.name == "Valysar Fm."
     #     assert surf.tagname == "FACIES_Fraction_Channel"
-    its = real_surfs._get_field_values("fmu.iteration.name.keyword")
+    its = real_surfs.get_field_values("fmu.iteration.name.keyword")
     assert len(its) == 1 and its[0] == "iter-0"
-    names = real_surfs._get_field_values("data.name.keyword")
+    names = real_surfs.get_field_values("data.name.keyword")
     assert len(names) == 1 and names[0] == "Valysar Fm."
-    tagnames = real_surfs._get_field_values("data.tagname.keyword")
+    tagnames = real_surfs.get_field_values("data.tagname.keyword")
     assert len(tagnames) == 1 and tagnames[0] == "FACIES_Fraction_Channel"
 
     # filter on data format
