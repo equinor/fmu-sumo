@@ -7,14 +7,6 @@ from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._document import Document
 from fmu.sumo.explorer.objects._search_context import SearchContext
 
-_prop_desc = [
-    ("name", "fmu.case.name", "Case name"),
-    ("status", "_sumo.status", "Case status"),
-    ("user", "fmu.case.user.id", "Name of user who uploaded case."),
-    ("asset", "access.asset.name", "Case asset"),
-    ("field", "masterdata.smda.field[0].identifier", "Case field"),
-]
-
 
 def _make_overview_query(id):
     return {
@@ -96,5 +88,27 @@ class Case(Document, SearchContext):
 
         return self._overview
 
+    @property
+    def field(self) -> str:
+        """Case field"""
+        return self.get_property("masterdata.smda.field[0].identifier")
 
-Case.map_properties(Case, _prop_desc)
+    @property
+    def asset(self) -> str:
+        """Case asset"""
+        return self.get_property("access.asset.name")
+
+    @property
+    def user(self) -> str:
+        """Name of user who uploaded case."""
+        return self.get_property("fmu.case.user.id")
+
+    @property
+    def status(self) -> str:
+        """Case status"""
+        return self.get_property("_sumo.status")
+
+    @property
+    def name(self) -> str:
+        """Case name"""
+        return self.get_property("fmu.case.name")

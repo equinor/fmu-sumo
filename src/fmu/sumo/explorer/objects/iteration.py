@@ -7,15 +7,6 @@ from sumo.wrapper import SumoClient
 from fmu.sumo.explorer.objects._document import Document
 from fmu.sumo.explorer.objects._search_context import SearchContext
 
-_prop_desc = [
-    ("name", "fmu.iteration.name", "FMU iteration name"),
-    ("casename", "fmu.case.name", "FMU case name"),
-    ("caseuuid", "fmu.case.uuid", "FMU case uuid"),
-    ("user", "fmu.case.user.id", "Name of user who uploaded iteration."),
-    ("asset", "access.asset.name", "Case asset"),
-    ("field", "masterdata.smda.field[0].identifier", "Case field"),
-]
-
 
 class Iteration(Document, SearchContext):
     """Class for representing an iteration in Sumo."""
@@ -27,6 +18,34 @@ class Iteration(Document, SearchContext):
             sumo,
             must=[{"term": {"fmu.iteration.uuid.keyword": self.uuid}}],
         )
+        pass
 
+    @property
+    def field(self) -> str:
+        """Case field"""
+        return self.get_property("masterdata.smda.field[0].identifier")
 
-Iteration.map_properties(Iteration, _prop_desc)
+    @property
+    def asset(self) -> str:
+        """Case asset"""
+        return self.get_property("access.asset.name")
+
+    @property
+    def user(self) -> str:
+        """Name of user who uploaded iteration."""
+        return self.get_property("fmu.case.user.id")
+
+    @property
+    def caseuuid(self) -> str:
+        """FMU case uuid"""
+        return self.get_property("fmu.case.uuid")
+
+    @property
+    def casename(self) -> str:
+        """FMU case name"""
+        return self.get_property("fmu.case.name")
+
+    @property
+    def name(self) -> str:
+        """FMU iteration name"""
+        return self.get_property("fmu.iteration.name")

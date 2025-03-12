@@ -1,38 +1,11 @@
 """module containing class for child object"""
 
 from io import BytesIO
-from typing import Dict
+from typing import Dict, List
 
 from sumo.wrapper import SumoClient
 
 from fmu.sumo.explorer.objects._document import Document
-
-_prop_desc = [
-    ("name", "data.name", "Object name"),
-    ("dataname", "data.name", "Object name"),
-    ("classname", "class.name", "Object class name"),
-    ("casename", "fmu.case.name", "Object case name"),
-    ("caseuuid", "fmu.case.uuid", "Object case uuid"),
-    ("content", "data.content", "Content"),
-    ("tagname", "data.tagname", "Object tagname"),
-    ("columns", "data.spec.columns", "Object table columns"),
-    ("stratigraphic", "data.stratigraphic", "Object stratigraphic"),
-    ("vertical_domain", "data.vertical_domain", "Object vertical domain"),
-    ("context", "fmu.context.stage", "Object context"),
-    ("iteration", "fmu.iteration.name", "Object iteration"),
-    ("realization", "fmu.realization.id", "Object realization"),
-    (
-        "aggregation",
-        "fmu.aggregation.operation",
-        "Object aggregation operation",
-    ),
-    ("stage", "fmu.context.stage", "Object stage"),
-    ("format", "data.format", "Object file format"),
-    ("dataformat", "data.format", "Object file format"),
-    ("relative_path", "file.relative_path", "Object relative file path"),
-    ("bbox", "data.bbox", "Object boundary-box data"),
-    ("spec", "data.spec", "Object spec data"),
-]
 
 
 class Child(Document):
@@ -95,5 +68,102 @@ class Child(Document):
             + self.relative_path.split("/")[2:]
         )
 
+    @property
+    def spec(self) -> Dict:
+        """Object spec data"""
+        return self.get_property("data.spec")
 
-Child.map_properties(Child, _prop_desc)
+    @property
+    def bbox(self) -> Dict:
+        """Object boundary-box data"""
+        return self.get_property("data.bbox")
+
+    @property
+    def relative_path(self) -> str:
+        """Object relative file path"""
+        return self.get_property("file.relative_path")
+
+    @property
+    def dataformat(self) -> str:
+        """Object file format"""
+        return self.get_property("data.format")
+
+    @property
+    def format(self) -> str:
+        """Object file format"""
+        return self.get_property("data.format")
+
+    @property
+    def stage(self) -> str:
+        """Object stage"""
+        return self.get_property("fmu.context.stage")
+
+    @property
+    def aggregation(self) -> str:
+        """Object aggregation operation"""
+        return self.get_property("fmu.aggregation.operation")
+
+    @property
+    def realization(self) -> str:
+        """Object realization"""
+        return self.get_property("fmu.realization.id")
+
+    @property
+    def iteration(self) -> str:
+        """Object iteration"""
+        return self.get_property("fmu.iteration.name")
+
+    @property
+    def context(self) -> str:
+        """Object context"""
+        return self.get_property("fmu.context.stage")
+
+    @property
+    def vertical_domain(self) -> str:
+        """Object vertical domain"""
+        return self.get_property("data.vertical_domain")
+
+    @property
+    def stratigraphic(self) -> str:
+        """Object stratigraphic"""
+        return self.get_property("data.stratigraphic")
+
+    @property
+    def columns(self) -> List[str]:
+        """Object table columns"""
+        return self.get_property("data.spec.columns")
+
+    @property
+    def tagname(self) -> str:
+        """Object tagname"""
+        return self.get_property("data.tagname")
+
+    @property
+    def content(self) -> str:
+        """Content"""
+        return self.get_property("data.content")
+
+    @property
+    def caseuuid(self) -> str:
+        """Object case uuid"""
+        return self.get_property("fmu.case.uuid")
+
+    @property
+    def casename(self) -> str:
+        """Object case name"""
+        return self.get_property("fmu.case.name")
+
+    @property
+    def classname(self) -> str:
+        """Object class name"""
+        return self.get_property("class.name")
+
+    @property
+    def dataname(self) -> str:
+        """Object data name"""
+        return self.get_property("data.name")
+
+    @property
+    def name(self) -> str:
+        """Object data name"""
+        return self.get_property("data.name")
