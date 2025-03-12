@@ -162,45 +162,6 @@ def _gen_filters(spec):
 filters = _gen_filters(_filterspec)
 
 
-_bucket_spec = {
-    "names": ["data.name.keyword", "List of unique object names."],
-    "tagnames": ["data.tagname.keyword", "List of unique object tagnames."],
-    "dataformats": [
-        "data.format.keyword",
-        "List of unique data.format values.",
-    ],
-    "aggregations": [
-        "fmu.aggregation.operation.keyword",
-        "List of unique object aggregation operations.",
-    ],
-    "stages": ["fmu.context.stage.keyword", "List of unique stages."],
-    # "stratigraphic": [
-    #     "data.stratigraphic",
-    #     "List of unique object stratigraphic.",
-    # ],
-    "vertical_domains": [
-        "data.vertical_domain",
-        "List of unique object vertical domains.",
-    ],
-    "contents": ["data.content.keyword", "List of unique contents."],
-    "columns": ["data.spec.columns.keyword", "List of unique column names."],
-    "statuses": ["_sumo.status.keyword", "List of unique case statuses."],
-    "users": ["fmu.case.user.id.keyword", "List of unique user names."],
-    "fieldidentifiers": [
-        "masterdata.smda.field.identifier.keyword",
-        "List of unique field names.",
-    ],
-    "stratcolumnidentifiers": [
-        "masterdata.smda.stratigraphic_column.identifier.keyword",
-        "List of unique stratigraphic column names.",
-    ],
-    "realizationids": [
-        "fmu.realization.id",
-        "List of unique realization ids.",
-    ],
-}
-
-
 def _build_bucket_query(query, field, size):
     return {
         "size": 0,
@@ -1547,6 +1508,146 @@ class SearchContext:
     def p90(self):
         return self.aggregate(operation="p90")
 
+    @property
+    def realizationids(self) -> List[int]:
+        """List of unique realization ids."""
+        return self.get_field_values("fmu.realization.id")
+
+    @property
+    async def realizationids_async(self) -> List[int]:
+        """List of unique realization ids."""
+        return await self.get_field_values_async("fmu.realization.id")
+
+    @property
+    def stratcolumnidentifiers(self) -> List[str]:
+        """List of unique stratigraphic column names."""
+        return self.get_field_values(
+            "masterdata.smda.stratigraphic_column.identifier.keyword"
+        )
+
+    @property
+    async def stratcolumnidentifiers_async(self) -> List[str]:
+        """List of unique stratigraphic column names."""
+        return await self.get_field_values_async(
+            "masterdata.smda.stratigraphic_column.identifier.keyword"
+        )
+
+    @property
+    def fieldidentifiers(self) -> List[str]:
+        """List of unique field names."""
+        return self.get_field_values(
+            "masterdata.smda.field.identifier.keyword"
+        )
+
+    @property
+    async def fieldidentifiers_async(self) -> List[str]:
+        """List of unique field names."""
+        return await self.get_field_values_async(
+            "masterdata.smda.field.identifier.keyword"
+        )
+
+    @property
+    def users(self) -> List[str]:
+        """List of unique user names."""
+        return self.get_field_values("fmu.case.user.id.keyword")
+
+    @property
+    async def users_async(self) -> List[str]:
+        """List of unique user names."""
+        return await self.get_field_values_async("fmu.case.user.id.keyword")
+
+    @property
+    def statuses(self) -> List[str]:
+        """List of unique case statuses."""
+        return self.get_field_values("_sumo.status.keyword")
+
+    @property
+    async def statuses_async(self) -> List[str]:
+        """List of unique case statuses."""
+        return await self.get_field_values_async("_sumo.status.keyword")
+
+    @property
+    def columns(self) -> List[str]:
+        """List of unique column names."""
+        return self.get_field_values("data.spec.columns.keyword")
+
+    @property
+    async def columns_async(self) -> List[str]:
+        """List of unique column names."""
+        return await self.get_field_values_async("data.spec.columns.keyword")
+
+    @property
+    def contents(self) -> List[str]:
+        """List of unique contents."""
+        return self.get_field_values("data.content.keyword")
+
+    @property
+    async def contents_async(self) -> List[str]:
+        """List of unique contents."""
+        return await self.get_field_values_async("data.content.keyword")
+
+    @property
+    def vertical_domains(self) -> List[str]:
+        """List of unique object vertical domains."""
+        return self.get_field_values("data.vertical_domain")
+
+    @property
+    async def vertical_domains_async(self) -> List[str]:
+        """List of unique object vertical domains."""
+        return await self.get_field_values_async("data.vertical_domain")
+
+    @property
+    def stages(self) -> List[str]:
+        """List of unique stages."""
+        return self.get_field_values("fmu.context.stage.keyword")
+
+    @property
+    async def stages_async(self) -> List[str]:
+        """List of unique stages."""
+        return await self.get_field_values_async("fmu.context.stage.keyword")
+
+    @property
+    def aggregations(self) -> List[str]:
+        """List of unique object aggregation operations."""
+        return self.get_field_values("fmu.aggregation.operation.keyword")
+
+    @property
+    async def aggregations_async(self) -> List[str]:
+        """List of unique object aggregation operations."""
+        return await self.get_field_values_async(
+            "fmu.aggregation.operation.keyword"
+        )
+
+    @property
+    def dataformats(self) -> List[str]:
+        """List of unique data.format values."""
+        return self.get_field_values("data.format.keyword")
+
+    @property
+    async def dataformats_async(self) -> List[str]:
+        """List of unique data.format values."""
+        return await self.get_field_values_async("data.format.keyword")
+
+    @property
+    def tagnames(self) -> List[str]:
+        """List of unique object tagnames."""
+        return self.get_field_values("data.tagname.keyword")
+
+    @property
+    async def tagnames_async(self) -> List[str]:
+        """List of unique object tagnames."""
+        return await self.get_field_values_async("data.tagname.keyword")
+
+    @property
+    def names(self) -> List[str]:
+        """List of unique object names."""
+        return self.get_field_values("data.name.keyword")
+
+    @property
+    async def names_async(self) -> List[str]:
+        """List of unique object names."""
+        return await self.get_field_values_async("data.name.keyword")
+
 
 def _gen_filter_doc(spec):
     fmap = {
@@ -1635,35 +1736,3 @@ Examples:
 
 
 SearchContext.filter.__doc__ = _gen_filter_doc(_filterspec)
-
-
-def _build_bucket_fn(property, docstring):
-    def fn(self):
-        return self.get_field_values(property)
-
-    return fn
-
-
-def _build_bucket_fn_async(property, docstring):
-    async def fn(self):
-        return await self.get_field_values_async(property)
-
-    return fn
-
-
-def _inject_bucket_fns(spec):
-    for name, defn in spec.items():
-        prop, docstring = defn
-        fn = _build_bucket_fn(prop, docstring)
-        setattr(SearchContext, name, property(fn, None, None, docstring))
-        afn = _build_bucket_fn_async(prop, docstring)
-        setattr(
-            SearchContext,
-            name + "_async",
-            property(afn, None, None, docstring),
-        )
-        pass
-    return
-
-
-_inject_bucket_fns(_bucket_spec)

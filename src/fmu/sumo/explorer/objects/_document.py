@@ -1,7 +1,7 @@
 """Contains class for one document"""
 
 import re
-from typing import Dict, List
+from typing import Any, Dict, List, Union
 
 _path_split_rx = re.compile(r"\]\.|\.|\[")
 
@@ -9,11 +9,6 @@ _path_split_rx = re.compile(r"\]\.|\.|\[")
 def _splitpath(path):
     parts = _path_split_rx.split(path)
     return [int(x) if re.match(r"\d+", x) else x for x in parts]
-
-
-def _makeprop(attribute):
-    path = _splitpath(attribute)
-    return lambda self: self._get_property(path)
 
 
 class Document:
@@ -41,7 +36,7 @@ class Document:
         """
         return self._metadata
 
-    def _get_property(self, path: List[str]):
+    def _get_property(self, path: List[Union[str, int]]):
         curr = self._metadata
 
         for key in path:
@@ -52,10 +47,8 @@ class Document:
 
         return curr
 
+    def get_property(self, path: str) -> Any:
+        return self._get_property(_splitpath(path))
+
     def __getitem__(self, key: str):
         return self._metadata[key]
-
-    @staticmethod
-    def map_properties(cls, propmap):
-        for name, attribute, doc in propmap:
-            setattr(cls, name, property(_makeprop(attribute), None, None, doc))
