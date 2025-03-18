@@ -919,9 +919,9 @@ class SearchContext:
     @property
     async def timestamps_async(self) -> List[str]:
         """List of unique timestamps in SearchContext"""
-        ts = await self.get_field_values_async(
-            "data.time.t0.value", self._timestamp_query
-        )
+        ts = await self.filter(
+            complex=self._timestamp_query
+        ).get_field_values_async("data.time.t0.value")
         return [datetime.fromtimestamp(t / 1000).isoformat() for t in ts]
 
     def _extract_intervals(self, res):
@@ -1177,7 +1177,7 @@ class SearchContext:
         Returns: realization object
         """
         res = (
-            await self._sumo.post(
+            await self._sumo.post_async(
                 "/search", json=self._realization_query(uuid)
             )
         ).json()
