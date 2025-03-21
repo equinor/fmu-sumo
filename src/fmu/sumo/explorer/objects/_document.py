@@ -56,3 +56,7 @@ class Document:
 
     def __getitem__(self, key: str):
         return self._metadata[key]
+
+    @property
+    def template_path(self) -> str:
+        return ""

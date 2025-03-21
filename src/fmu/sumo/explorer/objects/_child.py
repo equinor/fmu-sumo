@@ -62,7 +62,7 @@ class Child(Document):
         return None
 
     @property
-    def template_path(self):
+    def template_path(self) -> str:
         return "/".join(
             ["{realization}", "{iteration}"]
             + self.relative_path.split("/")[2:]
