@@ -4,7 +4,7 @@ from typing import Dict, Tuple
 
 from sumo.wrapper import SumoClient
 
-from .objects._child import Child
+from ._child import Child
 
 
 class Cube(Child):
