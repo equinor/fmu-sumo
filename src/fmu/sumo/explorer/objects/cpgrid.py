@@ -4,8 +4,8 @@ from typing import Dict
 
 from sumo.wrapper import SumoClient
 
-from fmu.sumo.explorer.objects._child import Child
-from fmu.sumo.explorer.objects._search_context import SearchContext
+from ._child import Child
+from ._search_context import SearchContext
 
 
 class CPGrid(Child):
@@ -32,7 +32,7 @@ class CPGrid(Child):
                 "Unable to import xtgeo; probably not installed."
             )
         try:
-            return grid_from_file(self.blob)
+            return grid_from_file(self.blob)  # pyright: ignore type
         except TypeError as type_err:
             raise TypeError(f"Unknown format: {self.format}") from type_err
 
@@ -49,7 +49,7 @@ class CPGrid(Child):
             )
 
         try:
-            return grid_from_file(await self.blob_async)
+            return grid_from_file(await self.blob_async)  # pyright: ignore type
         except TypeError as type_err:
             raise TypeError(f"Unknown format: {self.format}") from type_err
 

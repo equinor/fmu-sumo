@@ -1,6 +1,6 @@
 """Module for searchcontext for collection of cases."""
 
-from fmu.sumo.explorer.objects._search_context import SearchContext
+from ._search_context import SearchContext
 
 
 class Cases(SearchContext):

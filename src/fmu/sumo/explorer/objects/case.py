@@ -4,11 +4,11 @@ from typing import Dict
 
 from sumo.wrapper import SumoClient
 
-from fmu.sumo.explorer.objects._document import Document
-from fmu.sumo.explorer.objects._search_context import SearchContext
+from ._document import Document
+from ._search_context import SearchContext
 
 
-def _make_overview_query(id):
+def _make_overview_query(id) -> Dict:
     return {
         "query": {"term": {"fmu.case.uuid.keyword": id}},
         "aggs": {
@@ -52,7 +52,7 @@ class Case(Document, SearchContext):
         self._iterations = None
 
     @property
-    def overview(self):
+    def overview(self) -> Dict:
         """Overview of case contents."""
 
         def extract_bucket_keys(bucket, name):

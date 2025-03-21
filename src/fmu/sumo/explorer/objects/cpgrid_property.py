@@ -4,8 +4,8 @@ from typing import Dict
 
 from sumo.wrapper import SumoClient
 
-from fmu.sumo.explorer.objects._child import Child
-from fmu.sumo.explorer.objects._search_context import SearchContext
+from ._child import Child
+from ._search_context import SearchContext
 
 
 class CPGridProperty(Child):

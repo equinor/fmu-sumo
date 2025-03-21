@@ -1,3 +1,7 @@
+"""
+Complex(ish) filters for use with fmu-sumo Explorer.
+"""
+
 class Filters:
     # Filter that matches 4d-seismic objects.
     seismic4d = {
