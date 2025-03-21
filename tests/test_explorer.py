@@ -301,7 +301,7 @@ def test_get_case_by_uuid(explorer: Explorer, case_uuid: str, case_name: str):
 
 
 @pytest.mark.skipif(
-    sys.platform.startswith("darwin") or sys.version_info > (3, 11),
+    sys.platform.startswith("darwin") or sys.version_info > (3, 12),
     reason="do not run OpenVDS SEGYImport on mac os or python 3.12",
 )
 def test_seismic_case_by_uuid(explorer: Explorer, seismic_case_uuid: str):
