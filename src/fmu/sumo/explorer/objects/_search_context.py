@@ -1,19 +1,44 @@
+from __future__ import annotations
+
 import uuid
 import warnings
 from datetime import datetime
 from io import BytesIO
-from typing import Dict, List, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
 
 import deprecation
 import httpx
-from sumo.wrapper import SumoClient
 
-import fmu.sumo.explorer.objects as objects
 from fmu.sumo.explorer.cache import LRUCache
+
+from ._child import Child
+from ._metrics import Metrics
+from .case import Case
+from .cases import Cases
+from .cpgrid import CPGrid
+from .cpgrid_property import CPGridProperty
+from .cube import Cube
+from .dictionary import Dictionary
+from .iteration import Iteration
+from .iterations import Iterations
+from .polygons import Polygons
+from .realization import Realization
+from .realizations import Realizations
+from .surface import Surface
+from .table import Table
+
+if TYPE_CHECKING:
+    from sumo.wrapper import SumoClient
+
+    from ._document import Document
+
+
+# Type aliases
+SelectArg = Union[bool, str, Dict[str, Union[str, List[str]]], List[str]]
 
 
 def _gen_filter_none():
-    def _fn(value):
+    def _fn(_):
         return None, None
 
     return _fn
@@ -211,7 +236,7 @@ class Pit:
         self._id = res.json()["id"]
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, *_):
         if self._id is not None:
             self._sumo.delete("/pit", params={"id": self._id})
             pass
@@ -224,7 +249,7 @@ class Pit:
         self._id = res.json()["id"]
         return self
 
-    async def __aexit__(self, exc_type, exc_value, traceback):
+    async def __aexit__(self, *_):
         if self._id is not None:
             await self._sumo.delete_async("/pit", params={"id": self._id})
             pass
@@ -257,7 +282,7 @@ class SearchContext:
         self._hits = None
         self._cache = LRUCache(capacity=200)
         self._length = None
-        self._select = {
+        self._select: SelectArg = {
             "excludes": ["fmu.realization.parameters"],
         }
         return
@@ -282,23 +307,23 @@ class SearchContext:
             else:
                 return {"bool": {"must": must, "must_not": must_not}}
 
-    def _to_sumo(self, obj, blob=None):
+    def _to_sumo(self, obj, blob=None) -> Document:
         cls = obj["_source"]["class"]
         if cls == "case":
-            return objects.Case(self._sumo, obj)
+            return Case(self._sumo, obj)
         # ELSE
         constructor = {
-            "cube": objects.Cube,
-            "dictionary": objects.Dictionary,
-            "polygons": objects.Polygons,
-            "surface": objects.Surface,
-            "table": objects.Table,
-            "cpgrid": objects.CPGrid,
-            "cpgrid_property": objects.CPGridProperty,
+            "cube": Cube,
+            "dictionary": Dictionary,
+            "polygons": Polygons,
+            "surface": Surface,
+            "table": Table,
+            "cpgrid": CPGrid,
+            "cpgrid_property": CPGridProperty,
         }.get(cls)
         if constructor is None:
             warnings.warn(f"No constructor for class {cls}")
-            constructor = objects.Child
+            constructor = Child
         return constructor(self._sumo, obj, blob)
 
     def __len__(self):
@@ -319,7 +344,7 @@ class SearchContext:
             self._length = res["count"]
         return self._length
 
-    def __search_all(self, query, size=1000, select=False):
+    def __search_all(self, query, size: int = 1000, select: SelectArg = False):
         all_hits = []
         query = {
             "query": query,
@@ -356,10 +381,12 @@ class SearchContext:
             pass
         return all_hits
 
-    def _search_all(self, select=False):
+    def _search_all(self, select: SelectArg = False):
         return self.__search_all(query=self._query, size=1000, select=select)
 
-    async def __search_all_async(self, query, size=1000, select=False):
+    async def __search_all_async(
+        self, query, size: int = 1000, select: SelectArg = False
+    ):
         all_hits = []
         query = {
             "query": query,
@@ -398,7 +425,7 @@ class SearchContext:
             pass
         return all_hits
 
-    async def _search_all_async(self, select=False):
+    async def _search_all_async(self, select: SelectArg = False):
         return await self.__search_all_async(
             query=self._query, size=1000, select=select
         )
@@ -477,7 +504,7 @@ class SearchContext:
         assert await self.length_async() == 1
         return await self.getitem_async(0)
 
-    def select(self, sel):
+    def select(self, sel) -> SearchContext:
         """Specify what should be returned from elasticsearch.
         Has the side effect of clearing the lru cache.
         sel is either a single string value, a list of string value,
@@ -521,7 +548,7 @@ class SearchContext:
         self._cache.clear()
         return self
 
-    def get_object(self, uuid: str) -> Dict:
+    def get_object(self, uuid: str) -> Document:
         """Get metadata object by uuid
 
         Args:
@@ -549,7 +576,7 @@ class SearchContext:
 
         return self._to_sumo(obj)
 
-    async def get_object_async(self, uuid: str) -> Dict:
+    async def get_object_async(self, uuid: str) -> Document:
         """Get metadata object by uuid
 
         Args:
@@ -579,6 +606,7 @@ class SearchContext:
         return self._to_sumo(obj)
 
     def _maybe_prefetch(self, index):
+        assert isinstance(self._hits, list)
         uuid = self._hits[index]
         if self._cache.has(uuid):
             return
@@ -595,6 +623,7 @@ class SearchContext:
         return
 
     async def _maybe_prefetch_async(self, index):
+        assert isinstance(self._hits, list)
         uuid = self._hits[index]
         if self._cache.has(uuid):
             return
@@ -613,13 +642,13 @@ class SearchContext:
     def get_objects(
         self,
         uuids: List[str],
-        select: List[str] = None,
+        select: SelectArg,
     ) -> List[Dict]:
         size = (
             1000
             if select is False
             else 100
-            if isinstance(select, list)
+            if isinstance(select, (list, dict))
             else 10
         )
         return self.__search_all(
@@ -627,15 +656,13 @@ class SearchContext:
         )
 
     async def get_objects_async(
-        self,
-        uuids: List[str],
-        select: List[str] = None,
+        self, uuids: List[str], select: SelectArg
     ) -> List[Dict]:
         size = (
             1000
             if select is False
             else 100
-            if isinstance(select, list)
+            if isinstance(select, (list, dict))
             else 10
         )
         return await self.__search_all_async(
@@ -865,31 +892,31 @@ class SearchContext:
     def cases(self):
         """Cases from current selection."""
         uuids = self.get_field_values("fmu.case.uuid.keyword")
-        return objects.Cases(self, uuids)
+        return Cases(self, uuids)
 
     @property
     async def cases_async(self):
         """Cases from current selection."""
         uuids = await self.get_field_values_async("fmu.case.uuid.keyword")
-        return objects.Cases(self, uuids)
+        return Cases(self, uuids)
 
     @property
     def iterations(self):
         """Iterations from current selection."""
         uuids = self.get_field_values("fmu.iteration.uuid.keyword")
-        return objects.Iterations(self, uuids)
+        return Iterations(self, uuids)
 
     @property
     async def iterations_async(self):
         """Iterations from current selection."""
         uuids = await self.get_field_values_async("fmu.iteration.uuid.keyword")
-        return objects.Iterations(self, uuids)
+        return Iterations(self, uuids)
 
     @property
     def realizations(self):
         """Realizations from current selection."""
         uuids = self.get_field_values("fmu.realization.uuid.keyword")
-        return objects.Realizations(self, uuids)
+        return Realizations(self, uuids)
 
     @property
     async def realizations_async(self):
@@ -897,16 +924,16 @@ class SearchContext:
         uuids = await self.get_field_values_async(
             "fmu.realization.uuid.keyword"
         )
-        return objects.Realizations(self, uuids)
+        return Realizations(self, uuids)
 
     @property
-    def template_paths(search_context):  # noqa: N805
-        return {obj.template_path for obj in search_context}
+    def template_paths(self) -> List[str]:
+        return {obj.template_path for obj in self}
 
     @property
     def metrics(self):
         """Metrics for current search context."""
-        return objects.Metrics(self)
+        return Metrics(self)
 
     @property
     def timestamps(self) -> List[str]:
@@ -987,7 +1014,6 @@ class SearchContext:
             f = filters.get(k)
             if f is None:
                 raise Exception(f"Don't know how to generate filter for {k}")
-                pass
             _must, _must_not = f(v)
             if _must:
                 must.append(_must)
@@ -1023,46 +1049,46 @@ class SearchContext:
         return sc
 
     @property
-    def surfaces(self):
+    def surfaces(self) -> SearchContext:
         return self._context_for_class("surface")
 
     @property
-    def tables(self):
+    def tables(self) -> SearchContext:
         return self._context_for_class("table")
 
     @property
-    def cubes(self):
+    def cubes(self) -> SearchContext:
         return self._context_for_class("cube")
 
     @property
-    def polygons(self):
+    def polygons(self) -> SearchContext:
         return self._context_for_class("polygons")
 
     @property
-    def dictionaries(self):
+    def dictionaries(self) -> SearchContext:
         return self._context_for_class("dictionary")
 
     @property
-    def grids(self):
+    def grids(self) -> SearchContext:
         return self._context_for_class("cpgrid")
 
     @property
-    def grid_properties(self):
+    def grid_properties(self) -> SearchContext:
         return self._context_for_class("cpgrid_property")
 
-    def _get_object_by_class_and_uuid(self, cls, uuid):
+    def _get_object_by_class_and_uuid(self, cls, uuid) -> Any:
         obj = self.get_object(uuid)
         if obj.metadata["class"] != cls:
             raise Exception(f"Document of type {cls} not found: {uuid}")
         return obj
 
-    async def _get_object_by_class_and_uuid_async(self, cls, uuid):
+    async def _get_object_by_class_and_uuid_async(self, cls, uuid) -> Any:
         obj = await self.get_object_async(uuid)
         if obj.metadata["class"] != cls:
             raise Exception(f"Document of type {cls} not found: {uuid}")
         return obj
 
-    def get_case_by_uuid(self, uuid: str):
+    def get_case_by_uuid(self, uuid: str) -> Case:
         """Get case object by uuid
 
         Args:
@@ -1073,7 +1099,7 @@ class SearchContext:
         """
         return self._get_object_by_class_and_uuid("case", uuid)
 
-    async def get_case_by_uuid_async(self, uuid: str):
+    async def get_case_by_uuid_async(self, uuid: str) -> Case:
         """Get case object by uuid
 
         Args:
@@ -1101,7 +1127,7 @@ class SearchContext:
             },
         }
 
-    def get_iteration_by_uuid(self, uuid: str):
+    def get_iteration_by_uuid(self, uuid: str) -> Iteration:
         """Get iteration object by uuid
 
         Args:
@@ -1114,9 +1140,9 @@ class SearchContext:
         ).json()
         obj = res["hits"]["hits"][0]
         obj["_id"] = uuid
-        return objects.Iteration(self._sumo, obj)
+        return Iteration(self._sumo, obj)
 
-    async def get_iteration_by_uuid_async(self, uuid: str):
+    async def get_iteration_by_uuid_async(self, uuid: str) -> Iteration:
         """Get iteration object by uuid
 
         Args:
@@ -1131,9 +1157,9 @@ class SearchContext:
         ).json()
         obj = res["hits"]["hits"][0]
         obj["_id"] = uuid
-        return objects.Iteration(self._sumo, obj)
+        return Iteration(self._sumo, obj)
 
-    def _realization_query(self, uuid):
+    def _realization_query(self, uuid) -> Dict:
         return {
             "query": {
                 "term": {"fmu.realization.uuid.keyword": {"value": uuid}}
@@ -1153,7 +1179,7 @@ class SearchContext:
             },
         }
 
-    def get_realization_by_uuid(self, uuid: str):
+    def get_realization_by_uuid(self, uuid: str) -> Realization:
         """Get realization object by uuid
 
         Args:
@@ -1166,9 +1192,9 @@ class SearchContext:
         ).json()
         obj = res["hits"]["hits"][0]
         obj["_id"] = uuid
-        return objects.Realization(self._sumo, obj)
+        return Realization(self._sumo, obj)
 
-    async def get_realization_by_uuid_async(self, uuid: str):
+    async def get_realization_by_uuid_async(self, uuid: str) -> Realization:
         """Get realization object by uuid
 
         Args:
@@ -1183,9 +1209,9 @@ class SearchContext:
         ).json()
         obj = res["hits"]["hits"][0]
         obj["_id"] = uuid
-        return objects.Realization(self._sumo, obj)
+        return Realization(self._sumo, obj)
 
-    def get_surface_by_uuid(self, uuid: str):
+    def get_surface_by_uuid(self, uuid: str) -> Surface:
         """Get surface object by uuid
 
         Args:
@@ -1196,7 +1222,7 @@ class SearchContext:
         """
         return self._get_object_by_class_and_uuid("surface", uuid)
 
-    async def get_surface_by_uuid_async(self, uuid: str):
+    async def get_surface_by_uuid_async(self, uuid: str) -> Surface:
         """Get surface object by uuid
 
         Args:
@@ -1207,7 +1233,7 @@ class SearchContext:
         """
         return await self._get_object_by_class_and_uuid_async("surface", uuid)
 
-    def get_polygons_by_uuid(self, uuid: str):
+    def get_polygons_by_uuid(self, uuid: str) -> Polygons:
         """Get polygons object by uuid
 
         Args:
@@ -1218,7 +1244,7 @@ class SearchContext:
         """
         return self._get_object_by_class_and_uuid("polygons", uuid)
 
-    async def get_polygons_by_uuid_async(self, uuid: str):
+    async def get_polygons_by_uuid_async(self, uuid: str) -> Polygons:
         """Get polygons object by uuid
 
         Args:
@@ -1229,7 +1255,7 @@ class SearchContext:
         """
         return await self._get_object_by_class_and_uuid_async("polygons", uuid)
 
-    def get_table_by_uuid(self, uuid: str):
+    def get_table_by_uuid(self, uuid: str) -> Table:
         """Get table object by uuid
 
         Args:
@@ -1240,7 +1266,7 @@ class SearchContext:
         """
         return self._get_object_by_class_and_uuid("table", uuid)
 
-    async def get_table_by_uuid_async(self, uuid: str):
+    async def get_table_by_uuid_async(self, uuid: str) -> Table:
         """Get table object by uuid
 
         Args:
@@ -1251,7 +1277,9 @@ class SearchContext:
         """
         return await self._get_object_by_class_and_uuid_async("table", uuid)
 
-    def _verify_aggregation_operation(self):
+    def _verify_aggregation_operation(
+        self,
+    ) -> Tuple[Dict, List[str], List[int]]:
         query = {
             "query": self._query,
             "size": 1,
@@ -1291,7 +1319,7 @@ class SearchContext:
         rids = [hit["_source"]["fmu"]["realization"]["id"] for hit in hits]
         return prototype, uuids, rids
 
-    def _aggregate(self, columns=None, operation=None):
+    def _aggregate(self, columns=None, operation=None) -> Child:
         prototype, uuids, rids = self._verify_aggregation_operation()
         spec = {
             "object_ids": uuids,
@@ -1330,10 +1358,11 @@ class SearchContext:
             raise ex
         blob = BytesIO(res.content)
         res = self._to_sumo(prototype, blob)
+        assert isinstance(res, Child)
         res._blob = blob
         return res
 
-    def aggregate(self, columns=None, operation=None):
+    def aggregate(self, columns=None, operation=None) -> Child:
         if len(self.hidden) > 0:
             return self.hidden._aggregate(columns=columns, operation=operation)
         else:
@@ -1341,7 +1370,9 @@ class SearchContext:
                 columns=columns, operation=operation
             )
 
-    async def _verify_aggregation_operation_async(self):
+    async def _verify_aggregation_operation_async(
+        self,
+    ) -> Tuple[Dict, List[str], List[int]]:
         query = {
             "query": self._query,
             "size": 1,
@@ -1381,7 +1412,7 @@ class SearchContext:
         rids = [hit["_source"]["fmu"]["realization"]["id"] for hit in hits]
         return prototype, uuids, rids
 
-    async def _aggregate_async(self, columns=None, operation=None):
+    async def _aggregate_async(self, columns=None, operation=None) -> Child:
         (
             prototype,
             uuids,
@@ -1424,10 +1455,11 @@ class SearchContext:
             raise ex
         blob = BytesIO(res.content)
         res = self._to_sumo(prototype, blob)
+        assert isinstance(res, Child)
         res._blob = blob
         return res
 
-    async def aggregate_async(self, columns=None, operation=None):
+    async def aggregate_async(self, columns=None, operation=None) -> Child:
         length_hidden = await self.hidden.length_async()
         if length_hidden > 0:
             return await self.hidden._aggregate_async(
@@ -1438,13 +1470,14 @@ class SearchContext:
                 columns=columns, operation=operation
             )
 
-    def aggregation(self, column=None, operation=None):
+    def aggregation(self, column=None, operation=None) -> Child:
         assert operation is not None
         assert column is None or isinstance(column, str)
         sc = self.filter(aggregation=operation, column=column)
         numaggs = len(sc)
         assert numaggs <= 1
         if numaggs == 1:
+            assert isinstance(sc[0], Child)
             return sc[0]
         else:
             return self.filter(realization=True).aggregate(
@@ -1452,7 +1485,7 @@ class SearchContext:
                 operation=operation,
             )
 
-    async def aggregation_async(self, column=None, operation=None):
+    async def aggregation_async(self, column=None, operation=None) -> Child:
         assert operation is not None
         assert column is None or isinstance(column, str)
         sc = self.filter(aggregation=operation, column=column)
