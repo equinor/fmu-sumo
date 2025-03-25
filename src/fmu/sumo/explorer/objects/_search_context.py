@@ -878,31 +878,31 @@ class SearchContext:
     def cases(self):
         """Cases from current selection."""
         uuids = self.get_field_values("fmu.case.uuid.keyword")
-        return Cases(self, uuids)
+        return objects.Cases(self, uuids)
 
     @property
     async def cases_async(self):
         """Cases from current selection."""
         uuids = await self.get_field_values_async("fmu.case.uuid.keyword")
-        return Cases(self, uuids)
+        return objects.Cases(self, uuids)
 
     @property
     def iterations(self):
         """Iterations from current selection."""
         uuids = self.get_field_values("fmu.iteration.uuid.keyword")
-        return Iterations(self, uuids)
+        return objects.Iterations(self, uuids)
 
     @property
     async def iterations_async(self):
         """Iterations from current selection."""
         uuids = await self.get_field_values_async("fmu.iteration.uuid.keyword")
-        return Iterations(self, uuids)
+        return objects.Iterations(self, uuids)
 
     @property
     def realizations(self):
         """Realizations from current selection."""
         uuids = self.get_field_values("fmu.realization.uuid.keyword")
-        return Realizations(self, uuids)
+        return objects.Realizations(self, uuids)
 
     @property
     async def realizations_async(self):
@@ -910,7 +910,7 @@ class SearchContext:
         uuids = await self.get_field_values_async(
             "fmu.realization.uuid.keyword"
         )
-        return Realizations(self, uuids)
+        return objects.Realizations(self, uuids)
 
     @property
     def template_paths(self) -> List[str]:
@@ -919,7 +919,7 @@ class SearchContext:
     @property
     def metrics(self):
         """Metrics for current search context."""
-        return Metrics(self)
+        return objects.Metrics(self)
 
     @property
     def timestamps(self) -> List[str]:
