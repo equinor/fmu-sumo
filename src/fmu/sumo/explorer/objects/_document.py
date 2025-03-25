@@ -40,7 +40,11 @@ class Document:
         curr = self._metadata
 
         for key in path:
-            if (isinstance(curr, list) and key < len(curr)) or key in curr:
+            if (
+                isinstance(curr, list)
+                and isinstance(key, int)
+                and key < len(curr)
+            ) or key in curr:
                 curr = curr[key]
             else:
                 return None
@@ -52,3 +56,7 @@ class Document:
 
     def __getitem__(self, key: str):
         return self._metadata[key]
+
+    @property
+    def template_path(self) -> str:
+        return ""

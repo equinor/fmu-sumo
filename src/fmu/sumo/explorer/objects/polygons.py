@@ -4,7 +4,7 @@ from typing import Dict
 
 from sumo.wrapper import SumoClient
 
-from fmu.sumo.explorer.objects._child import Child
+from ._child import Child
 
 
 class Polygons(Child):

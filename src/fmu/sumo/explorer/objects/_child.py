@@ -1,11 +1,11 @@
 """module containing class for child object"""
 
 from io import BytesIO
-from typing import Dict, List
+from typing import Dict, List, Tuple, Union
 
 from sumo.wrapper import SumoClient
 
-from fmu.sumo.explorer.objects._document import Document
+from ._document import Document
 
 
 class Child(Document):
@@ -40,7 +40,7 @@ class Child(Document):
         return self._blob
 
     @property
-    def timestamp(self) -> str:
+    def timestamp(self) -> Union[str, None]:
         """Object timestmap data"""
         t0 = self._get_property(["data", "time", "t0", "value"])
         t1 = self._get_property(["data", "time", "t1", "value"])
@@ -51,7 +51,7 @@ class Child(Document):
         return None
 
     @property
-    def interval(self) -> str:
+    def interval(self) -> Union[str, Tuple[str, str], None]:
         """Object interval data"""
         t0 = self._get_property(["data", "time", "t0", "value"])
         t1 = self._get_property(["data", "time", "t1", "value"])
@@ -62,7 +62,7 @@ class Child(Document):
         return None
 
     @property
-    def template_path(self):
+    def template_path(self) -> str:
         return "/".join(
             ["{realization}", "{iteration}"]
             + self.relative_path.split("/")[2:]

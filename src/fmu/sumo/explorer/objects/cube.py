@@ -1,10 +1,10 @@
 """Module containing class for cube object"""
 
-from typing import Dict
+from typing import Dict, Tuple
 
 from sumo.wrapper import SumoClient
 
-from fmu.sumo.explorer.objects._child import Child
+from ._child import Child
 
 
 class Cube(Child):
@@ -17,64 +17,28 @@ class Cube(Child):
             metadata (dict): cube metadata
         """
         super().__init__(sumo, metadata, blob)
-        self._url = None
-        self._sas = None
 
-    def _populate_url(self):
-        res = self._sumo.get(f"/objects('{self.uuid}')/blob/authuri")
+    def _extract_auth(self, res) -> Tuple[str, str]:
         try:
             res = res.json()
-            self._url = res.get("baseuri") + self.uuid
-            self._sas = res.get("auth")
+            url = res.get("baseuri") + self.uuid
+            sas = res.get("auth")
         except Exception:
-            self._url = res.text
+            url, sas = res.text.split("?")
+            pass
+        return url, sas
 
-    async def _populate_url_async(self):
+    @property
+    def auth(self) -> Tuple[str, str]:
+        res = self._sumo.get(f"/objects('{self.uuid}')/blob/authuri")
+        return self._extract_auth(res)
+
+    @property
+    async def auth_async(self) -> Tuple[str, str]:
         res = await self._sumo.get_async(
             f"/objects('{self.uuid}')/blob/authuri"
         )
-        try:
-            res = res.json()
-            self._url = res.get("baseuri") + self.uuid
-            self._sas = res.get("auth")
-        except Exception:
-            self._url = res.text
-
-    @property
-    def url(self) -> str:
-        if self._url is None:
-            self._populate_url()
-        if self._sas is None:
-            return self._url
-        else:
-            return self._url.split("?")[0] + "/"
-
-    @property
-    async def url_async(self) -> str:
-        if self._url is None:
-            await self._populate_url_async()
-        if self._sas is None:
-            return self._url
-        else:
-            return self._url.split("?")[0] + "/"
-
-    @property
-    def sas(self) -> str:
-        if self._url is None:
-            self._populate_url()
-        if self._sas is None:
-            return self._url.split("?")[1]
-        else:
-            return self._sas
-
-    @property
-    async def sas_async(self) -> str:
-        if self._url is None:
-            await self._populate_url_async()
-        if self._sas is None:
-            return self._url.split("?")[1]
-        else:
-            return self._sas
+        return self._extract_auth(res)
 
     @property
     def openvds_handle(self):
@@ -85,15 +49,10 @@ class Cube(Child):
                 "Unable to import openvds; probably not installed."
             )
 
-        if self._url is None:
-            self._populate_url()
-
-        if self._sas is None:
-            return openvds.open(self._url)
-        else:
-            url = "azureSAS" + self._url[5:] + "/"
-            sas = "Suffix=?" + self._sas
-            return openvds.open(url, sas)
+        url, sas = self.auth
+        url = url.replace("https://", "azureSAS://") + "/"
+        sas = "Suffix=?" + sas
+        return openvds.open(url, sas)
 
     @property
     async def openvds_handle_async(self):
@@ -104,12 +63,7 @@ class Cube(Child):
                 "Unable to import openvds; probably not installed."
             )
 
-        if self._url is None:
-            await self._populate_url_async()
-
-        if self._sas is None:
-            return openvds.open(self._url)
-        else:
-            url = "azureSAS" + self._url[5:] + "/"
-            sas = "Suffix=?" + self._sas
-            return openvds.open(url, sas)
+        url, sas = await self.auth_async
+        url = url.replace("https://", "azureSAS://") + "/"
+        sas = "Suffix=?" + sas
+        return openvds.open(url, sas)

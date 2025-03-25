@@ -4,8 +4,8 @@ from typing import Dict
 
 from sumo.wrapper import SumoClient
 
-from fmu.sumo.explorer.objects._document import Document
-from fmu.sumo.explorer.objects._search_context import SearchContext
+from ._document import Document
+from ._search_context import SearchContext
 
 
 class Realization(Document, SearchContext):

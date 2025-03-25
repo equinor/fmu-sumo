@@ -1,11 +1,12 @@
 """Module containing class for exploring results from sumo"""
 
 import warnings
+from typing import Optional
 
 import httpx
 from sumo.wrapper import SumoClient
 
-from fmu.sumo.explorer.objects._search_context import SearchContext
+from .objects._search_context import SearchContext
 
 
 class Explorer(SearchContext):
@@ -25,9 +26,9 @@ class Explorer(SearchContext):
     def __init__(
         self,
         env: str = "prod",
-        token: str = None,
+        token: Optional[str] = None,
         interactive: bool = True,
-        keep_alive: str = None,
+        keep_alive: Optional[str] = None,
         http_client=None,
         async_http_client=None,
     ):
@@ -58,7 +59,7 @@ class Explorer(SearchContext):
     def cases(self):
         return self._context_for_class("case")
 
-    def get_permissions(self, asset: str = None):
+    def get_permissions(self, asset: Optional[str] = None):
         """Get permissions
 
         Args:
@@ -74,7 +75,7 @@ class Explorer(SearchContext):
 
         return res
 
-    async def get_permissions_async(self, asset: str = None):
+    async def get_permissions_async(self, asset: Optional[str] = None):
         """Get permissions
 
         Args:

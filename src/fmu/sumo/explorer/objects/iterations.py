@@ -1,8 +1,8 @@
 """Module for searchcontext for collection of iterations."""
 
-from typing import Dict, List
+from typing import Dict
 
-from fmu.sumo.explorer.objects._search_context import SearchContext
+from ._search_context import SearchContext
 
 
 class Iterations(SearchContext):
@@ -17,7 +17,7 @@ class Iterations(SearchContext):
     async def _maybe_prefetch_async(self, index):
         return
 
-    def get_object(self, uuid: str, select: List[str] = None) -> Dict:
+    def get_object(self, uuid: str) -> Dict:
         """Get metadata object by uuid
 
         Args:
@@ -35,9 +35,7 @@ class Iterations(SearchContext):
 
         return obj
 
-    async def get_object_async(
-        self, uuid: str, select: List[str] = None
-    ) -> Dict:
+    async def get_object_async(self, uuid: str) -> Dict:
         """Get metadata object by uuid
 
         Args:
