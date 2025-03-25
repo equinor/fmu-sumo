@@ -9,9 +9,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
 import deprecation
 import httpx
 
-from fmu.sumo.explorer.cache import LRUCache
-
 from fmu.sumo.explorer import objects
+from fmu.sumo.explorer.cache import LRUCache
 
 if TYPE_CHECKING:
     from sumo.wrapper import SumoClient
@@ -1074,7 +1073,7 @@ class SearchContext:
             raise Exception(f"Document of type {cls} not found: {uuid}")
         return obj
 
-    def get_case_by_uuid(self, uuid: str) -> Case:
+    def get_case_by_uuid(self, uuid: str) -> objects.Case:
         """Get case object by uuid
 
         Args:
@@ -1085,7 +1084,7 @@ class SearchContext:
         """
         return self._get_object_by_class_and_uuid("case", uuid)
 
-    async def get_case_by_uuid_async(self, uuid: str) -> Case:
+    async def get_case_by_uuid_async(self, uuid: str) -> objects.Case:
         """Get case object by uuid
 
         Args:
@@ -1113,7 +1112,7 @@ class SearchContext:
             },
         }
 
-    def get_iteration_by_uuid(self, uuid: str) -> Iteration:
+    def get_iteration_by_uuid(self, uuid: str) -> objects.Iteration:
         """Get iteration object by uuid
 
         Args:
@@ -1126,9 +1125,11 @@ class SearchContext:
         ).json()
         obj = res["hits"]["hits"][0]
         obj["_id"] = uuid
-        return Iteration(self._sumo, obj)
+        return objects.Iteration(self._sumo, obj)
 
-    async def get_iteration_by_uuid_async(self, uuid: str) -> Iteration:
+    async def get_iteration_by_uuid_async(
+        self, uuid: str
+    ) -> objects.Iteration:
         """Get iteration object by uuid
 
         Args:
@@ -1143,7 +1144,7 @@ class SearchContext:
         ).json()
         obj = res["hits"]["hits"][0]
         obj["_id"] = uuid
-        return Iteration(self._sumo, obj)
+        return objects.Iteration(self._sumo, obj)
 
     def _realization_query(self, uuid) -> Dict:
         return {
@@ -1165,7 +1166,7 @@ class SearchContext:
             },
         }
 
-    def get_realization_by_uuid(self, uuid: str) -> Realization:
+    def get_realization_by_uuid(self, uuid: str) -> objects.Realization:
         """Get realization object by uuid
 
         Args:
@@ -1178,9 +1179,11 @@ class SearchContext:
         ).json()
         obj = res["hits"]["hits"][0]
         obj["_id"] = uuid
-        return Realization(self._sumo, obj)
+        return objects.Realization(self._sumo, obj)
 
-    async def get_realization_by_uuid_async(self, uuid: str) -> Realization:
+    async def get_realization_by_uuid_async(
+        self, uuid: str
+    ) -> objects.Realization:
         """Get realization object by uuid
 
         Args:
@@ -1195,9 +1198,9 @@ class SearchContext:
         ).json()
         obj = res["hits"]["hits"][0]
         obj["_id"] = uuid
-        return Realization(self._sumo, obj)
+        return objects.Realization(self._sumo, obj)
 
-    def get_surface_by_uuid(self, uuid: str) -> Surface:
+    def get_surface_by_uuid(self, uuid: str) -> objects.Surface:
         """Get surface object by uuid
 
         Args:
@@ -1208,7 +1211,7 @@ class SearchContext:
         """
         return self._get_object_by_class_and_uuid("surface", uuid)
 
-    async def get_surface_by_uuid_async(self, uuid: str) -> Surface:
+    async def get_surface_by_uuid_async(self, uuid: str) -> objects.Surface:
         """Get surface object by uuid
 
         Args:
@@ -1219,7 +1222,7 @@ class SearchContext:
         """
         return await self._get_object_by_class_and_uuid_async("surface", uuid)
 
-    def get_polygons_by_uuid(self, uuid: str) -> Polygons:
+    def get_polygons_by_uuid(self, uuid: str) -> objects.Polygons:
         """Get polygons object by uuid
 
         Args:
@@ -1230,7 +1233,7 @@ class SearchContext:
         """
         return self._get_object_by_class_and_uuid("polygons", uuid)
 
-    async def get_polygons_by_uuid_async(self, uuid: str) -> Polygons:
+    async def get_polygons_by_uuid_async(self, uuid: str) -> objects.Polygons:
         """Get polygons object by uuid
 
         Args:
@@ -1241,7 +1244,7 @@ class SearchContext:
         """
         return await self._get_object_by_class_and_uuid_async("polygons", uuid)
 
-    def get_table_by_uuid(self, uuid: str) -> Table:
+    def get_table_by_uuid(self, uuid: str) -> objects.Table:
         """Get table object by uuid
 
         Args:
@@ -1252,7 +1255,7 @@ class SearchContext:
         """
         return self._get_object_by_class_and_uuid("table", uuid)
 
-    async def get_table_by_uuid_async(self, uuid: str) -> Table:
+    async def get_table_by_uuid_async(self, uuid: str) -> objects.Table:
         """Get table object by uuid
 
         Args:
@@ -1305,7 +1308,7 @@ class SearchContext:
         rids = [hit["_source"]["fmu"]["realization"]["id"] for hit in hits]
         return prototype, uuids, rids
 
-    def _aggregate(self, columns=None, operation=None) -> Child:
+    def _aggregate(self, columns=None, operation=None) -> objects.Child:
         prototype, uuids, rids = self._verify_aggregation_operation()
         spec = {
             "object_ids": uuids,
@@ -1344,11 +1347,11 @@ class SearchContext:
             raise ex
         blob = BytesIO(res.content)
         res = self._to_sumo(prototype, blob)
-        assert isinstance(res, Child)
+        assert isinstance(res, objects.Child)
         res._blob = blob
         return res
 
-    def aggregate(self, columns=None, operation=None) -> Child:
+    def aggregate(self, columns=None, operation=None) -> objects.Child:
         if len(self.hidden) > 0:
             return self.hidden._aggregate(columns=columns, operation=operation)
         else:
@@ -1398,7 +1401,9 @@ class SearchContext:
         rids = [hit["_source"]["fmu"]["realization"]["id"] for hit in hits]
         return prototype, uuids, rids
 
-    async def _aggregate_async(self, columns=None, operation=None) -> Child:
+    async def _aggregate_async(
+        self, columns=None, operation=None
+    ) -> objects.Child:
         (
             prototype,
             uuids,
@@ -1441,11 +1446,13 @@ class SearchContext:
             raise ex
         blob = BytesIO(res.content)
         res = self._to_sumo(prototype, blob)
-        assert isinstance(res, Child)
+        assert isinstance(res, objects.Child)
         res._blob = blob
         return res
 
-    async def aggregate_async(self, columns=None, operation=None) -> Child:
+    async def aggregate_async(
+        self, columns=None, operation=None
+    ) -> objects.Child:
         length_hidden = await self.hidden.length_async()
         if length_hidden > 0:
             return await self.hidden._aggregate_async(
@@ -1456,14 +1463,14 @@ class SearchContext:
                 columns=columns, operation=operation
             )
 
-    def aggregation(self, column=None, operation=None) -> Child:
+    def aggregation(self, column=None, operation=None) -> objects.Child:
         assert operation is not None
         assert column is None or isinstance(column, str)
         sc = self.filter(aggregation=operation, column=column)
         numaggs = len(sc)
         assert numaggs <= 1
         if numaggs == 1:
-            assert isinstance(sc[0], Child)
+            assert isinstance(sc[0], objects.Child)
             return sc[0]
         else:
             return self.filter(realization=True).aggregate(
@@ -1471,7 +1478,9 @@ class SearchContext:
                 operation=operation,
             )
 
-    async def aggregation_async(self, column=None, operation=None) -> Child:
+    async def aggregation_async(
+        self, column=None, operation=None
+    ) -> objects.Child:
         assert operation is not None
         assert column is None or isinstance(column, str)
         sc = self.filter(aggregation=operation, column=column)
