@@ -11,21 +11,7 @@ import httpx
 
 from fmu.sumo.explorer.cache import LRUCache
 
-from ._child import Child
-from ._metrics import Metrics
-from .case import Case
-from .cases import Cases
-from .cpgrid import CPGrid
-from .cpgrid_property import CPGridProperty
-from .cube import Cube
-from .dictionary import Dictionary
-from .iteration import Iteration
-from .iterations import Iterations
-from .polygons import Polygons
-from .realization import Realization
-from .realizations import Realizations
-from .surface import Surface
-from .table import Table
+from fmu.sumo.explorer import objects
 
 if TYPE_CHECKING:
     from sumo.wrapper import SumoClient
@@ -310,20 +296,20 @@ class SearchContext:
     def _to_sumo(self, obj, blob=None) -> Document:
         cls = obj["_source"]["class"]
         if cls == "case":
-            return Case(self._sumo, obj)
+            return objects.Case(self._sumo, obj)
         # ELSE
         constructor = {
-            "cube": Cube,
-            "dictionary": Dictionary,
-            "polygons": Polygons,
-            "surface": Surface,
-            "table": Table,
-            "cpgrid": CPGrid,
-            "cpgrid_property": CPGridProperty,
+            "cube": objects.Cube,
+            "dictionary": objects.Dictionary,
+            "polygons": objects.Polygons,
+            "surface": objects.Surface,
+            "table": objects.Table,
+            "cpgrid": objects.CPGrid,
+            "cpgrid_property": objects.CPGridProperty,
         }.get(cls)
         if constructor is None:
             warnings.warn(f"No constructor for class {cls}")
-            constructor = Child
+            constructor = objects.Child
         return constructor(self._sumo, obj, blob)
 
     def __len__(self):
