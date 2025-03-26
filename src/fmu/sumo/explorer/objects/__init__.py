@@ -1,6 +1,7 @@
 """Sumo cases and child objects"""
 
 from ._child import Child
+from ._document import Document
 from ._metrics import Metrics
 from ._search_context import SearchContext
 from .case import Case

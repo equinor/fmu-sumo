@@ -15,8 +15,6 @@ from fmu.sumo.explorer.cache import LRUCache
 if TYPE_CHECKING:
     from sumo.wrapper import SumoClient
 
-    from ._document import Document
-
 
 # Type aliases
 SelectArg = Union[bool, str, Dict[str, Union[str, List[str]]], List[str]]
@@ -292,7 +290,7 @@ class SearchContext:
             else:
                 return {"bool": {"must": must, "must_not": must_not}}
 
-    def _to_sumo(self, obj, blob=None) -> Document:
+    def _to_sumo(self, obj, blob=None) -> objects.Document:
         cls = obj["_source"]["class"]
         if cls == "case":
             return objects.Case(self._sumo, obj)
@@ -533,7 +531,7 @@ class SearchContext:
         self._cache.clear()
         return self
 
-    def get_object(self, uuid: str) -> Document:
+    def get_object(self, uuid: str) -> objects.Document:
         """Get metadata object by uuid
 
         Args:
@@ -561,7 +559,7 @@ class SearchContext:
 
         return self._to_sumo(obj)
 
-    async def get_object_async(self, uuid: str) -> Document:
+    async def get_object_async(self, uuid: str) -> objects.Document:
         """Get metadata object by uuid
 
         Args:
@@ -1309,6 +1307,11 @@ class SearchContext:
         return prototype, uuids, rids
 
     def _aggregate(self, columns=None, operation=None) -> objects.Child:
+        assert (
+            operation != "collection"
+            or columns is not None
+            and len(columns) == 1
+        ), "Exactly one column required for collection aggregation."
         prototype, uuids, rids = self._verify_aggregation_operation()
         spec = {
             "object_ids": uuids,
@@ -1404,6 +1407,11 @@ class SearchContext:
     async def _aggregate_async(
         self, columns=None, operation=None
     ) -> objects.Child:
+        assert (
+            operation != "collection"
+            or columns is not None
+            and len(columns) == 1
+        ), "Exactly one column required for collection aggregation."
         (
             prototype,
             uuids,
@@ -1470,13 +1478,22 @@ class SearchContext:
         numaggs = len(sc)
         assert numaggs <= 1
         if numaggs == 1:
-            assert isinstance(sc[0], objects.Child)
-            return sc[0]
-        else:
-            return self.filter(realization=True).aggregate(
-                columns=[column] if column is not None else None,
-                operation=operation,
-            )
+            agg = sc.single
+            assert isinstance(agg, objects.Child)
+            ts = agg.metadata["_sumo"]["timestamp"]
+            reals = self.filter(
+                realization=True,
+                complex={"range": {"_sumo.timestamp": {"lt": ts}}},
+            ).realizationids
+            if set(reals) == set(
+                agg.metadata["fmu"]["aggregation"]["realization_ids"]
+            ):
+                return agg
+        # ELSE
+        return self.filter(realization=True).aggregate(
+            columns=[column] if column is not None else None,
+            operation=operation,
+        )
 
     async def aggregation_async(
         self, column=None, operation=None
@@ -1487,12 +1504,22 @@ class SearchContext:
         numaggs = await sc.length_async()
         assert numaggs <= 1
         if numaggs == 1:
-            return await sc.getitem_async(0)
-        else:
-            return await self.filter(realization=True).aggregate_async(
-                columns=[column] if column is not None else None,
-                operation=operation,
-            )
+            agg = await sc.single_async
+            assert isinstance(agg, objects.Child)
+            ts = agg.metadata["_sumo"]["timestamp"]
+            reals = await self.filter(
+                realization=True,
+                complex={"range": {"_sumo.timestamp": {"lt": ts}}},
+            ).realizationids_async
+            if set(reals) == set(
+                agg.metadata["fmu"]["aggregation"]["realization_ids"]
+            ):
+                return agg
+        # ELSE
+        return await self.filter(realization=True).aggregate_async(
+            columns=[column] if column is not None else None,
+            operation=operation,
+        )
 
     @deprecation.deprecated(
         details="Use the method 'aggregate' instead, with parameter 'operation'."
