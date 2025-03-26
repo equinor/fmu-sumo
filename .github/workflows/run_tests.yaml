@@ -3,8 +3,6 @@ name: Build and test fmu-sumo
 on:
   pull_request:
     branches: [main]
-  schedule:
-    - cron: "4 4 * * *"
   workflow_dispatch:
 
 jobs:
