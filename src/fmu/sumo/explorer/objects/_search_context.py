@@ -1314,7 +1314,9 @@ class SearchContext:
             or columns is not None
             and len(columns) == 1
         ), "Exactly one column required for collection aggregation."
-        prototype, uuids, rids = self.filter(column=columns)._verify_aggregation_operation()
+        prototype, uuids, rids = self.filter(
+            column=columns
+        )._verify_aggregation_operation()
         spec = {
             "object_ids": uuids,
             "operations": [operation],
@@ -1420,7 +1422,9 @@ class SearchContext:
             prototype,
             uuids,
             rids,
-        ) = await self.filter(column=columns)._verify_aggregation_operation_async()
+        ) = await self.filter(
+            column=columns
+        )._verify_aggregation_operation_async()
         spec = {
             "object_ids": uuids,
             "operations": [operation],
