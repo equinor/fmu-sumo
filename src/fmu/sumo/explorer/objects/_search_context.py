@@ -303,6 +303,8 @@ class SearchContext:
             "table": objects.Table,
             "cpgrid": objects.CPGrid,
             "cpgrid_property": objects.CPGridProperty,
+            "iteration": objects.Iteration,
+            "realization": objects.Realization,
         }.get(cls)
         if constructor is None:
             warnings.warn(f"No constructor for class {cls}")
@@ -1100,6 +1102,7 @@ class SearchContext:
             "_source": {
                 "includes": [
                     "$schema",
+                    "class",
                     "source",
                     "version",
                     "access",
@@ -1118,12 +1121,21 @@ class SearchContext:
 
         Returns: iteration object
         """
-        res = self._sumo.post(
-            "/search", json=self._iteration_query(uuid)
-        ).json()
-        obj = res["hits"]["hits"][0]
-        obj["_id"] = uuid
-        return objects.Iteration(self._sumo, obj)
+        try:
+            obj = self.get_object(uuid)
+            assert isinstance(obj, objects.Iteration)
+            return obj
+        except Exception:
+            res = self._sumo.post(
+                "/search", json=self._iteration_query(uuid)
+            ).json()
+            hits = res["hits"]["hits"]
+            if len(hits) == 0:
+                raise Exception(f"Document not found: {uuid}")
+            obj = hits[0]
+            obj["_id"] = uuid
+            obj["_source"]["class"] = "iteration"
+            return self._to_sumo(obj)
 
     async def get_iteration_by_uuid_async(
         self, uuid: str
@@ -1135,14 +1147,23 @@ class SearchContext:
 
         Returns: iteration object
         """
-        res = (
-            await self._sumo.post_async(
-                "/search", json=self._iteration_query(uuid)
-            )
-        ).json()
-        obj = res["hits"]["hits"][0]
-        obj["_id"] = uuid
-        return objects.Iteration(self._sumo, obj)
+        try:
+            obj = await self.get_object_async(uuid)
+            assert isinstance(obj, objects.Iteration)
+            return obj
+        except Exception:
+            res = (
+                await self._sumo.post_async(
+                    "/search", json=self._iteration_query(uuid)
+                )
+            ).json()
+            hits = res["hits"]["hits"]
+            if len(hits) == 0:
+                raise Exception(f"Document not found: {uuid}")
+            obj = hits[0]
+            obj["_id"] = uuid
+            obj["_source"]["class"] = "iteration"
+            return self._to_sumo(obj)
 
     def _realization_query(self, uuid) -> Dict:
         return {
@@ -1153,6 +1174,7 @@ class SearchContext:
             "_source": {
                 "includes": [
                     "$schema",
+                    "class",
                     "source",
                     "version",
                     "access",
@@ -1172,12 +1194,21 @@ class SearchContext:
 
         Returns: realization object
         """
-        res = self._sumo.post(
-            "/search", json=self._realization_query(uuid)
-        ).json()
-        obj = res["hits"]["hits"][0]
-        obj["_id"] = uuid
-        return objects.Realization(self._sumo, obj)
+        try:
+            obj = self.get_object(uuid)
+            assert isinstance(obj, objects.Realization)
+            return obj
+        except Exception:
+            res = self._sumo.post(
+                "/search", json=self._realization_query(uuid)
+            ).json()
+            hits = res["hits"]["hits"]
+            if len(hits) == 0:
+                raise Exception(f"Document not found: {uuid}")
+            obj = hits[0]
+            obj["_id"] = uuid
+            obj["_source"]["class"] = "realization"
+            return self._to_sumo(obj)
 
     async def get_realization_by_uuid_async(
         self, uuid: str
@@ -1189,14 +1220,23 @@ class SearchContext:
 
         Returns: realization object
         """
-        res = (
-            await self._sumo.post_async(
-                "/search", json=self._realization_query(uuid)
-            )
-        ).json()
-        obj = res["hits"]["hits"][0]
-        obj["_id"] = uuid
-        return objects.Realization(self._sumo, obj)
+        try:
+            obj = await self.get_object_async(uuid)
+            assert isinstance(obj, objects.Realization)
+            return obj
+        except Exception:
+            res = (
+                await self._sumo.post_async(
+                    "/search", json=self._realization_query(uuid)
+                )
+            ).json()
+            hits = res["hits"]["hits"]
+            if len(hits) == 0:
+                raise Exception(f"Document not found: {uuid}")
+            obj = hits[0]
+            obj["_id"] = uuid
+            obj["_source"]["class"] = "realization"
+            return self._to_sumo(obj)
 
     def get_surface_by_uuid(self, uuid: str) -> objects.Surface:
         """Get surface object by uuid
