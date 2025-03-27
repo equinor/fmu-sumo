@@ -11,7 +11,9 @@ from ._search_context import SearchContext
 class Iteration(Document, SearchContext):
     """Class for representing an iteration in Sumo."""
 
-    def __init__(self, sumo: SumoClient, metadata: Dict, blob: Optional[bytes] = None):
+    def __init__(
+        self, sumo: SumoClient, metadata: Dict, blob: Optional[bytes] = None
+    ):
         assert blob is None
         Document.__init__(self, metadata)
         SearchContext.__init__(
@@ -45,6 +47,16 @@ class Iteration(Document, SearchContext):
     def casename(self) -> str:
         """FMU case name"""
         return self.get_property("fmu.case.name")
+
+    @property
+    def iterationuuid(self) -> str:
+        """FMU iteration uuid"""
+        return self.get_property("fmu.iteration.uuid")
+
+    @property
+    def iterationname(self) -> str:
+        """FMU iteration name"""
+        return self.get_property("fmu.iteration.name")
 
     @property
     def name(self) -> str:
