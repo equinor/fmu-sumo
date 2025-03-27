@@ -1,6 +1,6 @@
 """Module for (pseudo) iteration class."""
 
-from typing import Dict
+from typing import Dict, Optional
 
 from sumo.wrapper import SumoClient
 
@@ -11,7 +11,8 @@ from ._search_context import SearchContext
 class Iteration(Document, SearchContext):
     """Class for representing an iteration in Sumo."""
 
-    def __init__(self, sumo: SumoClient, metadata: Dict):
+    def __init__(self, sumo: SumoClient, metadata: Dict, blob: Optional[bytes] = None):
+        assert blob is None
         Document.__init__(self, metadata)
         SearchContext.__init__(
             self,
