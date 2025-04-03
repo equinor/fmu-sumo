@@ -23,6 +23,13 @@ class Iteration(Document, SearchContext):
         )
         pass
 
+    def __repr__(self):
+        return (
+            f"<{self.__class__.__name__}: {self.name} {self.uuid}(uuid) "
+            f"in case {self.casename} "
+            f"in asset {self.asset}>"
+        )
+
     @property
     def field(self) -> str:
         """Case field"""
@@ -62,3 +69,8 @@ class Iteration(Document, SearchContext):
     def name(self) -> str:
         """FMU iteration name"""
         return self.get_property("fmu.iteration.name")
+
+    @property
+    def uuid(self) -> str:
+        """FMU iteration uuid"""
+        return self.get_property("fmu.iteration.uuid")

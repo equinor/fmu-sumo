@@ -23,6 +23,14 @@ class Realization(Document, SearchContext):
         )
         pass
 
+    def __repr__(self):
+        return (
+            f"<{self.__class__.__name__}: {self.realizationid} {self.uuid}(uuid) "
+            f"in iteration {self.iterationname} "
+            f"in case {self.casename} "
+            f"in asset {self.asset}>"
+        )
+
     @property
     def field(self) -> str:
         """Case field"""
@@ -72,8 +80,3 @@ class Realization(Document, SearchContext):
     def realizationid(self) -> int:
         """FMU realization id"""
         return self.get_property("fmu.realization.id")
-
-    @property
-    def name(self) -> str:
-        """FMU realization name"""
-        return self.get_property("fmu.realization.name")
