@@ -1364,7 +1364,6 @@ class SearchContext:
         del prototype["_source"]["fmu"]["realization"]
         del prototype["_source"]["_sumo"]
         del prototype["_source"]["file"]
-        del prototype["_source"]["access"]
         if "context" in prototype["_source"]["fmu"]:
             prototype["_source"]["fmu"]["context"]["stage"] = "iteration"
             pass
@@ -1472,7 +1471,6 @@ class SearchContext:
         del prototype["_source"]["fmu"]["realization"]
         del prototype["_source"]["_sumo"]
         del prototype["_source"]["file"]
-        del prototype["_source"]["access"]
         if "context" in prototype["_source"]["fmu"]:
             prototype["_source"]["fmu"]["context"]["stage"] = "iteration"
             pass
