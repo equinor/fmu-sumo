@@ -1,5 +1,6 @@
 """Contains class for one document"""
 
+import json
 import re
 from typing import Any, Dict, List, Union
 
@@ -17,6 +18,15 @@ class Document:
     def __init__(self, metadata: Dict) -> None:
         self._uuid = metadata["_id"]
         self._metadata = metadata["_source"]
+
+    def __str__(self):
+        return f"{json.dumps(self.metadata, indent=4)}"
+
+    def __repr__(self):
+        return (
+            f"<{self.__class__.__name__}: {self.name} {self.uuid}(uuid) "
+            f"in asset {self.asset}>"
+        )
 
     @property
     def uuid(self):
@@ -60,3 +70,11 @@ class Document:
     @property
     def template_path(self) -> str:
         return ""
+
+    @property
+    def name(self):
+        return "Should not happen"
+
+    @property
+    def asset(self):
+        return self.get_property("access.asset.name")

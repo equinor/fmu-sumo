@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import uuid
 import warnings
 from datetime import datetime
@@ -269,6 +270,27 @@ class SearchContext:
             "excludes": ["fmu.realization.parameters"],
         }
         return
+
+    def __str__(self):
+        length = len(self)
+        if length == 0:
+            return "None"
+        else:
+            preview = [self[i].metadata for i in range(min(5, length))]
+            return f"Data Preview:\n{json.dumps(preview, indent=4)}"
+
+    def __repr__(self):
+        cls = self.__class__.__name__
+        length = len(self)
+        if length == 0:
+            return f"<{cls}: {length} objects>"
+        if length == 1:
+            return f"<{cls}: {length} object of type {self.classes[0]}>"
+        else:
+            if len(self.classes) == 1:
+                return f"<{cls}: {length} objects of type {self.classes[0]}>"
+            else:
+                return f"<{cls}: {length} objects of types {self.classes}>"
 
     @property
     def _query(self):
@@ -1748,6 +1770,16 @@ class SearchContext:
     async def names_async(self) -> List[str]:
         """List of unique object names."""
         return await self.get_field_values_async("data.name.keyword")
+
+    @property
+    def classes(self) -> List[str]:
+        """List of class names."""
+        return self.get_field_values("class.keyword")
+
+    @property
+    async def classes_async(self) -> List[str]:
+        """List of class names."""
+        return await self.get_field_values_async("class.keyword")
 
 
 def _gen_filter_doc(spec):

@@ -7,6 +7,7 @@ import httpx
 from sumo.wrapper import SumoClient
 
 from .objects._search_context import SearchContext
+from .objects.cases import Cases
 
 
 class Explorer(SearchContext):
@@ -57,7 +58,8 @@ class Explorer(SearchContext):
 
     @property
     def cases(self):
-        return self._context_for_class("case")
+        uuids = self._context_for_class("case").uuids
+        return Cases(self, uuids)
 
     def get_permissions(self, asset: Optional[str] = None):
         """Get permissions

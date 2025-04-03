@@ -21,6 +21,33 @@ class Child(Document):
         self._sumo = sumo
         self._blob = blob
 
+    def __repr__(self):
+        if self.stage == "case" and self.__class__.__name__ != "Case":
+            return (
+                f"<{self.__class__.__name__}: {self.name} {self.uuid}(uuid) "
+                f"in case {self.casename} "
+                f"in asset {self.asset}>"
+            )
+        else:
+            if self.realization:
+                return (
+                    f"<{self.__class__.__name__}: {self.name} {self.uuid}(uuid) "
+                    f"in realization {self.realization} "
+                    f"in iteration {self.iteration} "
+                    f"in case {self.casename} "
+                    f"in asset {self.asset}>"
+                )
+            if self.operationname:
+                return (
+                    f"<{self.__class__.__name__}: {self.name} {self.uuid}(uuid) "
+                    f"in operation {self.operationname} "
+                    f"in iteration {self.iteration} "
+                    f"in case {self.casename} "
+                    f"in asset {self.asset}>"
+                )
+            else:
+                return super().__repr__()
+
     @property
     def blob(self) -> BytesIO:
         """Object blob"""
@@ -167,3 +194,13 @@ class Child(Document):
     def name(self) -> str:
         """Object data name"""
         return self.get_property("data.name")
+
+    @property
+    def asset(self) -> str:
+        """Object asset name"""
+        return self.get_property("access.asset.name")
+
+    @property
+    def operationname(self) -> str:
+        """Object aggregation operation name"""
+        return self.get_property("fmu.aggregation.operation")
