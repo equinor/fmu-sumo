@@ -72,9 +72,9 @@ class Document:
         return ""
 
     @property
-    def name(self):
+    def name(self) -> str:
         return "Should not happen"
 
     @property
-    def asset(self):
+    def asset(self) -> str:
         return self.get_property("access.asset.name")
