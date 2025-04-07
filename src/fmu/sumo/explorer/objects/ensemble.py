@@ -1,6 +1,6 @@
 """Module for (pseudo) ensemble class."""
 
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 from sumo.wrapper import SumoClient
 

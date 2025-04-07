@@ -4,8 +4,6 @@ from typing import Dict, List
 
 from ._search_context import SearchContext
 
-import json
-
 
 class Ensembles(SearchContext):
     def __init__(self, sc, uuids):
@@ -26,11 +24,11 @@ class Ensembles(SearchContext):
 
     @property
     def classes(self) -> List[str]:
-        return ['ensemble']
+        return ["ensemble"]
 
     @property
     async def classes_async(self) -> List[str]:
-        return ['ensemble']
+        return ["ensemble"]
 
     def _maybe_prefetch(self, index):
         return
@@ -75,6 +73,9 @@ class Ensembles(SearchContext):
         return obj
 
     def filter(self, **kwargs):
-        sc = SearchContext(self._sumo, must=[{"terms": {"fmu.ensemble.uuid.keyword": self._hits}}]).filter(**kwargs)
+        sc = SearchContext(
+            self._sumo,
+            must=[{"terms": {"fmu.ensemble.uuid.keyword": self._hits}}],
+        ).filter(**kwargs)
         uuids = sc.get_field_values("fmu.iteration.uuid.keyword")
         return Ensembles(sc, uuids)

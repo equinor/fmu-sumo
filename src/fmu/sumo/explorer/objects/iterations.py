@@ -4,8 +4,6 @@ from typing import Dict, List
 
 from ._search_context import SearchContext
 
-import json
-
 
 class Iterations(SearchContext):
     def __init__(self, sc, uuids):
@@ -15,11 +13,11 @@ class Iterations(SearchContext):
 
     @property
     def classes(self) -> List[str]:
-        return ['iteration']
+        return ["iteration"]
 
     @property
     async def classes_async(self) -> List[str]:
-        return ['iteration']
+        return ["iteration"]
 
     def _maybe_prefetch(self, index):
         return
@@ -64,6 +62,9 @@ class Iterations(SearchContext):
         return obj
 
     def filter(self, **kwargs):
-        sc = SearchContext(self._sumo, must=[{"terms": {"fmu.iteration.uuid.keyword": self._hits}}]).filter(**kwargs)
+        sc = SearchContext(
+            self._sumo,
+            must=[{"terms": {"fmu.iteration.uuid.keyword": self._hits}}],
+        ).filter(**kwargs)
         uuids = sc.get_field_values("fmu.iteration.uuid.keyword")
         return Iterations(sc, uuids)
