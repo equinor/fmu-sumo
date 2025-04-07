@@ -10,6 +10,8 @@ from .cpgrid import CPGrid
 from .cpgrid_property import CPGridProperty
 from .cube import Cube
 from .dictionary import Dictionary
+from .ensemble import Ensemble
+from .ensembles import Ensembles
 from .iteration import Iteration
 from .iterations import Iterations
 from .polygons import Polygons
