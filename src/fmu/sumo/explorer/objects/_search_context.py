@@ -137,7 +137,11 @@ _filterspec = {
     "relative_path": [_gen_filter_gen, "file.relative_path.keyword"],
     "tagname": [_gen_filter_gen, "data.tagname.keyword"],
     "dataformat": [_gen_filter_gen, "data.format.keyword"],
-    "iteration": [_gen_filter_gen, "fmu.iteration.name.keyword"],
+    "iteration": [
+        _gen_filter_gen,
+        "fmu.iteration.name.keyword",
+    ],  # FIXME: to be removed
+    "ensemble": [_gen_filter_gen, "fmu.ensemble.name.keyword"],
     "realization": [_gen_filter_gen, "fmu.realization.id"],
     "aggregation": [_gen_filter_gen, "fmu.aggregation.operation.keyword"],
     "stage": [_gen_filter_gen, "fmu.context.stage.keyword"],
@@ -284,8 +288,6 @@ class SearchContext:
         length = len(self)
         if length == 0:
             return f"<{cls}: {length} objects>"
-        if length == 1:
-            return f"<{cls}: {length} object of type {self.classes[0]}>"
         else:
             if len(self.classes) == 1:
                 return f"<{cls}: {length} objects of type {self.classes[0]}>"
@@ -325,7 +327,8 @@ class SearchContext:
             "table": objects.Table,
             "cpgrid": objects.CPGrid,
             "cpgrid_property": objects.CPGridProperty,
-            "iteration": objects.Iteration,
+            "iteration": objects.Iteration,  # FIXME: to be removed
+            "ensemble": objects.Ensemble,
             "realization": objects.Realization,
         }.get(cls)
         if constructor is None:
@@ -908,16 +911,32 @@ class SearchContext:
         return objects.Cases(self, uuids)
 
     @property
+    @deprecation.deprecated(details="Use the method 'ensembles' instead.")
     def iterations(self):
         """Iterations from current selection."""
         uuids = self.get_field_values("fmu.iteration.uuid.keyword")
         return objects.Iterations(self, uuids)
 
     @property
+    @deprecation.deprecated(
+        details="Use the method 'ensembles_async' instead."
+    )
     async def iterations_async(self):
         """Iterations from current selection."""
         uuids = await self.get_field_values_async("fmu.iteration.uuid.keyword")
         return objects.Iterations(self, uuids)
+
+    @property
+    def ensembles(self):
+        """Ensembles from current selection."""
+        uuids = self.get_field_values("fmu.ensemble.uuid.keyword")
+        return objects.Ensembles(self, uuids)
+
+    @property
+    async def ensembles_async(self):
+        """Ensembles from current selection."""
+        uuids = await self.get_field_values_async("fmu.ensemble.uuid.keyword")
+        return objects.Ensembles(self, uuids)
 
     @property
     def realizations(self):
@@ -1157,7 +1176,9 @@ class SearchContext:
             obj = hits[0]
             obj["_id"] = uuid
             obj["_source"]["class"] = "iteration"
-            return self._to_sumo(obj)
+            ret = self._to_sumo(obj)
+            self._cache.put(uuid, ret)
+            return ret
 
     async def get_iteration_by_uuid_async(
         self, uuid: str
@@ -1185,7 +1206,81 @@ class SearchContext:
             obj = hits[0]
             obj["_id"] = uuid
             obj["_source"]["class"] = "iteration"
-            return self._to_sumo(obj)
+            ret = self._to_sumo(obj)
+            self._cache.put(uuid, ret)
+            return ret
+
+    def _ensemble_query(self, uuid):
+        return {
+            "query": {"term": {"fmu.ensemble.uuid.keyword": {"value": uuid}}},
+            "size": 1,
+            "_source": {
+                "includes": [
+                    "$schema",
+                    "class",
+                    "source",
+                    "version",
+                    "access",
+                    "masterdata",
+                    "fmu.case",
+                    "fmu.ensemble",
+                ],
+            },
+        }
+
+    def get_ensemble_by_uuid(self, uuid: str) -> objects.Ensemble:
+        """Get ensemble object by uuid
+
+        Args:
+            uuid (str): ensemble uuid
+
+        Returns: ensemble object
+        """
+        try:
+            obj = self.get_object(uuid)
+            assert isinstance(obj, objects.Ensemble)
+            return obj
+        except Exception:
+            res = self._sumo.post(
+                "/search", json=self._ensemble_query(uuid)
+            ).json()
+            hits = res["hits"]["hits"]
+            if len(hits) == 0:
+                raise Exception(f"Document not found: {uuid}")
+            obj = hits[0]
+            obj["_id"] = uuid
+            obj["_source"]["class"] = "ensemble"
+            ret = self._to_sumo(obj)
+            self._cache.put(uuid, ret)
+            return ret
+
+    async def get_ensemble_by_uuid_async(self, uuid: str) -> objects.Ensemble:
+        """Get ensemble object by uuid
+
+        Args:
+            uuid (str): ensemble uuid
+
+        Returns: ensemble object
+        """
+        try:
+            obj = await self.get_object_async(uuid)
+            assert isinstance(obj, objects.Ensemble)
+            return obj
+        except Exception:
+            res = (
+                await self._sumo.post_async(
+                    "/search", json=self._ensemble_query(uuid)
+                )
+            ).json()
+            hits = res["hits"]["hits"]
+            if len(hits) == 0:
+                raise Exception(f"Document not found: {uuid}")
+            obj = hits[0]
+            obj["_id"] = uuid
+            obj["_source"]["class"] = "ensemble"
+            ret = self._to_sumo(obj)
+            self._cache.put(uuid, ret)
+            return ret
 
     def _realization_query(self, uuid) -> Dict:
         return {
@@ -1203,6 +1298,7 @@ class SearchContext:
                     "masterdata",
                     "fmu.case",
                     "fmu.iteration",
+                    "fmu.ensemble",
                     "fmu.realization",
                 ],
             },
@@ -1338,7 +1434,7 @@ class SearchContext:
                 for k in [
                     "fmu.case.uuid",
                     "class",
-                    "fmu.iteration.name",
+                    "fmu.ensemble.name",
                     "data.name",
                     "data.tagname",
                     "data.content",
@@ -1387,7 +1483,7 @@ class SearchContext:
         del prototype["_source"]["_sumo"]
         del prototype["_source"]["file"]
         if "context" in prototype["_source"]["fmu"]:
-            prototype["_source"]["fmu"]["context"]["stage"] = "iteration"
+            prototype["_source"]["fmu"]["context"]["stage"] = "ensemble"
             pass
         prototype["_source"]["fmu"]["aggregation"] = {
             "id": str(uuid.uuid4()),
@@ -1439,7 +1535,7 @@ class SearchContext:
                 for k in [
                     "fmu.case.uuid",
                     "class",
-                    "fmu.iteration.name",
+                    "fmu.ensemble.name",
                     "data.name",
                     "data.tagname",
                     "data.content",
@@ -1494,7 +1590,7 @@ class SearchContext:
         del prototype["_source"]["_sumo"]
         del prototype["_source"]["file"]
         if "context" in prototype["_source"]["fmu"]:
-            prototype["_source"]["fmu"]["context"]["stage"] = "iteration"
+            prototype["_source"]["fmu"]["context"]["stage"] = "ensemble"
             pass
         prototype["_source"]["fmu"]["aggregation"] = {
             "id": str(uuid.uuid4()),
@@ -1835,7 +1931,7 @@ Examples:
     Match one value::
 
         surfs = case.surfaces.filter(
-                    iteration="iter-0",
+                    ensemble="iter-0",
                     name="my_surface_name"
                 )
 
