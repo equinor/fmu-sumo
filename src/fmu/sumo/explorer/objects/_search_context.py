@@ -267,6 +267,7 @@ class SearchContext:
         self._visible = visible
         self._hidden = hidden
         self._field_values = {}
+        self._field_values_and_counts = {}
         self._hits = None
         self._cache = LRUCache(capacity=200)
         self._length = None
@@ -800,6 +801,23 @@ class SearchContext:
 
         return all_buckets
 
+    def get_field_values_and_counts(self, field: str) -> Dict[str, int]:
+        """Get List of unique values with occurrence counts for a given field
+
+        Arguments:
+            - field (str): a metadata field
+
+        Returns:
+            A mapping from unique values to count.
+        """
+        if field not in self._field_values_and_counts:
+            buckets = {
+                b["key"]: b["doc_count"] for b in self._get_buckets(field)
+            }
+            self._field_values_and_counts[field] = buckets
+
+        return self._field_values_and_counts[field]
+
     def get_field_values(self, field: str) -> List:
         """Get List of unique values for a given field
 
@@ -828,6 +846,26 @@ class SearchContext:
             A List of unique values for the given field
         """
         return self.get_field_values(field)
+
+    async def get_field_values_and_counts_async(
+        self, field: str
+    ) -> Dict[str, int]:
+        """Get List of unique values with occurrence counts for a given field
+
+        Arguments:
+            - field (str): a metadata field
+
+        Returns:
+            A mapping from unique values to count.
+        """
+        if field not in self._field_values_and_counts:
+            buckets = {
+                b["key"]: b["doc_count"]
+                for b in await self._get_buckets_async(field)
+            }
+            self._field_values_and_counts[field] = buckets
+
+        return self._field_values_and_counts[field]
 
     async def get_field_values_async(self, field: str) -> List:
         """Get List of unique values for a given field
