@@ -801,14 +801,14 @@ class SearchContext:
 
         return all_buckets
 
-    def get_field_values_and_counts(self, field: str) -> List:
+    def get_field_values_and_counts(self, field: str) -> Dict[str, int]:
         """Get List of unique values with occurrence counts for a given field
 
         Arguments:
             - field (str): a metadata field
 
         Returns:
-            A List of unique values for the given field
+            A mapping from unique values to count.
         """
         if field not in self._field_values_and_counts:
             buckets = {
@@ -847,14 +847,16 @@ class SearchContext:
         """
         return self.get_field_values(field)
 
-    async def get_field_values_and_counts_async(self, field: str) -> List:
+    async def get_field_values_and_counts_async(
+        self, field: str
+    ) -> Dict[str, int]:
         """Get List of unique values with occurrence counts for a given field
 
         Arguments:
             - field (str): a metadata field
 
         Returns:
-            A List of unique values for the given field
+            A mapping from unique values to count.
         """
         if field not in self._field_values_and_counts:
             buckets = {
