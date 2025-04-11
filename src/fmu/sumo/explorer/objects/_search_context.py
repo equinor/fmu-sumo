@@ -155,6 +155,7 @@ _filterspec = {
     "stratigraphic": [_gen_filter_bool, "data.stratigraphic"],
     "is_observation": [_gen_filter_bool, "data.is_observation"],
     "is_prediction": [_gen_filter_bool, "data.is_prediction"],
+    "standard_result": [_gen_filter_gen, "data.standard_result.name.keyword"],
     "complex": [_gen_filter_complex, None],
     "has": [_gen_filter_none, None],
 }
@@ -1914,6 +1915,18 @@ class SearchContext:
     async def classes_async(self) -> List[str]:
         """List of class names."""
         return await self.get_field_values_async("class.keyword")
+
+    @property
+    def standard_results(self) -> List[str]:
+        """List of standard result names."""
+        return self.get_field_values("data.standard_result.keyword")
+
+    @property
+    async def standard_results_async(self) -> List[str]:
+        """List of standard result names."""
+        return await self.get_field_values_async(
+            "data.standard_result.keyword"
+        )
 
 
 def _gen_filter_doc(spec):
