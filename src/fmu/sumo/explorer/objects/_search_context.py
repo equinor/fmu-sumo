@@ -1919,13 +1919,13 @@ class SearchContext:
     @property
     def standard_results(self) -> List[str]:
         """List of standard result names."""
-        return self.get_field_values("data.standard_result.keyword")
+        return self.get_field_values("data.standard_result.name.keyword")
 
     @property
     async def standard_results_async(self) -> List[str]:
         """List of standard result names."""
         return await self.get_field_values_async(
-            "data.standard_result.keyword"
+            "data.standard_result.name.keyword"
         )
 
 
