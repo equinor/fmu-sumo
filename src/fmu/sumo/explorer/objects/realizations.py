@@ -54,9 +54,6 @@ class Realizations(SearchContext):
         return obj
 
     def filter(self, **kwargs):
-        sc = SearchContext(
-            self._sumo,
-            must=[{"terms": {"fmu.realization.uuid.keyword": self._hits}}],
-        ).filter(**kwargs)
+        sc = super().filter(**kwargs)
         uuids = sc.get_field_values("fmu.realization.uuid.keyword")
         return Realizations(self, uuids)

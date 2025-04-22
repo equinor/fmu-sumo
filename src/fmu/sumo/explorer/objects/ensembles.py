@@ -11,17 +11,6 @@ class Ensembles(SearchContext):
         self._hits = uuids
         return
 
-    # def __str__(self) -> str:
-    #     length = len(self)
-    #     if length == 0:
-    #         return "None"
-    #     else:
-    #         preview = [self[i].metadata for i in range(min(5, length))]
-    #         return f"Data Preview:\n{json.dumps(preview, indent=4)}"
-
-    # def __repr__(self) -> str:
-    #     return(f"<{self.__class__.__name__} {len(self)} objects of type ensemble>")
-
     @property
     def classes(self) -> List[str]:
         return ["ensemble"]
@@ -73,9 +62,6 @@ class Ensembles(SearchContext):
         return obj
 
     def filter(self, **kwargs):
-        sc = SearchContext(
-            self._sumo,
-            must=[{"terms": {"fmu.ensemble.uuid.keyword": self._hits}}],
-        ).filter(**kwargs)
-        uuids = sc.get_field_values("fmu.iteration.uuid.keyword")
+        sc = super().filter(**kwargs)
+        uuids = sc.get_field_values("fmu.ensemble.uuid.keyword")
         return Ensembles(sc, uuids)

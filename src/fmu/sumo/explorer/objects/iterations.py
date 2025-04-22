@@ -62,9 +62,6 @@ class Iterations(SearchContext):
         return obj
 
     def filter(self, **kwargs):
-        sc = SearchContext(
-            self._sumo,
-            must=[{"terms": {"fmu.iteration.uuid.keyword": self._hits}}],
-        ).filter(**kwargs)
+        sc = super().filter(**kwargs)
         uuids = sc.get_field_values("fmu.iteration.uuid.keyword")
         return Iterations(sc, uuids)

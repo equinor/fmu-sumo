@@ -16,8 +16,6 @@ class Cases(SearchContext):
         return
 
     def filter(self, **kwargs):
-        sc = SearchContext(
-            self._sumo, must=[{"terms": {"fmu.case.uuid.keyword": self._hits}}]
-        ).filter(**kwargs)
+        sc = super().filter(**kwargs)
         uuids = sc.get_field_values("fmu.case.uuid.keyword")
         return Cases(sc, uuids)
