@@ -1690,7 +1690,7 @@ class SearchContext:
             ).realizationids
             if set(reals) == set(
                 agg.metadata["fmu"]["aggregation"]["realization_ids"]
-            ):
+            ) and len(reals) == len(self.filter(realization=True)):
                 return agg
         # ELSE
         return self.filter(realization=True).aggregate(
@@ -1714,8 +1714,11 @@ class SearchContext:
                 realization=True,
                 complex={"range": {"_sumo.timestamp": {"lt": ts}}},
             ).realizationids_async
-            if set(reals) == set(
-                agg.metadata["fmu"]["aggregation"]["realization_ids"]
+            if (
+                set(reals)
+                == set(agg.metadata["fmu"]["aggregation"]["realization_ids"])
+                and len(reals)
+                == await self.filter(realization=True).length_async()
             ):
                 return agg
         # ELSE
