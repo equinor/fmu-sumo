@@ -64,6 +64,28 @@ def _gen_filter_gen(attr):
     return _fn
 
 
+def _gen_filter_stage(attr):
+    """Match property against either single value or list of values.
+    If the value given is a boolean, tests for existence or not of the property.
+    In addition, if the value is or includes either "iteration" or "ensemble",
+    expand to include both values.
+    """
+
+    _inner = _gen_filter_gen(attr)
+
+    def _fn(value):
+        if value == "iteration" or value == "ensemble":
+            return _inner(["iteration", "ensemble"])
+        elif isinstance(value, list) and set(value).intersection(
+            {"iteration", "ensemble"}
+        ):
+            return _inner(list(set(value).union({"iteration", "ensemble"})))
+        else:
+            return _inner(value)
+
+    return _fn
+
+
 def _gen_filter_name():
     """Match against \"data.name\", or \"case.name\" for case objects."""
 
@@ -144,7 +166,7 @@ _filterspec = {
     "ensemble": [_gen_filter_gen, "fmu.ensemble.name.keyword"],
     "realization": [_gen_filter_gen, "fmu.realization.id"],
     "aggregation": [_gen_filter_gen, "fmu.aggregation.operation.keyword"],
-    "stage": [_gen_filter_gen, "fmu.context.stage.keyword"],
+    "stage": [_gen_filter_stage, "fmu.context.stage.keyword"],
     "column": [_gen_filter_gen, "data.spec.columns.keyword"],
     "vertical_domain": [_gen_filter_gen, "data.vertical_domain.keyword"],
     "content": [_gen_filter_gen, "data.content.keyword"],
