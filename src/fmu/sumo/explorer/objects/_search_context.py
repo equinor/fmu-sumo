@@ -156,6 +156,7 @@ _filterspec = {
     "is_observation": [_gen_filter_bool, "data.is_observation"],
     "is_prediction": [_gen_filter_bool, "data.is_prediction"],
     "standard_result": [_gen_filter_gen, "data.standard_result.name.keyword"],
+    "entity": [_gen_filter_gen, "fmu.entity.uuid.keyword"],
     "complex": [_gen_filter_complex, None],
     "has": [_gen_filter_none, None],
 }
@@ -1930,6 +1931,16 @@ class SearchContext:
         return await self.get_field_values_async(
             "data.standard_result.name.keyword"
         )
+
+    @property
+    def entities(self) -> List[str]:
+        """List of entity uuids."""
+        return self.get_field_values("fmu.entity.uuid.keyword")
+
+    @property
+    async def entities_async(self) -> List[str]:
+        """List of entity uuids."""
+        return await self.get_field_values_async("fmu.entity.uuid.keyword")
 
 
 def _gen_filter_doc(spec):
