@@ -16,9 +16,9 @@ class Metrics:
             "agg": {op: {k: v for k, v in kwargs.items() if v is not None}}
         }
         qdoc = {"query": self._search_context._query, "aggs": aggs, "size": 0}
-        res = (await self._search_context._sumo.post_async(
-            "/search", json=qdoc
-        )).json()
+        res = (
+            await self._search_context._sumo.post_async("/search", json=qdoc)
+        ).json()
         return res["aggregations"]["agg"]
 
     def min(self, field):
