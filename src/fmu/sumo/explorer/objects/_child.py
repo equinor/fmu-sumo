@@ -141,6 +141,11 @@ class Child(Document):
         return self.get_property("fmu.iteration.name")
 
     @property
+    def ensemble(self) -> str:
+        """Object ensemble"""
+        return self.get_property("fmu.ensemble.name")
+
+    @property
     def context(self) -> str:
         """Object context"""
         return self.get_property("fmu.context.stage")
