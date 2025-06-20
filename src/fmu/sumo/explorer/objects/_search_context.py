@@ -1501,7 +1501,9 @@ class SearchContext:
             },
         }
 
-    def __verify_aggregation_operation(self, sres) -> Tuple[str, str, str]:
+    def __verify_aggregation_operation(
+        self, sres
+    ) -> Tuple[str, str, str, str]:
         tot_hits = sres["hits"]["total"]["value"]
         if tot_hits == 0:
             raise Exception("No matching realizations found.")
@@ -1523,11 +1525,12 @@ class SearchContext:
         ensemblename = sres["aggregations"]["fmu.ensemble.name"]["buckets"][0][
             "key"
         ]
-        return caseuuid, entityuuid, ensemblename
+        classname = sres["aggregations"]["class"]["buckets"][0]["key"]
+        return caseuuid, classname, entityuuid, ensemblename
 
     def _verify_aggregation_operation(
         self, columns, operation
-    ) -> Tuple[str, str, str]:
+    ) -> Tuple[str, str, str, str]:
         assert (
             operation != "collection"
             or columns is not None
@@ -1539,12 +1542,14 @@ class SearchContext:
         return sc.__verify_aggregation_operation(sres)
 
     def __prepare_aggregation_spec(
-        self, caseuuid, entityuuid, ensemblename, operation, columns
+        self, caseuuid, classname, entityuuid, ensemblename, operation, columns
     ):
         spec = {
-            "caseuuid": caseuuid,
-            "entityuuid": entityuuid,
-            "ensemblename": ensemblename,
+            "case_uuid": caseuuid,
+            "class": classname,
+            "entity_uuid": entityuuid,
+            "ensemble_name": ensemblename,
+            "iteration_name": ensemblename,
             "operations": [operation],
         }
         if columns is not None:
@@ -1552,12 +1557,13 @@ class SearchContext:
         return spec
 
     def _aggregate(self, columns=None, operation=None) -> objects.Child:
-        caseuuid, entityuuid, ensemblename = (
+        caseuuid, classname, entityuuid, ensemblename = (
             self._verify_aggregation_operation(columns, operation)
         )
         spec = self.__prepare_aggregation_spec(
-            caseuuid, entityuuid, ensemblename, operation, columns
+            caseuuid, classname, entityuuid, ensemblename, operation, columns
         )
+        spec["object_ids"] = self.uuids
         try:
             res = self._sumo.post("/aggregations", json=spec)
         except httpx.HTTPStatusError as ex:
@@ -1577,7 +1583,7 @@ class SearchContext:
 
     async def _verify_aggregation_operation_async(
         self, columns, operation
-    ) -> Tuple[str, str, str]:
+    ) -> Tuple[str, str, str, str]:
         assert (
             operation != "collection"
             or columns is not None
@@ -1593,12 +1599,14 @@ class SearchContext:
     ) -> objects.Child:
         (
             caseuuid,
+            classname,
             entityuuid,
             ensemblename,
         ) = await self._verify_aggregation_operation_async(columns, operation)
         spec = self.__prepare_aggregation_spec(
-            caseuuid, entityuuid, ensemblename, operation, columns
+            caseuuid, classname, entityuuid, ensemblename, operation, columns
         )
+        spec["object_ids"] = await self.uuids_async
         try:
             res = await self._sumo.post_async("/aggregations", json=spec)
         except httpx.HTTPStatusError as ex:
