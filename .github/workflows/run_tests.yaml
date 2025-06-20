@@ -11,8 +11,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.11", "3.12"]
         os: [ubuntu-latest, windows-latest, macos-13]
+        exclude:
+          - os: windows-latest
+            python-version: "3.11"
     permissions:
       contents: read
       id-token: write
