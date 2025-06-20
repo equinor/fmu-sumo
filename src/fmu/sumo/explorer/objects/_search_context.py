@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import json
-import uuid
 import warnings
 from datetime import datetime
-from io import BytesIO
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
 
 import deprecation
@@ -1484,12 +1482,10 @@ class SearchContext:
         """
         return await self._get_object_by_class_and_uuid_async("table", uuid)
 
-    def _verify_aggregation_operation(
-        self,
-    ) -> Tuple[Dict, List[str], List[int]]:
-        query = {
+    def __prepare_verify_aggregation_query(self) -> Dict:
+        return {
             "query": self._query,
-            "size": 1,
+            "size": 0,
             "track_total_hits": True,
             "aggs": {
                 k: {"terms": {"field": k + ".keyword", "size": 1}}
@@ -1497,85 +1493,85 @@ class SearchContext:
                     "fmu.case.uuid",
                     "class",
                     "fmu.ensemble.name",
+                    "fmu.entity.uuid",
                     "data.name",
                     "data.tagname",
                     "data.content",
                 ]
             },
         }
-        sres = self._sumo.post("/search", json=query).json()
-        if len(sres["hits"]["hits"]) == 0:
+
+    def __verify_aggregation_operation(
+        self, sres
+    ) -> Tuple[str, str, str, str]:
+        tot_hits = sres["hits"]["total"]["value"]
+        if tot_hits == 0:
             raise Exception("No matching realizations found.")
-        prototype = sres["hits"]["hits"][0]
         conflicts = [
             k
             for (k, v) in sres["aggregations"].items()
             if (
-                ("sum_other_doc_count" in v) and (v["sum_other_doc_count"] > 0)
+                ("sum_other_doc_count" in v)
+                and (v["sum_other_doc_count"] > 0)
+                or v["buckets"][0]["doc_count"] != tot_hits
             )
         ]
         if len(conflicts) > 0:
             raise Exception(f"Conflicting values for {conflicts}")
+        entityuuid = sres["aggregations"]["fmu.entity.uuid"]["buckets"][0][
+            "key"
+        ]
+        caseuuid = sres["aggregations"]["fmu.case.uuid"]["buckets"][0]["key"]
+        ensemblename = sres["aggregations"]["fmu.ensemble.name"]["buckets"][0][
+            "key"
+        ]
+        classname = sres["aggregations"]["class"]["buckets"][0]["key"]
+        return caseuuid, classname, entityuuid, ensemblename
 
-        hits = self._search_all(select=["fmu.realization.id"])
-
-        if any(
-            hit["_source"]["fmu"].get("realization") is None for hit in hits
-        ):
-            raise Exception("Selection contains non-realization data.")
-
-        uuids = [hit["_id"] for hit in hits]
-        rids = [hit["_source"]["fmu"]["realization"]["id"] for hit in hits]
-        return prototype, uuids, rids
-
-    def _aggregate(self, columns=None, operation=None) -> objects.Child:
+    def _verify_aggregation_operation(
+        self, columns, operation
+    ) -> Tuple[str, str, str, str]:
         assert (
             operation != "collection"
             or columns is not None
             and len(columns) == 1
         ), "Exactly one column required for collection aggregation."
-        prototype, uuids, rids = self.filter(
-            column=columns
-        )._verify_aggregation_operation()
+        sc = self if columns is None else self.filter(column=columns)
+        query = sc.__prepare_verify_aggregation_query()
+        sres = sc._sumo.post("/search", json=query).json()
+        return sc.__verify_aggregation_operation(sres)
+
+    def __prepare_aggregation_spec(
+        self, caseuuid, classname, entityuuid, ensemblename, operation, columns
+    ):
         spec = {
-            "object_ids": uuids,
+            "case_uuid": caseuuid,
+            "class": classname,
+            "entity_uuid": entityuuid,
+            "ensemble_name": ensemblename,
+            "iteration_name": ensemblename,
             "operations": [operation],
-        }
-        del prototype["_source"]["fmu"]["realization"]
-        del prototype["_source"]["_sumo"]
-        del prototype["_source"]["file"]
-        if "context" in prototype["_source"]["fmu"]:
-            prototype["_source"]["fmu"]["context"]["stage"] = "ensemble"
-            pass
-        prototype["_source"]["fmu"]["aggregation"] = {
-            "id": str(uuid.uuid4()),
-            "realization_ids": rids,
-            "operation": operation,
         }
         if columns is not None:
             spec["columns"] = columns
-            cols = columns[:]
-            table_index = prototype["_source"]["data"].get("table_index")
-            if (
-                table_index is not None
-                and len(table_index) != 0
-                and table_index[0] not in cols
-            ):
-                cols.insert(0, table_index[0])
-                pass
-            prototype["_source"]["data"]["spec"]["columns"] = cols
-            pass
+        return spec
+
+    def _aggregate(self, columns=None, operation=None) -> objects.Child:
+        caseuuid, classname, entityuuid, ensemblename = (
+            self._verify_aggregation_operation(columns, operation)
+        )
+        spec = self.__prepare_aggregation_spec(
+            caseuuid, classname, entityuuid, ensemblename, operation, columns
+        )
+        spec["object_ids"] = self.uuids
         try:
             res = self._sumo.post("/aggregations", json=spec)
         except httpx.HTTPStatusError as ex:
             print(ex.response.reason_phrase)
             print(ex.response.text)
             raise ex
-        blob = BytesIO(res.content)
-        res = self._to_sumo(prototype, blob)
-        assert isinstance(res, objects.Child)
-        res._blob = blob
-        return res
+        res = self._sumo.poll(res).json()
+        return self._to_sumo(res)
 
     def aggregate(self, columns=None, operation=None) -> objects.Child:
         if len(self.hidden) > 0:
@@ -1586,103 +1582,39 @@ class SearchContext:
             )
 
     async def _verify_aggregation_operation_async(
-        self,
-    ) -> Tuple[Dict, List[str], List[int]]:
-        query = {
-            "query": self._query,
-            "size": 1,
-            "track_total_hits": True,
-            "aggs": {
-                k: {"terms": {"field": k + ".keyword", "size": 1}}
-                for k in [
-                    "fmu.case.uuid",
-                    "class",
-                    "fmu.ensemble.name",
-                    "data.name",
-                    "data.tagname",
-                    "data.content",
-                ]
-            },
-        }
-        sres = (await self._sumo.post_async("/search", json=query)).json()
-        if len(sres["hits"]["hits"]) == 0:
-            raise Exception("No matching realizations found.")
-        prototype = sres["hits"]["hits"][0]
-        conflicts = [
-            k
-            for (k, v) in sres["aggregations"].items()
-            if (
-                ("sum_other_doc_count" in v) and (v["sum_other_doc_count"] > 0)
-            )
-        ]
-        if len(conflicts) > 0:
-            raise Exception(f"Conflicting values for {conflicts}")
-
-        hits = await self._search_all_async(select=["fmu.realization.id"])
-
-        if any(
-            hit["_source"]["fmu"].get("realization") is None for hit in hits
-        ):
-            raise Exception("Selection contains non-realization data.")
-
-        uuids = [hit["_id"] for hit in hits]
-        rids = [hit["_source"]["fmu"]["realization"]["id"] for hit in hits]
-        return prototype, uuids, rids
-
-    async def _aggregate_async(
-        self, columns=None, operation=None
-    ) -> objects.Child:
+        self, columns, operation
+    ) -> Tuple[str, str, str, str]:
         assert (
             operation != "collection"
             or columns is not None
             and len(columns) == 1
         ), "Exactly one column required for collection aggregation."
+        sc = self if columns is None else self.filter(column=columns)
+        query = sc.__prepare_verify_aggregation_query()
+        sres = (await self._sumo.post_async("/search", json=query)).json()
+        return sc.__verify_aggregation_operation(sres)
+
+    async def _aggregate_async(
+        self, columns=None, operation=None
+    ) -> objects.Child:
         (
-            prototype,
-            uuids,
-            rids,
-        ) = await self.filter(
-            column=columns
-        )._verify_aggregation_operation_async()
-        spec = {
-            "object_ids": uuids,
-            "operations": [operation],
-        }
-        del prototype["_source"]["fmu"]["realization"]
-        del prototype["_source"]["_sumo"]
-        del prototype["_source"]["file"]
-        if "context" in prototype["_source"]["fmu"]:
-            prototype["_source"]["fmu"]["context"]["stage"] = "ensemble"
-            pass
-        prototype["_source"]["fmu"]["aggregation"] = {
-            "id": str(uuid.uuid4()),
-            "realization_ids": rids,
-            "operation": operation,
-        }
-        if columns is not None:
-            spec["columns"] = columns
-            cols = columns[:]
-            table_index = prototype["_source"]["data"].get("table_index")
-            if (
-                table_index is not None
-                and len(table_index) != 0
-                and table_index[0] not in cols
-            ):
-                cols.insert(0, table_index[0])
-                pass
-            prototype["_source"]["data"]["spec"]["columns"] = cols
-            pass
+            caseuuid,
+            classname,
+            entityuuid,
+            ensemblename,
+        ) = await self._verify_aggregation_operation_async(columns, operation)
+        spec = self.__prepare_aggregation_spec(
+            caseuuid, classname, entityuuid, ensemblename, operation, columns
+        )
+        spec["object_ids"] = await self.uuids_async
         try:
             res = await self._sumo.post_async("/aggregations", json=spec)
         except httpx.HTTPStatusError as ex:
             print(ex.response.reason_phrase)
             print(ex.response.text)
             raise ex
-        blob = BytesIO(res.content)
-        res = self._to_sumo(prototype, blob)
-        assert isinstance(res, objects.Child)
-        res._blob = blob
-        return res
+        res = self._sumo.poll(res).json()
+        return self._to_sumo(res)
 
     async def aggregate_async(
         self, columns=None, operation=None
