@@ -79,8 +79,8 @@ as a base class for certain other classes in `fmu.sumo.explorer`:
 * `Case` objects are search contexts that match objects in a specific
   case.
 
-* `Iteration` objects are search contexts that match objects in a
-  specific iteration.
+* `Ensemble` objects are search contexts that match objects in a
+  specific ensemble. (Previously `Iteration`)
 
 * `Realization` objects are search contexts that match objects in a
   specific realization.
@@ -309,7 +309,7 @@ method can be used to further refine the set of matching objects:
 
     case = sumo.get_case_by_uuid("1234567")
 
-    surfaces = case.surfaces.filter(iteration="iter-0")
+    surfaces = case.surfaces.filter(ensemble="iter-0")
 
     contents = surfaces.contents
 
@@ -341,7 +341,7 @@ are useful parameters to `.filter()`:
 * `tagname`
 * `content`
 * `dataformat`
-* `iteration`
+* `ensemble`
 * `realization`
 * `aggregation`
 * `stage`
@@ -379,7 +379,7 @@ We can get list of filter values for the following properties:
 * `contents`
 * `tagnames`
 * `dataformats`
-* `iterations`
+* `ensemble`
 * `realizations`
 * `aggregations`
 * `stages`
@@ -467,7 +467,7 @@ surfaces:
     case = explorer.get_case_by_uuid("dec73fae-bb11-41f2-be37-73ba005c4967")
 
     surface_collection: SurfaceCollection = case.surfaces.filter(
-        iteration="iter-1",
+        ensemble="iter-1",
     )
 
 
@@ -490,7 +490,7 @@ This can now be reduced to:
     case = explorer.get_case_by_uuid("dec73fae-bb11-41f2-be37-73ba005c4967")
 
     surface_collection: SurfaceCollection = case.surfaces.filter(
-        iteration="iter-1",
+        ensemble="iter-1",
     )
 
     async def main():
@@ -593,7 +593,7 @@ this is currently implemented for `surfaces` and `tables`.
     surfaces = case.surfaces.filter(
         stage="realization",
         content="depth",
-        iteration="iter-0",
+        ensemble="iter-0",
         name="Valysar Fm.",
         tagname="FACIES_Fraction_Channel"
         stratigraphic="false"
@@ -610,7 +610,7 @@ this is currently implemented for `surfaces` and `tables`.
 
 In this example we perform aggregations on all realized instance of
 the surface `Valysar Fm. (FACIES_Fraction_Channel)` in
-iteration 0. The aggregation methods return `xtgeo.RegularSurface`
+ensemble 0. The aggregation methods return `xtgeo.RegularSurface`
 objects.
 
 .. note:: The methods `.mean()`, `.min()`, etc are deprecated; the
@@ -625,7 +625,7 @@ For `table` aggregation it is also necessary to specify the columns you want:
 
     sumo = Explorer(env="dev")
     case = sumo.get_case_by_uuid("5b558daf-61c5-400a-9aa2-c602bb471a16")
-    tables = case.tables.filter(iteration="iter-0", realization=True,
+    tables = case.tables.filter(ensemble="iter-0", realization=True,
                                 tagname=summary, column="FOPT")
     agg = tables.aggregate(operation="collection", columns=["FOPT"])
     agg.to_pandas()
