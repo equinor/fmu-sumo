@@ -1162,6 +1162,46 @@ class SearchContext:
     def grid_properties(self) -> SearchContext:
         return self._context_for_class("cpgrid_property")
 
+    @property
+    def parameters(self) -> SearchContext:
+        return self.filter(
+            complex={
+                "bool": {
+                    "must": [
+                        {"term": {"data.name.keyword": "parameters"}},
+                        {"term": {"data.content.keyword": "parameters"}},
+                    ],
+                    "should": [
+                        {
+                            "bool": {
+                                "must": [
+                                    {"term": {"class.keyword": "dictionary"}},
+                                    {
+                                        "exists": {
+                                            "field": "fmu.realization.id"
+                                        }
+                                    },
+                                ]
+                            }
+                        },
+                        {
+                            "bool": {
+                                "must": [
+                                    {"term": {"class.keyword": "table"}},
+                                    {
+                                        "exists": {
+                                            "field": "fmu.aggregation.operation"
+                                        }
+                                    },
+                                ]
+                            }
+                        },
+                    ],
+                    "minimum_should_match": 1,
+                }
+            }
+        )
+
     def _get_object_by_class_and_uuid(self, cls, uuid) -> Any:
         obj = self.get_object(uuid)
         if obj.metadata["class"] != cls:
@@ -1531,11 +1571,9 @@ class SearchContext:
     def _verify_aggregation_operation(
         self, columns, operation
     ) -> Tuple[str, str, str, str]:
-        assert (
-            operation != "collection"
-            or columns is not None
-            and len(columns) == 1
-        ), "Exactly one column required for collection aggregation."
+        assert columns is None or len(columns) == 1, (
+            "Exactly one column required for collection aggregation."
+        )
         sc = self if columns is None else self.filter(column=columns)
         query = sc.__prepare_verify_aggregation_query()
         sres = sc._sumo.post("/search", json=query).json()
