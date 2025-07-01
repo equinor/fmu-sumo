@@ -1553,7 +1553,11 @@ class SearchContext:
             if (
                 ("sum_other_doc_count" in v)
                 and (v["sum_other_doc_count"] > 0)
-                or ("buckets" in v and len(v["buckets"]) > 0 and v["buckets"][0]["doc_count"] != tot_hits)
+                or (
+                    "buckets" in v
+                    and len(v["buckets"]) > 0
+                    and v["buckets"][0]["doc_count"] != tot_hits
+                )
             )
         ]
         if len(conflicts) > 0:
@@ -1616,9 +1620,7 @@ class SearchContext:
         if len(sc.hidden) > 0:
             return sc.hidden._aggregate(columns=columns, operation=operation)
         else:
-            return sc.visible._aggregate(
-                columns=columns, operation=operation
-            )
+            return sc.visible._aggregate(columns=columns, operation=operation)
 
     async def _verify_aggregation_operation_async(
         self, columns, operation
