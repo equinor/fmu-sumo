@@ -14,18 +14,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pip'
-      
+          python-version: "3.12"
+          cache: "pip"
+
       - name: Installing dependencies
         run: pip install ruff
-                
+
       - name: Run ruff lint
         run: ruff check .
 
       - name: Run ruff format
         run: ruff format . --check
-
