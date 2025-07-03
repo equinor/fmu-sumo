@@ -1654,7 +1654,7 @@ class SearchContext:
             print(ex.response.reason_phrase)
             print(ex.response.text)
             raise ex
-        res = await self._sumo.poll_async(res).json()
+        res = (await self._sumo.poll_async(res)).json()
         return self._to_sumo(res)
 
     async def aggregate_async(
