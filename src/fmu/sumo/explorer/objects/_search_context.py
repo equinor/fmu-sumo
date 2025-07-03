@@ -1847,12 +1847,12 @@ class SearchContext:
     @property
     def vertical_domains(self) -> List[str]:
         """List of unique object vertical domains."""
-        return self.get_field_values("data.vertical_domain")
+        return self.get_field_values("data.vertical_domain.keyword")
 
     @property
     async def vertical_domains_async(self) -> List[str]:
         """List of unique object vertical domains."""
-        return await self.get_field_values_async("data.vertical_domain")
+        return await self.get_field_values_async("data.vertical_domain.keyword")
 
     @property
     def stages(self) -> List[str]:
