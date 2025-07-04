@@ -1625,11 +1625,9 @@ class SearchContext:
     async def _verify_aggregation_operation_async(
         self, columns, operation
     ) -> Tuple[str, str, str, str]:
-        assert (
-            operation != "collection"
-            or columns is not None
-            and len(columns) == 1
-        ), "Exactly one column required for collection aggregation."
+        assert columns is None or len(columns) == 1, (
+            "Exactly one column required for collection aggregation."
+        )
         sc = self if columns is None else self.filter(column=columns)
         query = sc.__prepare_verify_aggregation_query()
         sres = (await self._sumo.post_async("/search", json=query)).json()
