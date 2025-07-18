@@ -55,7 +55,7 @@ platforms = ["any"]
 where = ["src"]
 
 [tool.ruff]
-exclude = [".env", ".git", ".github", ".venv", "venv"]
+exclude = [".env", ".git", ".github", ".venv", "venv", "examples"]
 
 line-length = 79
 
