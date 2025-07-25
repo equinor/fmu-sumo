@@ -1573,7 +1573,7 @@ class SearchContext:
         return caseuuid, classname, entityuuid, ensemblename
 
     def _verify_aggregation_operation(
-        self, columns, operation
+        self, columns
     ) -> Tuple[str, str, str, str]:
         assert columns is None or len(columns) == 1, (
             "Exactly one column required for collection aggregation."
@@ -1600,7 +1600,7 @@ class SearchContext:
 
     def _aggregate(self, columns=None, operation=None) -> objects.Child:
         caseuuid, classname, entityuuid, ensemblename = (
-            self._verify_aggregation_operation(columns, operation)
+            self._verify_aggregation_operation(columns)
         )
         spec = self.__prepare_aggregation_spec(
             caseuuid, classname, entityuuid, ensemblename, operation, columns
@@ -1623,7 +1623,7 @@ class SearchContext:
             return sc.visible._aggregate(columns=columns, operation=operation)
 
     async def _verify_aggregation_operation_async(
-        self, columns, operation
+        self, columns
     ) -> Tuple[str, str, str, str]:
         assert columns is None or len(columns) == 1, (
             "Exactly one column required for collection aggregation."
@@ -1641,7 +1641,7 @@ class SearchContext:
             classname,
             entityuuid,
             ensemblename,
-        ) = await self._verify_aggregation_operation_async(columns, operation)
+        ) = await self._verify_aggregation_operation_async(columns)
         spec = self.__prepare_aggregation_spec(
             caseuuid, classname, entityuuid, ensemblename, operation, columns
         )
