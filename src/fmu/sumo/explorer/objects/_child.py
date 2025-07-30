@@ -21,7 +21,7 @@ class Child(Document):
         self._sumo = sumo
         self._blob = blob
 
-    def __repr__(self):
+    def __str__(self):
         if self.stage == "case" and self.__class__.__name__ != "Case":
             return (
                 f"<{self.__class__.__name__}: {self.name} {self.uuid}(uuid) "
@@ -46,7 +46,10 @@ class Child(Document):
                     f"in asset {self.asset}>"
                 )
             else:
-                return super().__repr__()
+                return super().__str__()
+
+    def __repr__(self):
+        return self.__str__()
 
     @property
     def blob(self) -> BytesIO:
