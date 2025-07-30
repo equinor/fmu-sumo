@@ -20,13 +20,13 @@ class Document:
         self._metadata = metadata["_source"]
 
     def __str__(self):
-        return f"{json.dumps(self.metadata, indent=4)}"
-
-    def __repr__(self):
         return (
             f"<{self.__class__.__name__}: {self.name} {self.uuid}(uuid) "
             f"in asset {self.asset}>"
         )
+
+    def __repr__(self):
+        return self.__str__()
 
     @property
     def uuid(self):
