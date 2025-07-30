@@ -1,6 +1,5 @@
 """Contains class for one document"""
 
-import json
 import re
 from typing import Any, Dict, List, Union
 
