@@ -180,8 +180,21 @@ class Realization(Summary):
             _vectors.extend(self.vectors)
             self.vectors = _vectors
 
-    def _reindex_dates(self, table: pyarrow.Table, time_index: list):
+    def _reindex_dates(
+        self, table: pyarrow.Table, time_index: list
+    ) -> pyarrow.Table:
         df = table.to_pandas()
+
+        # If duplicates are found, re-indexing will not work. An edge case when
+        # duplicate days will be found is when the raw data has sub-daily
+        # resolution and multiple timesteps/entries on the same day.
+        if df["DATE"].dt.normalize().duplicated().any():
+            time_delta = df["DATE"] - df["DATE"].shift()
+            if (time_delta < pd.Timedelta(days=1)).any():
+                raise ValueError(
+                    "Duplicate dates found in summary data. "
+                    "Reindexing is not supported when the raw data has multiple timesteps on the same day."
+                )
 
         df_interpolated = (
             df.set_index("DATE")
@@ -321,7 +334,9 @@ class Ensemble(Summary):
 
         return table
 
-    def _reindex_dates(self, table: pyarrow.Table, time_index: list):
+    def _reindex_dates(
+        self, table: pyarrow.Table, time_index: list
+    ) -> pyarrow.Table:
         df = table.to_pandas()
 
         for i, real in enumerate(df.REAL.unique()):
