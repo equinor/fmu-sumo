@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import warnings
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
@@ -299,14 +298,6 @@ class SearchContext:
         return
 
     def __str__(self):
-        length = len(self)
-        if length == 0:
-            return "None"
-        else:
-            preview = [self[i].metadata for i in range(min(5, length))]
-            return f"Data Preview:\n{json.dumps(preview, indent=4)}"
-
-    def __repr__(self):
         cls = self.__class__.__name__
         length = len(self)
         if length == 0:
@@ -316,6 +307,9 @@ class SearchContext:
                 return f"<{cls}: {length} objects of type {self.classes[0]}>"
             else:
                 return f"<{cls}: {length} objects of types {self.classes}>"
+
+    def __repr__(self):
+        return self.__str__()
 
     @property
     def _query(self):

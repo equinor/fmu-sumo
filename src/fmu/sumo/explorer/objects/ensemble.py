@@ -23,12 +23,15 @@ class Ensemble(Document, SearchContext):
         )
         pass
 
-    def __repr__(self):
+    def __str__(self):
         return (
             f"<{self.__class__.__name__}: {self.name} {self.uuid}(uuid) "
             f"in case {self.casename} "
             f"in asset {self.asset}>"
         )
+
+    def __repr__(self):
+        return self.__str__()
 
     @property
     def field(self) -> str:
