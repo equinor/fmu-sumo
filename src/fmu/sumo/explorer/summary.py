@@ -16,7 +16,7 @@ from fmu.sumo.explorer.objects.case import Case
 from fmu.sumo.explorer.objects.table import Table
 
 
-def get_case(uuid: str) -> Case:
+def get_case(uuid: str, env: str = "prod") -> Case:
     """
     Get a case stored in Sumo.
 
@@ -27,7 +27,7 @@ def get_case(uuid: str) -> Case:
         Case: object representing a case in Sumo
     """
 
-    exp = Explorer()
+    exp = Explorer(env=env)
     case = exp.get_case_by_uuid(uuid)
 
     return case
@@ -98,7 +98,7 @@ class Summary:
             "No summary file found in the provided case."
         )
         assert len(tables.ensembles) == 1, (
-            f"More than one ensemble found: {[ens.name for ens in tables.ensembles]}. Specify the name of the ensemble file using Ensemble(..., summary_name='...')"
+            f"More than one ensemble found: {[ens.name for ens in tables.ensembles]}. Specify the name of the ensemble file using Ensemble(..., ensemble='...')"
         )
 
     def _filter_time_index(self, table: pyarrow.Table, frequency: str) -> list:
@@ -125,6 +125,31 @@ class Summary:
             )
 
         return frequency
+
+    def _reindex_dates(
+        self, df: pd.DataFrame, time_index: list
+    ) -> pd.DataFrame:
+        try:
+            df_reindexed = df.set_index("DATE").reindex(time_index, level=0)
+        except ValueError:
+            # If duplicates are found, re-indexing will not work. An edge case when
+            # duplicate days will be found is when the raw data has sub-daily
+            # resolution and multiple timesteps/entries on the same day.
+            if df["DATE"].dt.normalize().duplicated().any():
+                time_delta = df["DATE"] - df["DATE"].shift()
+                if (time_delta < pd.Timedelta(days=1)).any():
+                    raise ValueError(
+                        "Duplicate dates found in summary data. Cannot reindex on an axis with duplicate labels. "
+                        "The raw data contains data with multiple time steps on the same day. "
+                        "Reindexing of sub-daily data is not suppported."
+                    )
+            else:
+                # Raise more generic error
+                raise ValueError(
+                    "Duplicate dates found in summary data. Cannot reindex on an axis with duplicate labels."
+                )
+
+        return df_reindexed
 
 
 class Realization(Summary):
@@ -180,29 +205,16 @@ class Realization(Summary):
             _vectors.extend(self.vectors)
             self.vectors = _vectors
 
-    def _reindex_dates(
+    def _change_data_frequency(
         self, table: pyarrow.Table, time_index: list
     ) -> pyarrow.Table:
         df = table.to_pandas()
 
-        # If duplicates are found, re-indexing will not work. An edge case when
-        # duplicate days will be found is when the raw data has sub-daily
-        # resolution and multiple timesteps/entries on the same day.
-        if df["DATE"].dt.normalize().duplicated().any():
-            time_delta = df["DATE"] - df["DATE"].shift()
-            if (time_delta < pd.Timedelta(days=1)).any():
-                raise ValueError(
-                    "Duplicate dates found in summary data. "
-                    "Reindexing is not supported when the raw data has multiple timesteps on the same day."
-                )
+        df_reindexed = self._reindex_dates(df, time_index)
 
-        df_interpolated = (
-            df.set_index("DATE")
-            .reindex(time_index, level=0)
-            .interpolate(method="linear")
-            .dropna(axis=0, how="all")
-            .reset_index(names="DATE")
-        )
+        df_interpolated = df_reindexed.interpolate(
+            method="linear"
+        ).reset_index(names="DATE")
 
         table_interpolated = pyarrow.Table.from_pandas(
             df_interpolated, preserve_index=True
@@ -241,7 +253,7 @@ class Realization(Summary):
 
         if frequency:
             time_index = self._filter_time_index(table, frequency)
-            table = self._reindex_dates(table, time_index)
+            table = self._change_data_frequency(table, time_index)
 
         return table.to_pandas()
 
@@ -334,7 +346,7 @@ class Ensemble(Summary):
 
         return table
 
-    def _reindex_dates(
+    def _change_data_frequency(
         self, table: pyarrow.Table, time_index: list
     ) -> pyarrow.Table:
         df = table.to_pandas()
@@ -342,16 +354,20 @@ class Ensemble(Summary):
         for i, real in enumerate(df.REAL.unique()):
             if i == 0:
                 df_interpolated = pd.DataFrame()
-            _df_ri = (
-                df[df["REAL"] == real]
-                .copy()
-                .set_index("DATE")
-                .reindex(time_index, level=0)
-                .interpolate(method="linear")
-                .reset_index(names="DATE")
-            )
 
-            df_interpolated = pd.concat((df_interpolated, _df_ri))
+            df_real = df[df["REAL"] == real].copy()
+
+            # Once the dataframe for the realisation is obtained, this has the
+            # same behaviour as the Realization class
+            df_real_reindexed = self._reindex_dates(df_real, time_index)
+            df_real_interpolated = df_real_reindexed.interpolate(
+                method="linear"
+            ).reset_index(names="DATE")
+
+            # Add interpolated data for this realisation to the "ensemble" dataframe
+            df_interpolated = pd.concat(
+                (df_interpolated, df_real_interpolated)
+            )
 
         table_interpolated = pyarrow.Table.from_pandas(
             df_interpolated, preserve_index=True
@@ -383,7 +399,7 @@ class Ensemble(Summary):
 
         if frequency:
             time_index = self._filter_time_index(table, frequency)
-            table = self._reindex_dates(table, time_index)
+            table = self._change_data_frequency(table, time_index)
 
         df = table.to_pandas()
 
