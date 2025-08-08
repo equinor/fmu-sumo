@@ -182,60 +182,6 @@ class Summary:
         df_reindexed = df.reindex(time_index, level=0)
         return df_reindexed
 
-
-class Realization(Summary):
-    """
-    An object for downloading summary data for a single realisation from Sumo.
-
-    Args:
-        case (Case): fmu.sumo.explorer case
-        real (int): realisation number
-        vectors (str | list | None, optional): Summary vectors to download.
-        Defaults to None (all).
-        name (Optional[str], optional): Summary file metadata name in Sumo. Used to
-        select one summary file if multiple runs are present for a single
-        realisation. Defaults to None.
-        ensemble (Optional[str], optional): name of the ensemble in Sumo (e.g. "pred", "iter-0")
-    """
-
-    def __init__(
-        self,
-        case: Case,
-        real: int,
-        vectors: str | list | None = None,
-        name: Optional[str] = None,
-        ensemble: Optional[str] = None,
-    ) -> None:
-        super().__init__(case, vectors, name, ensemble)
-
-        self.real = real
-
-        self._format_vectors()
-
-        # Get tables object and check there is only data for only one summary file per realisation
-        self.tables = self.case.tables.filter(
-            tagname="summary",
-            realization=self.real,
-            name=self.name,
-            ensemble=self.ensemble,
-        )
-        self._check_number_ensembles(self.tables)
-        self._check_number_summary_files(self.tables)
-
-    def _format_vectors(self):
-        """
-        Format vectors argument. If a string is given, add it to a list. Always
-        keep DATE column as first vector. If vectors=None, nothing is done here.
-        """
-        if isinstance(self.vectors, str):
-            self.vectors = [self.vectors]
-
-        # Always keep DATE column
-        if isinstance(self.vectors, list):
-            _vectors = ["DATE"]
-            _vectors.extend(self.vectors)
-            self.vectors = _vectors
-
     def _join_original_reindexed_df(
         self, df: pd.DataFrame, df_reindexed: pd.DataFrame
     ) -> pd.DataFrame:
@@ -339,7 +285,8 @@ class Realization(Summary):
 
         # Remove date from this list. DATE is reindexed and doesn't need imputed
         # values.
-        del fill_methods["DATE"]
+        if "DATE" in fill_methods:
+            del fill_methods["DATE"]
 
         return fill_methods
 
@@ -373,6 +320,60 @@ class Realization(Summary):
 
         return df
 
+
+class Realization(Summary):
+    """
+    An object for downloading summary data for a single realisation from Sumo.
+
+    Args:
+        case (Case): fmu.sumo.explorer case
+        real (int): realisation number
+        vectors (str | list | None, optional): Summary vectors to download.
+        Defaults to None (all).
+        name (Optional[str], optional): Summary file metadata name in Sumo. Used to
+        select one summary file if multiple runs are present for a single
+        realisation. Defaults to None.
+        ensemble (Optional[str], optional): name of the ensemble in Sumo (e.g. "pred", "iter-0")
+    """
+
+    def __init__(
+        self,
+        case: Case,
+        real: int,
+        vectors: str | list | None = None,
+        name: Optional[str] = None,
+        ensemble: Optional[str] = None,
+    ) -> None:
+        super().__init__(case, vectors, name, ensemble)
+
+        self.real = real
+
+        self._format_vectors()
+
+        # Get tables object and check there is only data for only one summary file per realisation
+        self.tables = self.case.tables.filter(
+            tagname="summary",
+            realization=self.real,
+            name=self.name,
+            ensemble=self.ensemble,
+        )
+        self._check_number_ensembles(self.tables)
+        self._check_number_summary_files(self.tables)
+
+    def _format_vectors(self):
+        """
+        Format vectors argument. If a string is given, add it to a list. Always
+        keep DATE column as first vector. If vectors=None, nothing is done here.
+        """
+        if isinstance(self.vectors, str):
+            self.vectors = [self.vectors]
+
+        # Always keep DATE column
+        if isinstance(self.vectors, list):
+            _vectors = ["DATE"]
+            _vectors.extend(self.vectors)
+            self.vectors = _vectors
+
     def _change_data_frequency(
         self, table: pyarrow.Table, time_index: list[pd.Timestamp]
     ) -> pyarrow.Table:
@@ -400,7 +401,7 @@ class Realization(Summary):
         df_combined = df_combined[~df_combined.index.duplicated(keep="first")]
         df_imputed = df_combined.loc[
             df_combined.index.isin(df_reindexed.index)
-        ]
+        ].copy()
 
         table_imputed = pyarrow.Table.from_pandas(
             df_imputed, preserve_index=True
@@ -532,35 +533,51 @@ class Ensemble(Summary):
 
         return table
 
-    # FIXME this doesn't work correctly for the Ensemble class yet
     def _change_data_frequency(
         self, table: pyarrow.Table, time_index: list
     ) -> pyarrow.Table:
-        df = table.to_pandas()
+        df = table.to_pandas()  # DATE is a column
 
+        df_ens_combined = pd.DataFrame()
         for i, real in enumerate(df.REAL.unique()):
-            if i == 0:
-                df_interpolated = pd.DataFrame()
-
             df_real = df[df["REAL"] == real].copy()
 
-            # Once the dataframe for the realisation is obtained, this has the
-            # same behaviour as the Realization class
-            df_real_reindexed = self._reindex_dates(df_real, time_index)
-            df_real_interpolated = df_real_reindexed.interpolate(
-                method="linear"
-            ).reset_index(names="DATE")
+            # Drop REAL column so the data can be handled in the same way
+            # as for the Realization class. This column would be dropped
+            # during data imputation after reindexing anyway.
+            df_real = df_real.drop(columns="REAL")
 
-            # Add interpolated data for this realisation to the "ensemble" dataframe
-            df_interpolated = pd.concat(
-                (df_interpolated, df_real_interpolated)
+            """ From this point is the same as what's done in the same method in the Realization class """
+            # TODO consider putting this code in its own method in the Summar class
+            df_real = df_real.set_index("DATE")  # DATE is index
+            df_reindexed = self._reindex_dates(
+                df_real, time_index
+            )  # DATE is index
+            df_combined = self._join_original_reindexed_df(
+                df_real, df_reindexed
             )
+            df_combined = self._ensure_first_row_not_na(df_real, df_combined)
+            df_combined = self._impute_values_reindexed_df(df_combined)
 
-        table_interpolated = pyarrow.Table.from_pandas(
-            df_interpolated, preserve_index=True
+            # Remove duplicates and only keep dates for new time index
+            df_combined = df_combined[
+                ~df_combined.index.duplicated(keep="first")
+            ]
+            df_imputed = df_combined.loc[
+                df_combined.index.isin(df_reindexed.index)
+            ].copy()
+            """ Up to this point """
+
+            # Add realisation number back to dataframe
+            df_imputed.loc[:, "REAL"] = real
+            # Add imputed data for this realisation to the "ensemble" dataframe
+            df_ens_combined = pd.concat((df_ens_combined, df_imputed))
+
+        table_ens_combined = pyarrow.Table.from_pandas(
+            df_ens_combined, preserve_index=True
         )
 
-        return table_interpolated
+        return table_ens_combined
 
     def df(
         self,
