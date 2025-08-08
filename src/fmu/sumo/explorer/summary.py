@@ -8,12 +8,28 @@ from typing import Literal, Optional, Union
 
 import pandas as pd
 import pyarrow
-import pyarrow.compute as pc
 
 from fmu.ensemble.util.dates import unionize_smry_dates
 from fmu.sumo.explorer import Explorer
 from fmu.sumo.explorer.objects.case import Case
 from fmu.sumo.explorer.objects.table import Table
+
+# Regexs for columns which will be interpolated if the time
+# axis is reindexed. These are cumulatives, in-place volumes
+# and pressures.
+COLUMNS_INTERPOLATE = [
+    r"F[A-Z]{1}(I|P)(P|T).*$",  # matches e.g. FOPT, FWIT, FOIP, FGIP
+    r"WB(HP|P\d{1}):.*$",  # matches e.g. WBHP:*, WBP9:*
+    r"FPR",
+]
+# Regexs for columns which will be back-filled if the time
+# axis is reindexed. These are rates.
+COLUMNS_BACKFILL = [
+    r"W[A-Z]{1}(I|P)R:.*$",
+    r"F[A-Z]{1}(I|P)R.*$",  # matches e.g. FOPR, FWIR, FGPRH, but not FPR
+    r"FWCT.*$",
+    r"WWCT:.*$",
+]
 
 
 def get_case(uuid: str, env: str = "prod") -> Case:
@@ -66,44 +82,61 @@ class Summary:
 
         return regex_in_vectors
 
-    def _get_wildcard_vectors(self, table: Table):
+    def _expand_wildcard_vectors(self, table: pyarrow.Table) -> list[str]:
+        """
+        Get a list of all vectors. If wildcards are used in the
+        input, these will be 'expanded' based on the columns in the summary
+        data. For example: if F*PT is in the list of column_keys and the summary
+        data contains FOPT, FGPT and FWPT, these three strings will be matched
+        and returned in the new_vectors list.
+
+        Args:
+            table (pyarrow.Table): pyarrow table
+
+        Returns:
+            list[str]: list of vectors
+        """
+        expanded_vectors = []
         columns = table.column_names
 
-        # Expanded vectors e.g. FOPT* -> FOPT, FOPTH
-        new_vectors = []
+        # Get expanded wilcard vectors e.g. FOPT* -> FOPT, FOPTH
+        if self.vectors:
+            for v in self.vectors:
+                # Only try to match regex if wildcard character "*" is present
+                if re.match(r".*\*.*", v):
+                    for col in columns:
+                        pattern = rf"{v}".replace("*", ".*")
+                        if re.match(pattern, col):
+                            expanded_vectors.append(col)
+                else:
+                    expanded_vectors.append(v)
 
-        for v in self.vectors:
-            # Only try to match regex is wildcard character "*" is present
-            if re.match(r".*\*.*", v):
-                for col in columns:
-                    # {0, } to match e.g. both FOPT and FOPTH if regex is 'F*PT'
-                    pattern = rf"{v}".replace("*", ".*.{0,}")
-                    if re.match(pattern, col):
-                        new_vectors.append(col)
-            else:
-                new_vectors.append(v)
-
-        return new_vectors
+        return expanded_vectors
 
     def _check_number_summary_files(self, tables):
-        assert len(tables.names) > 0, (
-            "No summary file found in the provided case."
-        )
-        assert len(tables.names) == 1, (
-            f"More than one summary file found: {tables.names}. Specify the name of the summary file using Ensemble(..., summary_name='...')"
-        )
+        if len(tables.names) == 0:
+            raise ValueError("No summary file found in the provided case.")
+
+        if len(tables.names) > 1:
+            raise ValueError(
+                f"More than one summary file found: {tables.names}. Specify the name of the summary file using Ensemble(..., summary_name='...')"
+            )
 
     def _check_number_ensembles(self, tables):
-        assert len(tables.ensembles) > 0, (
-            "No summary file found in the provided case."
-        )
-        assert len(tables.ensembles) == 1, (
-            f"More than one ensemble found: {[ens.name for ens in tables.ensembles]}. Specify the name of the ensemble file using Ensemble(..., ensemble='...')"
-        )
+        if len(tables.ensembles) == 0:
+            raise ValueError(
+                "No ensemble with the requested name found in the provided case."
+            )
+        if len(tables.ensembles) > 1:
+            raise ValueError(
+                f"More than one ensemble found: {[ens.name for ens in tables.ensembles]}. Specify the name of the ensemble file using Ensemble(..., ensemble='...')"
+            )
 
-    def _filter_time_index(self, table: pyarrow.Table, frequency: str) -> list:
-        timestamps = pc.unique(table.select(["DATE"])[0])
-        timestamps_series = timestamps.to_pandas().unique()
+    def _filter_time_index(
+        self, table: pyarrow.Table, frequency: str
+    ) -> list[pd.Timestamp]:
+        timestamps = table.select(["DATE"])[0]
+        timestamps_series = timestamps.to_pandas()
         dates = unionize_smry_dates(
             [timestamps_series], freq=frequency, normalize=True
         )
@@ -127,28 +160,26 @@ class Summary:
         return frequency
 
     def _reindex_dates(
-        self, df: pd.DataFrame, time_index: list
+        self, df: pd.DataFrame, time_index: list[pd.Timestamp]
     ) -> pd.DataFrame:
-        try:
-            df_reindexed = df.set_index("DATE").reindex(time_index, level=0)
-        except ValueError:
-            # If duplicates are found, re-indexing will not work. An edge case when
-            # duplicate days will be found is when the raw data has sub-daily
-            # resolution and multiple timesteps/entries on the same day.
-            if df["DATE"].dt.normalize().duplicated().any():
-                time_delta = df["DATE"] - df["DATE"].shift()
-                if (time_delta < pd.Timedelta(days=1)).any():
-                    raise ValueError(
-                        "Duplicate dates found in summary data. Cannot reindex on an axis with duplicate labels. "
-                        "The raw data contains data with multiple time steps on the same day. "
-                        "Reindexing of sub-daily data is not suppported."
-                    )
-            else:
-                # Raise more generic error
-                raise ValueError(
-                    "Duplicate dates found in summary data. Cannot reindex on an axis with duplicate labels."
-                )
+        """
 
+        If duplicates are found, re-indexing will not work. An edge case when
+        duplicate days are found is when the raw data has sub-daily
+        resolution and multiple timesteps/entries on the same day.
+
+        This is put in its own function to allow for more detailed error
+        messages if required.
+
+        Args:
+            df (pd.DataFrame): dataframe with DATE as index
+            time_index (list[pd.Timestamp]): list of timestamps to reindex to
+
+        Returns:
+            pd.DataFrame: reindexed dataframe
+        """
+
+        df_reindexed = df.reindex(time_index, level=0)
         return df_reindexed
 
 
@@ -205,22 +236,177 @@ class Realization(Summary):
             _vectors.extend(self.vectors)
             self.vectors = _vectors
 
+    def _join_original_reindexed_df(
+        self, df: pd.DataFrame, df_reindexed: pd.DataFrame
+    ) -> pd.DataFrame:
+        """
+
+        Join original dataframe and reindexed dataframe. Rows from the
+        original dataframe are used to fill/interpolate the reindexed data.
+
+        Args:
+            df (pd.DataFrame): original dataframe
+            df_reindexed (pd.DataFrame): reindexed dataframe
+
+        Returns:
+            pd.DataFrame: combined dataframe with both original and reindexed entries
+        """
+
+        df_combined = pd.concat(
+            (
+                df.reset_index(names="DATE"),
+                df_reindexed.reset_index(names="DATE"),
+            ),
+            axis=0,
+        )
+        df_combined = df_combined.sort_values(by="DATE", ascending=True)
+        df_combined = df_combined.set_index("DATE")
+
+        return df_combined
+
+    def _ensure_first_row_not_na(
+        self, df: pd.DataFrame, df_combined: pd.DataFrame
+    ) -> pd.DataFrame:
+        """
+        This function handles an edge case when the first row in the reindexed
+        dataframe is missing values. This happens when reindexing introduces a
+        date before the original dataframe's first date. For example, when
+        reindexing to a monthly resolution and the first date in the original
+        dataframe is 2018-01-02, the new first date in the reindexed dataframe
+        will be 2018-01-01 and will contain NaN values. If this happens, this function
+        will set the first row of the intepolated dataframe to the first row of
+        the original dataframe while keeping the new date, so that the
+        interpolation method has something to interpolate from.
+
+        Args:
+            df (pd.DataFrame): original dataframe
+            df_combined (pd.DataFrame): combined dataframe with both original and reindexed entries
+
+        Returns:
+            pd.DataFrame: dataframe with values (not NaN values) in first row
+        """
+
+        if df_combined.iloc[0, :].isna().any():
+            date_keep = df_combined.index[0]
+            df_combined.iloc[0] = df.iloc[0].copy()
+            new_index = df_combined.index.to_numpy()
+            new_index[0] = date_keep
+            df_combined.index = new_index
+
+        return df_combined
+
+    def _get_column_fill_methods(self, df: pd.DataFrame) -> dict:
+        """
+
+        When reindexing, rows with NaN values will be introduced into the
+        reindexed dataframe. The method for imputing (filling missing values)
+        at the new time frequency needs to be specified: interpolate or bfill.
+
+        Two lists COLUMNS_INTERPOLATE and COLUMNS_BACKFILL contains regex
+        patterns which are used to decide which method should be used to fill
+        missing values for each of the columns (vectors) in the summary dataframe.
+
+        If a vector cannot be matched by a pattern in either of these lists,
+        reindexing with this vector is not supported.
+
+        Args:
+            df (pd.DataFrame): combined dataframe with both original and reindexed entries
+
+        Returns:
+            dict: map of column name (vector) to method to use to fill missing values
+        """
+        fill_methods = {}
+
+        table = pyarrow.Table.from_pandas(df)
+
+        # Get relevant vectors from user input, and check if these vectors can
+        # be matched by a regex in the lists of allowed regex vectors.
+        # NOTE DATE column will be found in this list.
+        relevant_vectors = self.vectors if self.vectors else table.column_names
+
+        for vector in relevant_vectors:
+            method = None
+
+            for pattern in COLUMNS_INTERPOLATE:
+                if re.match(pattern, vector):
+                    method = "interpolate"
+
+            for pattern in COLUMNS_BACKFILL:
+                if re.match(pattern, vector):
+                    method = "fill"
+
+            fill_methods[vector] = method
+
+        # Remove date from this list. DATE is reindexed and doesn't need imputed
+        # values.
+        del fill_methods["DATE"]
+
+        return fill_methods
+
+    def _impute_values_reindexed_df(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Impute values (fill missing values) in the reindexed dataframe.
+
+        Args:
+            df (pd.DataFrame): combined dataframe with both original and reindexed entries
+
+        Returns:
+            pd.DataFrame: combined dataframe with imputed values in place of NaN values
+        """
+        fill_methods = self._get_column_fill_methods(df)
+
+        # Fill values depending on the data type
+        for column in df.columns:
+            fill_method = fill_methods.get(column)
+
+            if fill_method == "fill":
+                df[column] = df[column].bfill()
+                # Fill last value which has nothing to be backfilled from
+                df[column] = df[column].fillna(0)
+            elif fill_method == "interpolate":
+                df[column] = df[column].interpolate(method="time")
+            elif not fill_method:
+                df = df.drop(columns=column)
+                print(
+                    f"Reindexing with summary vector {column} is not supported. Removing this vector from the dataframe"
+                )
+
+        return df
+
     def _change_data_frequency(
-        self, table: pyarrow.Table, time_index: list
+        self, table: pyarrow.Table, time_index: list[pd.Timestamp]
     ) -> pyarrow.Table:
-        df = table.to_pandas()
+        """
+        Change frequency of the data by reindexing to the requested time index
+        and imputing values from the original data.
 
-        df_reindexed = self._reindex_dates(df, time_index)
+        Args:
+            table (pyarrow.Table): table with DATE as column time_index
+            (list[pd.Timestamp]): list of timestamps to reindex to
 
-        df_interpolated = df_reindexed.interpolate(
-            method="linear"
-        ).reset_index(names="DATE")
+        Returns:
+            pyarrow.Table: reindexed table with imputed values at the new frequency
+        """
 
-        table_interpolated = pyarrow.Table.from_pandas(
-            df_interpolated, preserve_index=True
+        df = table.to_pandas()  # DATE is a column
+        df = df.set_index("DATE")  # DATE is index
+        df_reindexed = self._reindex_dates(df, time_index)  # DATE is index
+
+        df_combined = self._join_original_reindexed_df(df, df_reindexed)
+        df_combined = self._ensure_first_row_not_na(df, df_combined)
+        df_combined = self._impute_values_reindexed_df(df_combined)
+
+        # Remove duplicates and only keep dates for new time index
+        df_combined = df_combined[~df_combined.index.duplicated(keep="first")]
+        df_imputed = df_combined.loc[
+            df_combined.index.isin(df_reindexed.index)
+        ]
+
+        table_imputed = pyarrow.Table.from_pandas(
+            df_imputed, preserve_index=True
         )
 
-        return table_interpolated
+        return table_imputed
 
     def df(
         self,
@@ -245,7 +431,7 @@ class Realization(Summary):
         table = self.tables[0].to_arrow()
 
         if self._regex_in_vectors:
-            self.vectors = self._get_wildcard_vectors(table)
+            self.vectors = self._expand_wildcard_vectors(table)
 
         # If vectors are given, filter the table to the vectors
         if self.vectors:
@@ -298,7 +484,7 @@ class Ensemble(Summary):
                 name=self.name,
             )
             table = tables[0].to_arrow()
-            self.vectors = self._get_wildcard_vectors(table)
+            self.vectors = self._expand_wildcard_vectors(table)
 
     def _format_vectors(self):
         """
@@ -346,6 +532,7 @@ class Ensemble(Summary):
 
         return table
 
+    # FIXME this doesn't work correctly for the Ensemble class yet
     def _change_data_frequency(
         self, table: pyarrow.Table, time_index: list
     ) -> pyarrow.Table:
