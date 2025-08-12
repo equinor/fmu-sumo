@@ -241,7 +241,7 @@ class Summary:
 
         return df_combined
 
-    def _get_column_fill_methods(self, df: pd.DataFrame) -> dict:
+    def _get_column_imputation_methods(self, df: pd.DataFrame) -> dict:
         """
 
         When reindexing, rows with NaN values will be introduced into the
@@ -261,7 +261,7 @@ class Summary:
         Returns:
             dict: map of column name (vector) to method to use to fill missing values
         """
-        fill_methods = {}
+        imputation_methods = {}
 
         table = pyarrow.Table.from_pandas(df)
 
@@ -281,14 +281,14 @@ class Summary:
                 if re.match(pattern, vector):
                     method = "fill"
 
-            fill_methods[vector] = method
+            imputation_methods[vector] = method
 
         # Remove date from this list. DATE is reindexed and doesn't need imputed
         # values.
-        if "DATE" in fill_methods:
-            del fill_methods["DATE"]
+        if "DATE" in imputation_methods:
+            del imputation_methods["DATE"]
 
-        return fill_methods
+        return imputation_methods
 
     def _impute_values_reindexed_df(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -300,25 +300,61 @@ class Summary:
         Returns:
             pd.DataFrame: combined dataframe with imputed values in place of NaN values
         """
-        fill_methods = self._get_column_fill_methods(df)
+        imputation_methods = self._get_column_imputation_methods(df)
 
         # Fill values depending on the data type
         for column in df.columns:
-            fill_method = fill_methods.get(column)
+            imputation_method = imputation_methods.get(column)
 
-            if fill_method == "fill":
+            if imputation_method == "fill":
                 df[column] = df[column].bfill()
                 # Fill last value which has nothing to be backfilled from
                 df[column] = df[column].fillna(0)
-            elif fill_method == "interpolate":
+            elif imputation_method == "interpolate":
                 df[column] = df[column].interpolate(method="time")
-            elif not fill_method:
+            elif not imputation_method:
                 df = df.drop(columns=column)
                 print(
                     f"Reindexing with summary vector {column} is not supported. Removing this vector from the dataframe"
                 )
 
         return df
+
+    def _change_data_frequency_sr(
+        self, table: pyarrow.Table, time_index: list[pd.Timestamp]
+    ) -> pyarrow.Table:
+        """
+        Change frequency of the data for a single realisation by reindexing to
+        the requested time index and imputing values from the original data.
+
+        Args:
+            table (pyarrow.Table): table with DATE as column time_index
+            (list[pd.Timestamp]): list of timestamps to reindex to
+
+        Returns:
+            pyarrow.Table: reindexed table with imputed values at the new
+            frequency
+        """
+
+        df = table.to_pandas()  # DATE is a column
+        df = df.set_index("DATE")  # DATE is index
+        df_reindexed = self._reindex_dates(df, time_index)  # DATE is index
+
+        df_combined = self._join_original_reindexed_df(df, df_reindexed)
+        df_combined = self._ensure_first_row_not_na(df, df_combined)
+        df_combined = self._impute_values_reindexed_df(df_combined)
+
+        # Remove duplicates and only keep dates for new time index
+        df_combined = df_combined[~df_combined.index.duplicated(keep="first")]
+        df_imputed = df_combined.loc[
+            df_combined.index.isin(df_reindexed.index)
+        ].copy()
+
+        table_imputed = pyarrow.Table.from_pandas(
+            df_imputed, preserve_index=True
+        )
+
+        return table_imputed
 
 
 class Realization(Summary):
@@ -374,41 +410,6 @@ class Realization(Summary):
             _vectors.extend(self.vectors)
             self.vectors = _vectors
 
-    def _change_data_frequency(
-        self, table: pyarrow.Table, time_index: list[pd.Timestamp]
-    ) -> pyarrow.Table:
-        """
-        Change frequency of the data by reindexing to the requested time index
-        and imputing values from the original data.
-
-        Args:
-            table (pyarrow.Table): table with DATE as column time_index
-            (list[pd.Timestamp]): list of timestamps to reindex to
-
-        Returns:
-            pyarrow.Table: reindexed table with imputed values at the new frequency
-        """
-
-        df = table.to_pandas()  # DATE is a column
-        df = df.set_index("DATE")  # DATE is index
-        df_reindexed = self._reindex_dates(df, time_index)  # DATE is index
-
-        df_combined = self._join_original_reindexed_df(df, df_reindexed)
-        df_combined = self._ensure_first_row_not_na(df, df_combined)
-        df_combined = self._impute_values_reindexed_df(df_combined)
-
-        # Remove duplicates and only keep dates for new time index
-        df_combined = df_combined[~df_combined.index.duplicated(keep="first")]
-        df_imputed = df_combined.loc[
-            df_combined.index.isin(df_reindexed.index)
-        ].copy()
-
-        table_imputed = pyarrow.Table.from_pandas(
-            df_imputed, preserve_index=True
-        )
-
-        return table_imputed
-
     def df(
         self,
         frequency: Optional[
@@ -440,7 +441,7 @@ class Realization(Summary):
 
         if frequency:
             time_index = self._filter_time_index(table, frequency)
-            table = self._change_data_frequency(table, time_index)
+            table = self._change_data_frequency_sr(table, time_index)
 
         return table.to_pandas()
 
@@ -539,7 +540,7 @@ class Ensemble(Summary):
         df = table.to_pandas()  # DATE is a column
 
         df_ens_combined = pd.DataFrame()
-        for i, real in enumerate(df.REAL.unique()):
+        for real in df.REAL.unique():
             df_real = df[df["REAL"] == real].copy()
 
             # Drop REAL column so the data can be handled in the same way
@@ -547,26 +548,9 @@ class Ensemble(Summary):
             # during data imputation after reindexing anyway.
             df_real = df_real.drop(columns="REAL")
 
-            """ From this point is the same as what's done in the same method in the Realization class """
-            # TODO consider putting this code in its own method in the Summar class
-            df_real = df_real.set_index("DATE")  # DATE is index
-            df_reindexed = self._reindex_dates(
-                df_real, time_index
-            )  # DATE is index
-            df_combined = self._join_original_reindexed_df(
-                df_real, df_reindexed
-            )
-            df_combined = self._ensure_first_row_not_na(df_real, df_combined)
-            df_combined = self._impute_values_reindexed_df(df_combined)
-
-            # Remove duplicates and only keep dates for new time index
-            df_combined = df_combined[
-                ~df_combined.index.duplicated(keep="first")
-            ]
-            df_imputed = df_combined.loc[
-                df_combined.index.isin(df_reindexed.index)
-            ].copy()
-            """ Up to this point """
+            df_imputed = self._change_data_frequency_sr(
+                pyarrow.Table.from_pandas(df_real), time_index
+            ).to_pandas()
 
             # Add realisation number back to dataframe
             df_imputed.loc[:, "REAL"] = real
