@@ -87,4 +87,4 @@ class Realization(Document, SearchContext):
     @property
     def is_reference(self) -> bool:
         """Check if reference realization."""
-        return self.get_property("fmu.realizations.is_reference") is True
+        return self.get_property("fmu.realization.is_reference") is True
