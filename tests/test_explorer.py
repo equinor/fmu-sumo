@@ -362,3 +362,37 @@ def test_search_context_select(test_case: Case):
     assert "_sumo" in surfs[0].metadata
     assert "fmu" not in surfs[0].metadata
     assert "timestamp" not in surfs[0].metadata["_sumo"]
+
+
+def test_reference_realization(explorer: Explorer):
+    refs = explorer.filter(
+        cls="realization",
+        complex={"exists": {"field": "fmu.realization.is_reference"}},
+    )
+    if len(refs) > 0:
+        ens = refs.ensembles[0]
+        refs = ens.reference_realizations
+        assert len(refs) > 0
+        assert len(set(refs.realizationids)) == len(refs)
+        pass
+
+
+def test_reference_realization_fallback(explorer: Explorer):
+    all_case_uuids = explorer.cases.uuids
+    ref_case_uuids = explorer.filter(
+        cls="realization",
+        complex={"term": {"fmu.realization.is_reference": True}},
+    ).cases.uuids
+    noref_case_uuids = list(set(all_case_uuids).difference(ref_case_uuids))
+    if len(noref_case_uuids) > 0:
+        ens = explorer.filter(
+            uuid=noref_case_uuids, realization=[0, 1]
+        ).ensembles
+        if len(ens) > 0:
+            refs = ens[0].reference_realizations
+            assert len(refs) in [1, 2]
+            refids = refs.realizationids
+            assert len(refids) == len(set(refids))
+            assert len(set(refids).difference([0, 1])) == 0
+            pass
+        pass
