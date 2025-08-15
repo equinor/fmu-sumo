@@ -2,6 +2,10 @@
 
 import sys
 
+
+if sys.version_info < (3, 12):
+    from asyncio.tasks import _all_tasks_compat  # noqa: F401
+
 if not sys.platform.startswith("darwin") and sys.version_info < (3, 12):
     import openvds
 import json
