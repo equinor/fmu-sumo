@@ -77,3 +77,23 @@ class Ensemble(Document, SearchContext):
     def uuid(self) -> str:
         """FMU ensemble uuid"""
         return self.get_property("fmu.ensemble.uuid")
+
+    @property
+    def reference_realizations(self):
+        """Reference realizations in ensemble. If none, return
+        realizations 0 and 1, if they exist."""
+        sc = super().reference_realizations
+        if len(sc) > 0:
+            return sc
+        else:
+            return self.filter(realization=[0, 1]).realizations
+
+    @property
+    async def reference_realizations_async(self):
+        """Reference realizations in ensemble. If none, return
+        realizations 0 and 1, if they exist."""
+        sc = await super().reference_realizations_async
+        if await sc.length_async() > 0:
+            return sc
+        else:
+            return self.filter(realization=[0, 1]).realizations

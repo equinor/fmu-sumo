@@ -1007,6 +1007,22 @@ class SearchContext:
         return objects.Realizations(self, uuids)
 
     @property
+    def reference_realizations(self):
+        """Reference realizations from current selection."""
+        return self.filter(
+            cls="realization",
+            complex={"term": {"fmu.realization.is_reference": True}},
+        )
+
+    @property
+    async def reference_realizations_async(self):
+        """Reference realizations from current selection."""
+        return self.filter(
+            cls="realization",
+            complex={"term": {"fmu.realization.is_reference": True}},
+        )
+
+    @property
     def template_paths(self) -> List[str]:
         return {obj.template_path for obj in self}
 
