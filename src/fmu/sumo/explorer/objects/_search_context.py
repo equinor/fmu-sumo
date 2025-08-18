@@ -575,6 +575,66 @@ class SearchContext:
         self._cache.clear()
         return self
 
+    def _ensemble_or_realization_query(self, uuid: str) -> dict:
+        return {
+            "query": {
+                "bool": {
+                    "minimum_should_match": 1,
+                    "should": [
+                        {"term": {"fmu.ensemble.uuid.keyword": uuid}},
+                        {"term": {"fmu.iteration.uuid.keyword": uuid}},
+                        {"term": {"fmu.realization.uuid.keyword": uuid}},
+                    ],
+                }
+            },
+            "size": 1,
+            "_source": {
+                "includes": [
+                    "$schema",
+                    "class",
+                    "source",
+                    "version",
+                    "access",
+                    "masterdata",
+                    "fmu.case",
+                    "fmu.iteration",
+                    "fmu.ensemble",
+                    "fmu.realization",
+                ],
+            },
+        }
+
+    def _patch_ensemble_or_realization(self, uuid, hits):
+        if len(hits) == 1:
+            obj = hits[0]["_source"]
+            if obj["fmu"]["ensemble"]["uuid"] == uuid:
+                obj["class"] = "ensemble"
+            elif obj["fmu"]["iteration"]["uuid"] == uuid:
+                obj["class"] = "iteration"
+            elif obj["fmu"]["realization"]["uuid"] == uuid:
+                obj["class"] = "realization"
+            if (
+                obj["class"] in ["iteration", "ensemble"]
+                and "realization" in obj["fmu"]
+            ):
+                del obj["fmu"]["realization"]
+
+    def _get_ensemble_or_realization(self, uuid: str) -> List[Dict]:
+        query = self._ensemble_or_realization_query(uuid)
+        res = self._sumo.post("/search", json=query)
+        hits = res.json()["hits"]["hits"]
+        self._patch_ensemble_or_realization(uuid, hits)
+        return hits
+
+    async def _get_ensemble_or_realization_async(
+        self, uuid: str
+    ) -> List[Dict]:
+        query = self._ensemble_or_realization_query(uuid)
+        res = await self._sumo.post_async("/search", json=query)
+        hits = res.json()["hits"]["hits"]
+        self._patch_ensemble_or_realization(uuid, hits)
+        return hits
+
     def get_object(self, uuid: str) -> objects.Document:
         """Get metadata object by uuid
 
@@ -597,7 +657,10 @@ class SearchContext:
             hits = res.json()["hits"]["hits"]
 
             if len(hits) == 0:
-                raise Exception(f"Document not found: {uuid}")
+                hits = self._get_ensemble_or_realization(uuid)
+                if len(hits) == 0:
+                    raise Exception(f"Document not found: {uuid}")
+                pass
             obj = hits[0]
             self._cache.put(uuid, obj)
 
@@ -626,7 +689,10 @@ class SearchContext:
             hits = res.json()["hits"]["hits"]
 
             if len(hits) == 0:
-                raise Exception(f"Document not found: {uuid}")
+                hits = await self._get_ensemble_or_realization_async(uuid)
+                if len(hits) == 0:
+                    raise Exception(f"Document not found: {uuid}")
+                pass
             obj = hits[0]
             self._cache.put(uuid, obj)
 
@@ -1246,24 +1312,6 @@ class SearchContext:
         """
         return await self._get_object_by_class_and_uuid_async("case", uuid)
 
-    def _iteration_query(self, uuid):
-        return {
-            "query": {"term": {"fmu.iteration.uuid.keyword": {"value": uuid}}},
-            "size": 1,
-            "_source": {
-                "includes": [
-                    "$schema",
-                    "class",
-                    "source",
-                    "version",
-                    "access",
-                    "masterdata",
-                    "fmu.case",
-                    "fmu.iteration",
-                ],
-            },
-        }
-
     def get_iteration_by_uuid(self, uuid: str) -> objects.Iteration:
         """Get iteration object by uuid
 
@@ -1272,23 +1320,9 @@ class SearchContext:
 
         Returns: iteration object
         """
-        try:
-            obj = self.get_object(uuid)
-            assert isinstance(obj, objects.Iteration)
-            return obj
-        except Exception:
-            res = self._sumo.post(
-                "/search", json=self._iteration_query(uuid)
-            ).json()
-            hits = res["hits"]["hits"]
-            if len(hits) == 0:
-                raise Exception(f"Document not found: {uuid}")
-            obj = hits[0]
-            obj["_id"] = uuid
-            obj["_source"]["class"] = "iteration"
-            ret = self._to_sumo(obj)
-            self._cache.put(uuid, ret)
-            return ret
+        obj = self.get_object(uuid)
+        assert isinstance(obj, objects.Iteration)
+        return obj
 
     async def get_iteration_by_uuid_async(
         self, uuid: str
@@ -1300,43 +1334,9 @@ class SearchContext:
 
         Returns: iteration object
         """
-        try:
-            obj = await self.get_object_async(uuid)
-            assert isinstance(obj, objects.Iteration)
-            return obj
-        except Exception:
-            res = (
-                await self._sumo.post_async(
-                    "/search", json=self._iteration_query(uuid)
-                )
-            ).json()
-            hits = res["hits"]["hits"]
-            if len(hits) == 0:
-                raise Exception(f"Document not found: {uuid}")
-            obj = hits[0]
-            obj["_id"] = uuid
-            obj["_source"]["class"] = "iteration"
-            ret = self._to_sumo(obj)
-            self._cache.put(uuid, ret)
-            return ret
-
-    def _ensemble_query(self, uuid):
-        return {
-            "query": {"term": {"fmu.ensemble.uuid.keyword": {"value": uuid}}},
-            "size": 1,
-            "_source": {
-                "includes": [
-                    "$schema",
-                    "class",
-                    "source",
-                    "version",
-                    "access",
-                    "masterdata",
-                    "fmu.case",
-                    "fmu.ensemble",
-                ],
-            },
-        }
+        obj = await self.get_object_async(uuid)
+        assert isinstance(obj, objects.Iteration)
+        return obj
 
     def get_ensemble_by_uuid(self, uuid: str) -> objects.Ensemble:
         """Get ensemble object by uuid
@@ -1346,23 +1346,9 @@ class SearchContext:
 
         Returns: ensemble object
         """
-        try:
-            obj = self.get_object(uuid)
-            assert isinstance(obj, objects.Ensemble)
-            return obj
-        except Exception:
-            res = self._sumo.post(
-                "/search", json=self._ensemble_query(uuid)
-            ).json()
-            hits = res["hits"]["hits"]
-            if len(hits) == 0:
-                raise Exception(f"Document not found: {uuid}")
-            obj = hits[0]
-            obj["_id"] = uuid
-            obj["_source"]["class"] = "ensemble"
-            ret = self._to_sumo(obj)
-            self._cache.put(uuid, ret)
-            return ret
+        obj = self.get_object(uuid)
+        assert isinstance(obj, objects.Ensemble)
+        return obj
 
     async def get_ensemble_by_uuid_async(self, uuid: str) -> objects.Ensemble:
         """Get ensemble object by uuid
@@ -1372,47 +1358,9 @@ class SearchContext:
 
         Returns: ensemble object
         """
-        try:
-            obj = await self.get_object_async(uuid)
-            assert isinstance(obj, objects.Ensemble)
-            return obj
-        except Exception:
-            res = (
-                await self._sumo.post_async(
-                    "/search", json=self._ensemble_query(uuid)
-                )
-            ).json()
-            hits = res["hits"]["hits"]
-            if len(hits) == 0:
-                raise Exception(f"Document not found: {uuid}")
-            obj = hits[0]
-            obj["_id"] = uuid
-            obj["_source"]["class"] = "ensemble"
-            ret = self._to_sumo(obj)
-            self._cache.put(uuid, ret)
-            return ret
-
-    def _realization_query(self, uuid) -> Dict:
-        return {
-            "query": {
-                "term": {"fmu.realization.uuid.keyword": {"value": uuid}}
-            },
-            "size": 1,
-            "_source": {
-                "includes": [
-                    "$schema",
-                    "class",
-                    "source",
-                    "version",
-                    "access",
-                    "masterdata",
-                    "fmu.case",
-                    "fmu.iteration",
-                    "fmu.ensemble",
-                    "fmu.realization",
-                ],
-            },
-        }
+        obj = await self.get_object_async(uuid)
+        assert isinstance(obj, objects.Ensemble)
+        return obj
 
     def get_realization_by_uuid(self, uuid: str) -> objects.Realization:
         """Get realization object by uuid
@@ -1422,21 +1370,9 @@ class SearchContext:
 
         Returns: realization object
         """
-        try:
-            obj = self.get_object(uuid)
-            assert isinstance(obj, objects.Realization)
-            return obj
-        except Exception:
-            res = self._sumo.post(
-                "/search", json=self._realization_query(uuid)
-            ).json()
-            hits = res["hits"]["hits"]
-            if len(hits) == 0:
-                raise Exception(f"Document not found: {uuid}")
-            obj = hits[0]
-            obj["_id"] = uuid
-            obj["_source"]["class"] = "realization"
-            return self._to_sumo(obj)
+        obj = self.get_object(uuid)
+        assert isinstance(obj, objects.Realization)
+        return obj
 
     async def get_realization_by_uuid_async(
         self, uuid: str
@@ -1448,23 +1384,9 @@ class SearchContext:
 
         Returns: realization object
         """
-        try:
-            obj = await self.get_object_async(uuid)
-            assert isinstance(obj, objects.Realization)
-            return obj
-        except Exception:
-            res = (
-                await self._sumo.post_async(
-                    "/search", json=self._realization_query(uuid)
-                )
-            ).json()
-            hits = res["hits"]["hits"]
-            if len(hits) == 0:
-                raise Exception(f"Document not found: {uuid}")
-            obj = hits[0]
-            obj["_id"] = uuid
-            obj["_source"]["class"] = "realization"
-            return self._to_sumo(obj)
+        obj = await self.get_object_async(uuid)
+        assert isinstance(obj, objects.Realization)
+        return obj
 
     def get_surface_by_uuid(self, uuid: str) -> objects.Surface:
         """Get surface object by uuid
