@@ -1546,7 +1546,9 @@ class SearchContext:
             spec["columns"] = columns
         return spec
 
-    def _aggregate(self, columns=None, operation=None) -> objects.Child:
+    def _aggregate(
+        self, columns=None, operation=None, no_wait=False
+    ) -> objects.Child | httpx.Response:
         caseuuid, classname, entityuuid, ensemblename = (
             self._verify_aggregation_operation(columns)
         )
@@ -1560,15 +1562,24 @@ class SearchContext:
             print(ex.response.reason_phrase)
             print(ex.response.text)
             raise ex
+        if no_wait:
+            return res
+        # ELSE
         res = self._sumo.poll(res).json()
         return self._to_sumo(res)
 
-    def aggregate(self, columns=None, operation=None) -> objects.Child:
+    def aggregate(
+        self, columns=None, operation=None, no_wait=False
+    ) -> objects.Child | httpx.Response:
         sc = self.filter(realization=True, column=columns)
         if len(sc.hidden) > 0:
-            return sc.hidden._aggregate(columns=columns, operation=operation)
+            return sc.hidden._aggregate(
+                columns=columns, operation=operation, no_wait=no_wait
+            )
         else:
-            return sc.visible._aggregate(columns=columns, operation=operation)
+            return sc.visible._aggregate(
+                columns=columns, operation=operation, no_wait=no_wait
+            )
 
     async def _verify_aggregation_operation_async(
         self, columns
@@ -1597,8 +1608,8 @@ class SearchContext:
         return caseuuid, classname, entityuuid, ensemblename
 
     async def _aggregate_async(
-        self, columns=None, operation=None
-    ) -> objects.Child:
+        self, columns=None, operation=None, no_wait=False
+    ) -> objects.Child | httpx.Response:
         (
             caseuuid,
             classname,
@@ -1615,24 +1626,29 @@ class SearchContext:
             print(ex.response.reason_phrase)
             print(ex.response.text)
             raise ex
+        if no_wait:
+            return res
+        # ELSE
         res = (await self._sumo.poll_async(res)).json()
         return self._to_sumo(res)
 
     async def aggregate_async(
-        self, columns=None, operation=None
+        self, columns=None, operation=None, no_wait=False
     ) -> objects.Child:
         sc = self.filter(realization=True, column=columns)
         length_hidden = await sc.hidden.length_async()
         if length_hidden > 0:
             return await sc.hidden._aggregate_async(
-                columns=columns, operation=operation
+                columns=columns, operation=operation, no_wait=no_wait
             )
         else:
             return await sc.visible._aggregate_async(
-                columns=columns, operation=operation
+                columns=columns, operation=operation, no_wait=no_wait
             )
 
-    def aggregation(self, column=None, operation=None) -> objects.Child:
+    def aggregation(
+        self, column=None, operation=None, no_wait=False
+    ) -> objects.Child | httpx.Response:
         assert operation is not None
         assert column is None or isinstance(column, str)
         sc = self.filter(aggregation=operation, column=column)
@@ -1654,11 +1670,12 @@ class SearchContext:
         return self.filter(realization=True).aggregate(
             columns=[column] if column is not None else None,
             operation=operation,
+            no_wait=no_wait,
         )
 
     async def aggregation_async(
-        self, column=None, operation=None
-    ) -> objects.Child:
+        self, column=None, operation=None, no_wait=False
+    ) -> objects.Child | httpx.Response:
         assert operation is not None
         assert column is None or isinstance(column, str)
         sc = self.filter(aggregation=operation, column=column)
@@ -1683,6 +1700,7 @@ class SearchContext:
         return await self.filter(realization=True).aggregate_async(
             columns=[column] if column is not None else None,
             operation=operation,
+            no_wait=no_wait,
         )
 
     @deprecation.deprecated(
