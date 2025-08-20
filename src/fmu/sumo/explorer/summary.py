@@ -82,7 +82,7 @@ class Summary:
 
         return regex_in_vectors
 
-    def _expand_wildcard_vectors(self, table: pyarrow.Table) -> list[str]:
+    def _expand_wildcard_vectors(self, columns: list[str]) -> list[str]:
         """
         Get a list of all vectors. If wildcards are used in the
         input, these will be 'expanded' based on the columns in the summary
@@ -97,7 +97,6 @@ class Summary:
             list[str]: list of vectors
         """
         expanded_vectors = []
-        columns = table.column_names
 
         # Get expanded wilcard vectors e.g. FOPT* -> FOPT, FOPTH
         if self.vectors:
@@ -417,6 +416,7 @@ class Realization(Summary):
         ] = None,
     ) -> pd.DataFrame:
         """
+
         Get summary data as a pandas dataframe.
 
         Args:
@@ -427,13 +427,13 @@ class Realization(Summary):
         Returns:
             pd.DataFrame: Summary data with requested vectors
         """
+        columns = self.tables[0].columns
+        table = self.tables[0].to_arrow()
 
         frequency = self._check_frequency_allowed(frequency)
 
-        table = self.tables[0].to_arrow()
-
         if self._regex_in_vectors:
-            self.vectors = self._expand_wildcard_vectors(table)
+            self.vectors = self._expand_wildcard_vectors(columns)
 
         # If vectors are given, filter the table to the vectors
         if self.vectors:
@@ -478,15 +478,13 @@ class Ensemble(Summary):
         self._check_number_summary_files(self.tables)
 
         if self._regex_in_vectors:
-            _real = self.case.realizationids[0]
             tables = self.case.tables.filter(
                 tagname="summary",
                 ensemble=self.ensemble,
-                realization=_real,
                 name=self.name,
             )
-            table = tables[0].to_arrow()
-            self.vectors = self._expand_wildcard_vectors(table)
+            columns = tables[0].columns
+            self.vectors = self._expand_wildcard_vectors(columns)
 
     def _format_vectors(self):
         """

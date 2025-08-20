@@ -60,10 +60,11 @@ def test_regex_in_vectors(case: Case, vectors: list, expected_result: bool):
     [(["FWPT", "FOPT*"], ["FWPT", "FOPT", "FOPTF", "FOPTH", "FOPTS"])],
 )
 def test_expand_wildcard_vectors(
-    case: Case, pyarrow_table: pa.Table, vectors: list, expected_result: bool
+    case: Case, tables: SearchContext, vectors: list, expected_result: bool
 ):
     summary = Summary(case, vectors)  # Required to access method to be tested
-    expanded_vectors = summary._expand_wildcard_vectors(pyarrow_table)
+    columns = tables[0].columns
+    expanded_vectors = summary._expand_wildcard_vectors(columns)
     assert set(expected_result) == set(expanded_vectors)
 
 
