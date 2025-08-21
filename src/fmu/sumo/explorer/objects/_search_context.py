@@ -1502,6 +1502,16 @@ class SearchContext:
             "key"
         ]
         classname = sres["aggregations"]["class"]["buckets"][0]["key"]
+
+        for i in self._query["bool"]["must"]:
+            if (
+                (i.get("terms") and "fmu.realization.id" in i["terms"])
+                or (i.get("term") and "fmu.realization.id" in i["term"])
+            ) and set(["surface"]) != set(self.classes):
+                raise Exception(
+                    "Filtering on realization is not allowed for table and parameter aggretation."
+                )
+
         return caseuuid, classname, entityuuid, ensemblename
 
     def _verify_aggregation_operation(
