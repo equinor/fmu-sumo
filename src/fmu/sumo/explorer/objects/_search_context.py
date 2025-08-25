@@ -1503,9 +1503,13 @@ class SearchContext:
         ]
         classname = sres["aggregations"]["class"]["buckets"][0]["key"]
 
-        sc=SearchContext(sumo=self._sumo, must=[{"exists": {"field":  "fmu.realization.id"}}]).filter(entity=entityuuid, ensemble=ensemblename)
+        sc = SearchContext(
+            sumo=self._sumo, must=[{"exists": {"field": "fmu.realization.id"}}]
+        ).filter(entity=entityuuid, ensemble=ensemblename)
         if len(sc) != tot_hits and classname != "surface":
-            raise Exception("Filtering on realization is not allowed for table and parameter aggregation.")
+            raise Exception(
+                "Filtering on realization is not allowed for table and parameter aggregation."
+            )
 
         return caseuuid, classname, entityuuid, ensemblename
 
