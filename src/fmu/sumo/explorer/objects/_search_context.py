@@ -1507,7 +1507,7 @@ class SearchContext:
             if (
                 (i.get("terms") and "fmu.realization.id" in i["terms"])
                 or (i.get("term") and "fmu.realization.id" in i["term"])
-            ) and set(["surface"]) != set(self.classes):
+            ) and set("surface") != set(self.classes):
                 raise Exception(
                     "Filtering on realization is not allowed for table and parameter aggretation."
                 )
