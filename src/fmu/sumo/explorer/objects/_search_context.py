@@ -1513,6 +1513,48 @@ class SearchContext:
 
         return caseuuid, classname, entityuuid, ensemblename
 
+    async def __verify_aggregation_operation_async(
+        self, sres
+    ) -> Tuple[str, str, str, str]:
+        tot_hits = sres["hits"]["total"]["value"]
+        if tot_hits == 0:
+            raise Exception("No matching realizations found.")
+        conflicts = [
+            k
+            for (k, v) in sres["aggregations"].items()
+            if (
+                ("sum_other_doc_count" in v)
+                and (v["sum_other_doc_count"] > 0)
+                or (
+                    "buckets" in v
+                    and len(v["buckets"]) > 0
+                    and v["buckets"][0]["doc_count"] != tot_hits
+                )
+            )
+        ]
+        if len(conflicts) > 0:
+            raise Exception(f"Conflicting values for {conflicts}")
+        entityuuid = sres["aggregations"]["fmu.entity.uuid"]["buckets"][0][
+            "key"
+        ]
+        caseuuid = sres["aggregations"]["fmu.case.uuid"]["buckets"][0]["key"]
+        ensemblename = sres["aggregations"]["fmu.ensemble.name"]["buckets"][0][
+            "key"
+        ]
+        classname = sres["aggregations"]["class"]["buckets"][0]["key"]
+
+        sc = SearchContext(
+            sumo=self._sumo, must=[{"exists": {"field": "fmu.realization.id"}}]
+        ).filter(entity=entityuuid, ensemble=ensemblename)
+
+        tot_reals = await sc.length_async()
+        if tot_reals != tot_hits and classname != "surface":
+            raise Exception(
+                "Filtering on realization is not allowed for table and parameter aggregation."
+            )
+
+        return caseuuid, classname, entityuuid, ensemblename
+
     def _verify_aggregation_operation(
         self, columns
     ) -> Tuple[str, str, str, str]:
@@ -1572,7 +1614,7 @@ class SearchContext:
         sc = self if columns is None else self.filter(column=columns)
         query = sc.__prepare_verify_aggregation_query()
         sres = (await self._sumo.post_async("/search", json=query)).json()
-        return sc.__verify_aggregation_operation(sres)
+        return sc.__verify_aggregation_operation_async(sres)
 
     async def _aggregate_async(
         self, columns=None, operation=None
