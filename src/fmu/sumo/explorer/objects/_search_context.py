@@ -1502,7 +1502,8 @@ class SearchContext:
             "key"
         ]
         classname = sres["aggregations"]["class"]["buckets"][0]["key"]
-        return caseuuid, classname, entityuuid, ensemblename
+
+        return caseuuid, classname, entityuuid, ensemblename, tot_hits
 
     def _verify_aggregation_operation(
         self, columns
@@ -1513,7 +1514,22 @@ class SearchContext:
         sc = self if columns is None else self.filter(column=columns)
         query = sc.__prepare_verify_aggregation_query()
         sres = sc._sumo.post("/search", json=query).json()
-        return sc.__verify_aggregation_operation(sres)
+        caseuuid, classname, entityuuid, ensemblename, tot_hits = (
+            sc.__verify_aggregation_operation(sres)
+        )
+
+        if classname != "surface":
+            sc = SearchContext(
+                sumo=self._sumo,
+            ).filter(
+                realization=True, entity=entityuuid, ensemble=ensemblename
+            )
+
+            if len(sc) != tot_hits:
+                raise Exception(
+                    "Filtering on realization is not allowed for table and parameter aggregation."
+                )
+        return caseuuid, classname, entityuuid, ensemblename
 
     def __prepare_aggregation_spec(
         self, caseuuid, classname, entityuuid, ensemblename, operation, columns
@@ -1562,8 +1578,23 @@ class SearchContext:
         )
         sc = self if columns is None else self.filter(column=columns)
         query = sc.__prepare_verify_aggregation_query()
-        sres = (await self._sumo.post_async("/search", json=query)).json()
-        return sc.__verify_aggregation_operation(sres)
+        caseuuid, classname, entityuuid, ensemblename, tot_hits = (
+            await self._sumo.post_async("/search", json=query)
+        ).json()
+
+        if classname != "surface":
+            sc = SearchContext(
+                sumo=self._sumo,
+            ).filter(
+                realization=True, entity=entityuuid, ensemble=ensemblename
+            )
+
+            tot_reals = await sc.length_async()
+            if tot_reals != tot_hits:
+                raise Exception(
+                    "Filtering on realization is not allowed for table and parameter aggregation."
+                )
+        return caseuuid, classname, entityuuid, ensemblename
 
     async def _aggregate_async(
         self, columns=None, operation=None
