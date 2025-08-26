@@ -1521,8 +1521,9 @@ class SearchContext:
         if classname != "surface":
             sc = SearchContext(
                 sumo=self._sumo,
-                must=[{"exists": {"field": "fmu.realization.id"}}],
-            ).filter(entity=entityuuid, ensemble=ensemblename)
+            ).filter(
+                realization=True, entity=entityuuid, ensemble=ensemblename
+            )
 
             if len(sc) != tot_hits:
                 raise Exception(
@@ -1584,8 +1585,9 @@ class SearchContext:
         if classname != "surface":
             sc = SearchContext(
                 sumo=self._sumo,
-                must=[{"exists": {"field": "fmu.realization.id"}}],
-            ).filter(entity=entityuuid, ensemble=ensemblename)
+            ).filter(
+                realization=True, entity=entityuuid, ensemble=ensemblename
+            )
 
             tot_reals = await sc.length_async()
             if tot_reals != tot_hits:
