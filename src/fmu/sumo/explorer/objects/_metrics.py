@@ -298,7 +298,7 @@ class Metrics:
                 for (st in states) {
                     h ^= st.h; c += st.count; t += st.total
                 }
-                return ['xor_fnv64_hex': Long.toHexString(h), 'docs_seen': c, 'total': t];
+                return ['checksum': Long.toHexString(h), 'docs_in_checksum': c, 'docs_total': t];
             """,
         }
 
