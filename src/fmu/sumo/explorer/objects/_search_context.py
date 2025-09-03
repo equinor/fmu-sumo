@@ -1589,9 +1589,10 @@ class SearchContext:
         )
         sc = self if columns is None else self.filter(column=columns)
         query = sc.__prepare_verify_aggregation_query()
+        sres = (await self._sumo.post_async("/search", json=query)).json()
         caseuuid, classname, entityuuid, ensemblename, tot_hits = (
-            await self._sumo.post_async("/search", json=query)
-        ).json()
+            sc.__verify_aggregation_operation(sres)
+        )
 
         if classname != "surface":
             sc = SearchContext(
