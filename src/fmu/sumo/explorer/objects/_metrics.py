@@ -272,3 +272,56 @@ class Metrics:
                 "percentiles", field=field, percents=percents
             )
         )["values"]
+
+    def _fnv1a_script(self, field):
+        return {
+            "init_script": """
+                state.h = state.count = state.total = 0L;
+            """,
+            "map_script": f"""
+                state.total++;
+                if (doc['{field}'].size() == 0) return;
+                def s = doc.get('{field}').value;
+                long h = -3750763034362895579L;
+                for (int i = 0; i < s.length(); i++) {{
+                    h ^= (long) s.charAt(i);
+                    h *= 1099511628211L;
+                }}
+                state.h ^= h;
+                state.count++;
+            """,
+            "combine_script": """
+                return state;
+            """,
+            "reduce_script": """
+                long h = 0, c = 0, t = 0;
+                for (st in states) {
+                    h ^= st.h; c += st.count; t += st.total
+                }
+                return ['checksum': Long.toHexString(h), 'docs_in_checksum': c, 'docs_total': t];
+            """,
+        }
+
+    def fnv1a(self, field):
+        """Compute the 64-bit FNV-1a checksum for field over the current set of objects.
+
+        Arguments:
+            - field (str): the name of a property in the metadata.
+
+        Returns:
+            - a dict with the keys "docs_all", "docs_seen" and "xor_fnv64_hex".
+        """
+        return self._aggregate("scripted_metric", **self._fnv1a_script(field))
+
+    async def fnv1a_async(self, field):
+        """Compute the 64-bit FNV-1a checksum for field over the current set of objects.
+
+        Arguments:
+            - field (str): the name of a property in the metadata.
+
+        Returns:
+            - a dict with the keys "docs_all", "docs_seen" and "xor_fnv64_hex".
+        """
+        return await self._aggregate_async(
+            "scripted_metric", **self._fnv1a_script(field)
+        )
