@@ -279,6 +279,7 @@ class Metrics:
                 state.h = state.count = state.total = 0L;
             """,
             "map_script": f"""
+                state.total++;
                 if (doc['{field}'].size() == 0) return;
                 def s = doc.get('{field}').value;
                 long h = -3750763034362895579L;
@@ -288,7 +289,6 @@ class Metrics:
                 }}
                 state.h ^= h;
                 state.count++;
-                state.total++;
             """,
             "combine_script": """
                 return state;
