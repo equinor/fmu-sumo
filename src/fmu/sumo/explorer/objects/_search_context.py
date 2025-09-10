@@ -929,6 +929,26 @@ class SearchContext:
         """
         return self.get_field_values(field)
 
+    def glob_field_values(self, field: str, patterns: list[str]) -> list[str]:
+        query = {
+            "query": self._query,
+            "size": 0,
+            "aggs": {
+                "values": {
+                    "terms": {
+                        "field": field,
+                        "include": "|".join(patterns),
+                        "size": 1000,
+                    }
+                }
+            },
+        }
+        res = self._sumo.post("/search", json=query).json()
+        return [
+            bucket["key"]
+            for bucket in res["aggregations"]["values"]["buckets"]
+        ]
+
     async def get_field_values_and_counts_async(
         self, field: str
     ) -> Dict[str, int]:
@@ -977,6 +997,28 @@ class SearchContext:
             A List of unique values for the given field
         """
         return await self.get_field_values_async(field)
+
+    async def glob_field_values_async(
+        self, field: str, patterns: list[str]
+    ) -> list[str]:
+        query = {
+            "query": self._query,
+            "size": 0,
+            "aggs": {
+                "values": {
+                    "terms": {
+                        "field": field,
+                        "include": "|".join(patterns),
+                        "size": 1000,
+                    }
+                }
+            },
+        }
+        res = (await self._sumo.post_async("/search", json=query)).json()
+        return [
+            bucket["key"]
+            for bucket in res["aggregations"]["values"]["buckets"]
+        ]
 
     _timestamp_query = {
         "bool": {
@@ -1586,7 +1628,19 @@ class SearchContext:
         )
 
     def percolate(self, columns=None, operation=None, no_wait=False):
-        assert type(columns) is list and len(columns) > 1
+        """Aggregate one or more columns for the current context.
+
+        Args:
+            columns: list of column names or regular expressions for column names.
+            operation: must be "collection"
+            no_wait: set to True if the client handles polling itself.
+
+        Returns:
+            list of column names that occur in the current context and match the names/patterns.
+        """
+        assert operation == "collection"
+        assert type(columns) is list and len(columns) > 0
+        columns = self.glob_field_values("data.spec.columns.keyword", columns)
         sc = self.filter(realization=True, column=columns)
         if len(sc.hidden) > 0:
             sc = sc.hidden
@@ -1670,7 +1724,21 @@ class SearchContext:
     async def percolate_async(
         self, columns=None, operation=None, no_wait=False
     ):
-        assert type(columns) is list and len(columns) > 1
+        """Aggregate one or more columns for the current context.
+
+        Args:
+            columns: list of column names or regular expressions for column names.
+            operation: must be "collection"
+            no_wait: set to True if the client handles polling itself.
+
+        Returns:
+            list of column names that occur in the current context and match the names/patterns.
+        """
+        assert operation == "collection"
+        assert type(columns) is list and len(columns) > 0
+        columns = await self.glob_field_values_async(
+            "data.spec.columns.keyword", columns
+        )
         sc = self.filter(realization=True, column=columns)
         if len(sc.hidden) > 0:
             sc = sc.hidden
