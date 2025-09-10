@@ -1475,7 +1475,7 @@ class SearchContext:
 
     def __verify_aggregation_operation(
         self, sres
-    ) -> Tuple[str, str, str, str]:
+    ) -> Tuple[str, str, str, str, str]:
         tot_hits = sres["hits"]["total"]["value"]
         if tot_hits == 0:
             raise Exception("No matching realizations found.")
@@ -1508,9 +1508,6 @@ class SearchContext:
     def _verify_aggregation_operation(
         self, columns
     ) -> Tuple[str, str, str, str]:
-        assert columns is None or len(columns) == 1, (
-            "Exactly one column required for collection aggregation."
-        )
         sc = self if columns is None else self.filter(column=columns)
         query = sc.__prepare_verify_aggregation_query()
         sres = sc._sumo.post("/search", json=query).json()
@@ -1518,11 +1515,18 @@ class SearchContext:
             sc.__verify_aggregation_operation(sres)
         )
 
-        if classname != "surface":
+        if (
+            classname != "surface"
+            and isinstance(columns, list)
+            and len(columns) == 1
+        ):
             sc = SearchContext(
                 sumo=self._sumo,
             ).filter(
-                realization=True, entity=entityuuid, ensemble=ensemblename
+                cls=classname,
+                realization=True,
+                entity=entityuuid,
+                ensemble=ensemblename,
             )
 
             if len(sc) != tot_hits:
@@ -1571,22 +1575,31 @@ class SearchContext:
     def aggregate(
         self, columns=None, operation=None, no_wait=False
     ) -> objects.Child | httpx.Response:
+        assert columns is None or len(columns) == 1, (
+            "Exactly one column required for collection aggregation."
+        )
         sc = self.filter(realization=True, column=columns)
         if len(sc.hidden) > 0:
-            return sc.hidden._aggregate(
-                columns=columns, operation=operation, no_wait=no_wait
-            )
-        else:
-            return sc.visible._aggregate(
-                columns=columns, operation=operation, no_wait=no_wait
-            )
+            sc = sc.hidden
+        return sc._aggregate(
+            columns=columns, operation=operation, no_wait=no_wait
+        )
+
+    def percolate(self, columns=None, operation=None, no_wait=False):
+        assert type(columns) is list and len(columns) > 1
+        sc = self.filter(realization=True, column=columns)
+        if len(sc.hidden) > 0:
+            sc = sc.hidden
+        res = sc._aggregate(columns=columns, operation=operation, no_wait=True)
+        assert type(res) is httpx.Response
+        if no_wait:
+            return res
+        # ELSE
+        return self._sumo.poll(res)
 
     async def _verify_aggregation_operation_async(
         self, columns
     ) -> Tuple[str, str, str, str]:
-        assert columns is None or len(columns) == 1, (
-            "Exactly one column required for collection aggregation."
-        )
         sc = self if columns is None else self.filter(column=columns)
         query = sc.__prepare_verify_aggregation_query()
         sres = (await self._sumo.post_async("/search", json=query)).json()
@@ -1594,11 +1607,18 @@ class SearchContext:
             sc.__verify_aggregation_operation(sres)
         )
 
-        if classname != "surface":
+        if (
+            classname != "surface"
+            and isinstance(columns, list)
+            and len(columns) == 1
+        ):
             sc = SearchContext(
                 sumo=self._sumo,
             ).filter(
-                realization=True, entity=entityuuid, ensemble=ensemblename
+                cls=classname,
+                realization=True,
+                entity=entityuuid,
+                ensemble=ensemblename,
             )
 
             tot_reals = await sc.length_async()
@@ -1635,17 +1655,33 @@ class SearchContext:
 
     async def aggregate_async(
         self, columns=None, operation=None, no_wait=False
-    ) -> objects.Child:
+    ) -> objects.Child | httpx.Response:
+        assert columns is None or len(columns) == 1, (
+            "Exactly one column required for collection aggregation."
+        )
         sc = self.filter(realization=True, column=columns)
         length_hidden = await sc.hidden.length_async()
         if length_hidden > 0:
-            return await sc.hidden._aggregate_async(
-                columns=columns, operation=operation, no_wait=no_wait
-            )
-        else:
-            return await sc.visible._aggregate_async(
-                columns=columns, operation=operation, no_wait=no_wait
-            )
+            sc = sc.hidden
+        return await sc._aggregate_async(
+            columns=columns, operation=operation, no_wait=no_wait
+        )
+
+    async def percolate_async(
+        self, columns=None, operation=None, no_wait=False
+    ):
+        assert type(columns) is list and len(columns) > 1
+        sc = self.filter(realization=True, column=columns)
+        if len(sc.hidden) > 0:
+            sc = sc.hidden
+        res = await sc._aggregate_async(
+            columns=columns, operation=operation, no_wait=True
+        )
+        assert type(res) is httpx.Response
+        if no_wait:
+            return res
+        # ELSE
+        return await self._sumo.poll_async(res)
 
     def aggregation(
         self, column=None, operation=None, no_wait=False
