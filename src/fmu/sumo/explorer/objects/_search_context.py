@@ -929,7 +929,7 @@ class SearchContext:
         """
         return self.get_field_values(field)
 
-    def glob_field_values(self, field: str, patterns: list[str]) -> list[str]:
+    def match_field_values(self, field: str, patterns: list[str]) -> list[str]:
         query = {
             "query": self._query,
             "size": 0,
@@ -998,7 +998,7 @@ class SearchContext:
         """
         return await self.get_field_values_async(field)
 
-    async def glob_field_values_async(
+    async def match_field_values_async(
         self, field: str, patterns: list[str]
     ) -> list[str]:
         query = {
@@ -1627,7 +1627,7 @@ class SearchContext:
             columns=columns, operation=operation, no_wait=no_wait
         )
 
-    def percolate(self, columns=None, operation=None, no_wait=False):
+    def batch_aggregate(self, columns=None, operation=None, no_wait=False):
         """Aggregate one or more columns for the current context.
 
         Args:
@@ -1640,7 +1640,7 @@ class SearchContext:
         """
         assert operation == "collection"
         assert type(columns) is list and len(columns) > 0
-        columns = self.glob_field_values("data.spec.columns.keyword", columns)
+        columns = self.match_field_values("data.spec.columns.keyword", columns)
         sc = self.filter(realization=True, column=columns)
         if len(sc.hidden) > 0:
             sc = sc.hidden
@@ -1721,7 +1721,7 @@ class SearchContext:
             columns=columns, operation=operation, no_wait=no_wait
         )
 
-    async def percolate_async(
+    async def batch_aggregate_async(
         self, columns=None, operation=None, no_wait=False
     ):
         """Aggregate one or more columns for the current context.
@@ -1736,7 +1736,7 @@ class SearchContext:
         """
         assert operation == "collection"
         assert type(columns) is list and len(columns) > 0
-        columns = await self.glob_field_values_async(
+        columns = await self.match_field_values_async(
             "data.spec.columns.keyword", columns
         )
         sc = self.filter(realization=True, column=columns)
