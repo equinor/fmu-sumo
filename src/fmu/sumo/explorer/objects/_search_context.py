@@ -1640,7 +1640,7 @@ class SearchContext:
         """
         assert operation == "collection"
         assert type(columns) is list and len(columns) > 0
-        columns = self.match_field_values("data.spec.columns.keyword", columns)
+        assert len(columns) < 1000, "Maximum 1000 columns allowed for a single call to batch_aggregate."
         sc = self.filter(realization=True, column=columns)
         if len(sc.hidden) > 0:
             sc = sc.hidden
@@ -1736,9 +1736,7 @@ class SearchContext:
         """
         assert operation == "collection"
         assert type(columns) is list and len(columns) > 0
-        columns = await self.match_field_values_async(
-            "data.spec.columns.keyword", columns
-        )
+        assert len(columns) < 1000, "Maximum 1000 columns allowed for a single call to batch_aggregate."
         sc = self.filter(realization=True, column=columns)
         if len(sc.hidden) > 0:
             sc = sc.hidden
