@@ -1736,7 +1736,7 @@ class SearchContext:
         """
         assert operation == "collection"
         assert type(columns) is list and len(columns) > 0
-        assert len(columns) < 1000, "Maximum 1000 columns allowed for a single call to batch_aggregate."
+        assert len(columns) < 1000, "Maximum 1000 columns allowed for a single call to batch_aggregate_async."
         sc = self.filter(realization=True, column=columns)
         if len(sc.hidden) > 0:
             sc = sc.hidden
