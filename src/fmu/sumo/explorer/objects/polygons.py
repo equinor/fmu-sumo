@@ -28,7 +28,11 @@ class Polygons(Child):
         import pandas as pd
 
         try:
-            return pd.read_csv(self.blob)
+            if self.format == "csv":
+                return pd.read_csv(self.blob)
+            if self.format == "parquet":
+                return pd.read_parquet(self.blob)
+            raise TypeError()
         except TypeError as type_err:
             raise TypeError(f"Unknown format: {self.format}") from type_err
 
@@ -42,6 +46,10 @@ class Polygons(Child):
         import pandas as pd
 
         try:
-            return pd.read_csv(await self.blob_async)
+            if self.format == "csv":
+                return pd.read_csv(await self.blob_async)
+            if self.format == "parquet":
+                return pd.read_parquet(await self.blob_async)
+            raise TypeError()
         except TypeError as type_err:
             raise TypeError(f"Unknown format: {self.format}") from type_err
