@@ -1569,6 +1569,7 @@ class SearchContext:
                 realization=True,
                 entity=entityuuid,
                 ensemble=ensemblename,
+                column=columns,
             )
 
             if len(sc) != tot_hits:
@@ -1675,6 +1676,7 @@ class SearchContext:
                 realization=True,
                 entity=entityuuid,
                 ensemble=ensemblename,
+                column=columns,
             )
 
             tot_reals = await sc.length_async()
