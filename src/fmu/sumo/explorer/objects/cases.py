@@ -19,3 +19,7 @@ class Cases(SearchContext):
         sc = super().filter(**kwargs)
         uuids = sc.get_field_values("fmu.case.uuid.keyword")
         return Cases(sc, uuids)
+
+    @property
+    def names(self):
+        return self.get_field_values("fmu.case.name.keyword")
