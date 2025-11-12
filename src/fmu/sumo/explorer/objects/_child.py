@@ -217,4 +217,3 @@ class Child(Document):
     def entity(self) -> str:
         """Entity uuid for object."""
         return self.get_property("fmu.entity.uuid")
-
