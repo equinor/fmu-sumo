@@ -212,3 +212,9 @@ class Child(Document):
     def operationname(self) -> str:
         """Object aggregation operation name"""
         return self.get_property("fmu.aggregation.operation")
+
+    @property
+    def entity(self) -> str:
+        """Entity uuid for object."""
+        return self.get_property("fmu.entity.uuid")
+
