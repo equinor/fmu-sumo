@@ -29,6 +29,7 @@ class Ensembles(SearchContext):
 
     def get_object(self, uuid):
         if self._prototype is None:
+            assert len(self.get_field_values("fmu.case.uuid.keyword")) == 1
             self._prototype = super().get_object(uuid).metadata
             buckets = self.get_composite_agg(
                 {
@@ -45,6 +46,10 @@ class Ensembles(SearchContext):
 
     async def get_object_async(self, uuid):
         if self._prototype is None:
+            assert (
+                len(await self.get_field_values_async("fmu.case.uuid.keyword"))
+                == 1
+            )
             self._prototype = (await super().get_object_async(uuid)).metadata
             buckets = self.get_composite_agg(
                 {
