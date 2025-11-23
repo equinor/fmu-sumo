@@ -29,8 +29,11 @@ class Realizations(SearchContext):
 
     def get_object(self, uuid):
         if self._prototype is None:
-            assert len(self.get_field_values("fmu.ensemble.uuid.keyword")) == 1
-            self._prototype = super().get_object(uuid).metadata
+            obj = super().get_object(uuid)
+            if len(self.get_field_values("fmu.ensemble.uuid.keyword")) > 1:
+                return obj
+            # ELSE
+            self._prototype = obj.metadata
             buckets = self.get_composite_agg(
                 {
                     "uuid": "fmu.realization.uuid.keyword",
@@ -40,10 +43,10 @@ class Realizations(SearchContext):
             )
             self._map = {b["uuid"]: b for b in buckets}
             pass
-        obj = deepcopy(self._prototype)
+        metadata = deepcopy(self._prototype)
         b = self._map[uuid]
-        obj["fmu"]["realization"] = b
-        return Realization(self._sumo, {"_id": uuid, "_source": obj})
+        metadata["fmu"]["realization"] = b
+        return Realization(self._sumo, {"_id": uuid, "_source": metadata})
 
     async def get_object_async(self, uuid):
         assert (
@@ -51,7 +54,18 @@ class Realizations(SearchContext):
             == 1
         )
         if self._prototype is None:
-            self._prototype = (await super().get_object_async(uuid)).metadata
+            obj = await super().get_object_async(uuid)
+            if (
+                len(
+                    await self.get_field_values_async(
+                        "fmu.ensemble.uuid.keyword"
+                    )
+                )
+                > 1
+            ):
+                return obj
+            # ELSE
+            self._prototype = obj.metadata
             buckets = self.get_composite_agg(
                 {
                     "uuid": "fmu.realization.uuid.keyword",
@@ -61,10 +75,10 @@ class Realizations(SearchContext):
             )
             self._map = {b["uuid"]: b for b in buckets}
             pass
-        obj = deepcopy(self._prototype)
+        metadata = deepcopy(self._prototype)
         b = self._map[uuid]
-        obj["fmu"]["realization"] = b
-        return Realization(self._sumo, {"_id": uuid, "_source": obj})
+        metadata["fmu"]["realization"] = b
+        return Realization(self._sumo, {"_id": uuid, "_source": metadata})
 
     @property
     def classes(self) -> List[str]:
