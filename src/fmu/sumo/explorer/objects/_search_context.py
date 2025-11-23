@@ -227,10 +227,12 @@ def _build_composite_query(query, fields, size):
             "composite": {
                 "composite": {
                     "size": size,
-                    "sources": [{k: {"terms": {"field": v}}} for k, v in fields.items()]
+                    "sources": [
+                        {k: {"terms": {"field": v}}} for k, v in fields.items()
+                    ],
                 }
             }
-        }
+        },
     }
 
 

@@ -1,6 +1,9 @@
 """Module for searchcontext for collection of realizations."""
 
+from copy import deepcopy
 from typing import List
+
+from fmu.sumo.explorer.objects.realization import Realization
 
 from ._search_context import SearchContext
 
@@ -9,6 +12,8 @@ class Realizations(SearchContext):
     def __init__(self, sc, uuids):
         super().__init__(sc._sumo, must=[{"ids": {"values": uuids}}])
         self._hits = uuids
+        self._prototype = None
+        self._map = {}
         return
 
     def _maybe_prefetch(self, index):
@@ -21,6 +26,40 @@ class Realizations(SearchContext):
         sc = super().filter(**kwargs)
         uuids = sc.get_field_values("fmu.realization.uuid.keyword")
         return Realizations(self, uuids)
+
+    def get_object(self, uuid):
+        if self._prototype is None:
+            self._prototype = super().get_object(uuid).metadata
+            buckets = self.get_composite_agg(
+                {
+                    "uuid": "fmu.realization.uuid.keyword",
+                    "name": "fmu.realization.name.keyword",
+                    "id": "fmu.realization.id",
+                }
+            )
+            self._map = {b["uuid"]: b for b in buckets}
+            pass
+        obj = deepcopy(self._prototype)
+        b = self._map[uuid]
+        obj["fmu"]["realization"] = b
+        return Realization(self._sumo, {"_id": uuid, "_source": obj})
+
+    async def get_object_async(self, uuid):
+        if self._prototype is None:
+            self._prototype = (await super().get_object_async(uuid)).metadata
+            buckets = self.get_composite_agg(
+                {
+                    "uuid": "fmu.realization.uuid.keyword",
+                    "name": "fmu.realization.name.keyword",
+                    "id": "fmu.realization.id",
+                }
+            )
+            self._map = {b["uuid"]: b for b in buckets}
+            pass
+        obj = deepcopy(self._prototype)
+        b = self._map[uuid]
+        obj["fmu"]["realization"] = b
+        return Realization(self._sumo, {"_id": uuid, "_source": obj})
 
     @property
     def classes(self) -> List[str]:
