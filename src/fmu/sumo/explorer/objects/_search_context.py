@@ -219,6 +219,30 @@ def _build_bucket_query_simple(query, field, size):
     }
 
 
+def _build_composite_query(query, fields, size):
+    return {
+        "size": 0,
+        "query": query,
+        "aggs": {
+            "composite": {
+                "composite": {
+                    "size": size,
+                    "sources": [
+                        {k: {"terms": {"field": v}}} for k, v in fields.items()
+                    ],
+                }
+            }
+        },
+    }
+
+
+def _extract_composite_results(res):
+    aggs = res["aggregations"]["composite"]
+    after_key = aggs.get("after_key")
+    buckets = [bucket["key"] for bucket in aggs["buckets"]]
+    return buckets, after_key
+
+
 def _set_after_key(query, field, after_key):
     if after_key is not None:
         query["aggs"][field]["composite"]["after"] = after_key
@@ -1026,6 +1050,52 @@ class SearchContext:
             "must_not": [{"exists": {"field": "data.time.t1"}}],
         }
     }
+
+    def get_composite_agg(self, fields: Dict[str, str]):
+        buckets_per_batch = 1000
+        query = _build_composite_query(self._query, fields, buckets_per_batch)
+        all_buckets = []
+        after_key = None
+        with Pit(self._sumo, "1m") as pit:
+            while True:
+                query = pit.stamp_query(
+                    _set_after_key(query, "composite", after_key)
+                )
+                res = self._sumo.post("/search", json=query)
+                res = res.json()
+                pit.update_from_result(res)
+                buckets, after_key = _extract_composite_results(res)
+                if len(buckets) == 0:
+                    break
+                all_buckets = all_buckets + buckets
+                if len(buckets) < buckets_per_batch:
+                    break
+                pass
+
+        return all_buckets
+
+    async def get_composite_agg_async(self, fields: Dict[str, str]):
+        buckets_per_batch = 1000
+        query = _build_composite_query(self._query, fields, buckets_per_batch)
+        all_buckets = []
+        after_key = None
+        async with Pit(self._sumo, "1m") as pit:
+            while True:
+                query = pit.stamp_query(
+                    _set_after_key(query, "composite", after_key)
+                )
+                res = await self._sumo.post_async("/search", json=query)
+                res = res.json()
+                pit.update_from_result(res)
+                buckets, after_key = _extract_composite_results(res)
+                if len(buckets) == 0:
+                    break
+                all_buckets = all_buckets + buckets
+                if len(buckets) < buckets_per_batch:
+                    break
+                pass
+
+        return all_buckets
 
     def _context_for_class(self, cls):
         return self.filter(cls=cls)
