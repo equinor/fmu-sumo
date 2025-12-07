@@ -57,18 +57,17 @@ class Ensembles(SearchContext):
                 return obj
             # ELSE
             self._prototype = obj.metadata
-            buckets = self.get_composite_agg(
+            buckets = await self.get_composite_agg_async(
                 {
-                    "uuid": "fmu.realization.uuid.keyword",
-                    "name": "fmu.realization.name.keyword",
-                    "id": "fmu.realization.id",
+                    "uuid": "fmu.ensemble.uuid.keyword",
+                    "name": "fmu.ensemble.name.keyword",
                 }
             )
             self._map = {b["uuid"]: b for b in buckets}
             pass
         metadata = deepcopy(self._prototype)
         b = self._map[uuid]
-        metadata["fmu"]["realization"] = b
+        metadata["fmu"]["ensemble"] = b
         return Ensemble(self._sumo, {"_id": uuid, "_source": metadata})
 
     @property
