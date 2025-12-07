@@ -30,7 +30,7 @@ class Realizations(SearchContext):
     def get_object(self, uuid):
         if self._prototype is None:
             obj = super().get_object(uuid)
-            if len(self.get_field_values("fmu.ensemble.uuid.keyword")) > 1:
+            if len(self.get_field_values("fmu.realization.uuid.keyword")) == 1:
                 return obj
             # ELSE
             self._prototype = obj.metadata
@@ -49,24 +49,20 @@ class Realizations(SearchContext):
         return Realization(self._sumo, {"_id": uuid, "_source": metadata})
 
     async def get_object_async(self, uuid):
-        assert (
-            len(await self.get_field_values_async("fmu.ensemble.uuid.keyword"))
-            == 1
-        )
         if self._prototype is None:
             obj = await super().get_object_async(uuid)
             if (
                 len(
                     await self.get_field_values_async(
-                        "fmu.ensemble.uuid.keyword"
+                        "fmu.realization.uuid.keyword"
                     )
                 )
-                > 1
+                == 1
             ):
                 return obj
             # ELSE
             self._prototype = obj.metadata
-            buckets = self.get_composite_agg(
+            buckets = await self.get_composite_agg_async(
                 {
                     "uuid": "fmu.realization.uuid.keyword",
                     "name": "fmu.realization.name.keyword",
