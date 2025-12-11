@@ -456,7 +456,7 @@ class SearchContext:
             else:
                 return hits
         after = None
-        with Pit(self._sumo, "1m") as pit:
+        async with Pit(self._sumo, "1m") as pit:
             while True:
                 query = pit.stamp_query(_set_search_after(query, after))
                 res = (
