@@ -10,7 +10,7 @@ from ._search_context import SearchContext
 
 class Realizations(SearchContext):
     def __init__(self, sc, uuids):
-        super().__init__(sc._sumo, must=[{"ids": {"values": uuids}}])
+        super().__init__(sc._sumo, must=sc._must, must_not=sc._must_not)
         self._hits = uuids
         self._prototype = None
         self._map = {}
