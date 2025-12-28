@@ -1,5 +1,7 @@
 """Module for searchcontext for collection of cases."""
 
+from typing import List
+
 from ._search_context import SearchContext
 
 
@@ -9,16 +11,19 @@ class Cases(SearchContext):
         self._hits = uuids
         return
 
-    def _maybe_prefetch(self, index):
-        return
+    def __len__(self):
+        return len(self.uuids)
 
-    async def _maybe_prefetch_async(self, index):
-        return
+    async def length_async(self):
+        return len(await self.uuids_async)
 
-    def filter(self, **kwargs):
-        sc = super().filter(**kwargs)
-        uuids = sc.get_field_values("fmu.case.uuid.keyword")
-        return Cases(sc, uuids)
+    @property
+    def classes(self) -> List[str]:
+        return ["case"]
+
+    @property
+    async def classes_async(self) -> List[str]:
+        return ["case"]
 
     @property
     def names(self):
