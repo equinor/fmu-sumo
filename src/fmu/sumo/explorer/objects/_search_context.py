@@ -368,7 +368,6 @@ class SearchContext:
             "table": objects.Table,
             "cpgrid": objects.CPGrid,
             "cpgrid_property": objects.CPGridProperty,
-            "iteration": objects.Iteration,  # FIXME: to be removed
             "ensemble": objects.Ensemble,
             "realization": objects.Realization,
         }.get(cls)
@@ -481,16 +480,22 @@ class SearchContext:
             query=self._query, size=1000, select=select
         )
 
+    def _getuuids(self):
+        return self._search_all()
+
+    async def _getuuids_async(self):
+        return await self._search_all_async()
+
     @property
     def uuids(self):
         if self._hits is None:
-            self._hits = self._search_all()
+            self._hits = self._getuuids()
         return self._hits
 
     @property
     async def uuids_async(self):
         if self._hits is None:
-            self._hits = await self._search_all_async()
+            self._hits = await self._getuuids_async()
         return self._hits
 
     def __iter__(self):
@@ -527,15 +532,17 @@ class SearchContext:
 
     def __getitem__(self, index):
         if self._hits is None:
-            self._hits = self._search_all()
+            self._hits = self._getuuids()
             pass
+        self._maybe_prefetch(index)
         uuid = self._hits[index]
         return self.get_object(uuid)
 
     async def getitem_async(self, index):
         if self._hits is None:
-            self._hits = await self._search_all_async()
+            self._hits = await self._getuuids_async()
             pass
+        await self._maybe_prefetch_async(index)
         uuid = self._hits[index]
         return await self.get_object_async(uuid)
 
@@ -599,66 +606,6 @@ class SearchContext:
         self._cache.clear()
         return self
 
-    def _ensemble_or_realization_query(self, uuid: str) -> dict:
-        return {
-            "query": {
-                "bool": {
-                    "minimum_should_match": 1,
-                    "should": [
-                        {"term": {"fmu.ensemble.uuid.keyword": uuid}},
-                        {"term": {"fmu.iteration.uuid.keyword": uuid}},
-                        {"term": {"fmu.realization.uuid.keyword": uuid}},
-                    ],
-                }
-            },
-            "size": 1,
-            "_source": {
-                "includes": [
-                    "$schema",
-                    "class",
-                    "source",
-                    "version",
-                    "access",
-                    "masterdata",
-                    "fmu.case",
-                    "fmu.iteration",
-                    "fmu.ensemble",
-                    "fmu.realization",
-                ],
-            },
-        }
-
-    def _patch_ensemble_or_realization(self, uuid, hits):
-        if len(hits) == 1:
-            obj = hits[0]["_source"]
-            if obj["fmu"]["ensemble"]["uuid"] == uuid:
-                obj["class"] = "ensemble"
-            elif obj["fmu"]["iteration"]["uuid"] == uuid:
-                obj["class"] = "iteration"
-            elif obj["fmu"]["realization"]["uuid"] == uuid:
-                obj["class"] = "realization"
-            if (
-                obj["class"] in ["iteration", "ensemble"]
-                and "realization" in obj["fmu"]
-            ):
-                del obj["fmu"]["realization"]
-
-    def _get_ensemble_or_realization(self, uuid: str) -> List[Dict]:
-        query = self._ensemble_or_realization_query(uuid)
-        res = self._sumo.post("/search", json=query)
-        hits = res.json()["hits"]["hits"]
-        self._patch_ensemble_or_realization(uuid, hits)
-        return hits
-
-    async def _get_ensemble_or_realization_async(
-        self, uuid: str
-    ) -> List[Dict]:
-        query = self._ensemble_or_realization_query(uuid)
-        res = await self._sumo.post_async("/search", json=query)
-        hits = res.json()["hits"]["hits"]
-        self._patch_ensemble_or_realization(uuid, hits)
-        return hits
-
     def get_object(self, uuid: str) -> objects.Document:
         """Get metadata object by uuid
 
@@ -679,12 +626,6 @@ class SearchContext:
 
             res = self._sumo.post("/search", json=query)
             hits = res.json()["hits"]["hits"]
-
-            if len(hits) == 0:
-                hits = self._get_ensemble_or_realization(uuid)
-                if len(hits) == 0:
-                    raise Exception(f"Document not found: {uuid}")
-                pass
             obj = hits[0]
             self._cache.put(uuid, obj)
 
@@ -712,11 +653,6 @@ class SearchContext:
             res = await self._sumo.post_async("/search", json=query)
             hits = res.json()["hits"]["hits"]
 
-            if len(hits) == 0:
-                hits = await self._get_ensemble_or_realization_async(uuid)
-                if len(hits) == 0:
-                    raise Exception(f"Document not found: {uuid}")
-                pass
             obj = hits[0]
             self._cache.put(uuid, obj)
 
@@ -724,9 +660,11 @@ class SearchContext:
 
     def _maybe_prefetch(self, index):
         assert isinstance(self._hits, list)
+        print("***", index)
         uuid = self._hits[index]
         if self._cache.has(uuid):
             return
+        print("///")
         uuids = self._hits[index : min(index + 100, len(self._hits))]
         uuids = [uuid for uuid in uuids if not self._cache.has(uuid)]
         hits = self.__search_all(
@@ -1143,22 +1081,6 @@ class SearchContext:
         return objects.Cases(self, uuids)
 
     @property
-    @deprecation.deprecated(details="Use the method 'ensembles' instead.")
-    def iterations(self):
-        """Iterations from current selection."""
-        uuids = self.get_field_values("fmu.iteration.uuid.keyword")
-        return objects.Iterations(self, uuids)
-
-    @property
-    @deprecation.deprecated(
-        details="Use the method 'ensembles_async' instead."
-    )
-    async def iterations_async(self):
-        """Iterations from current selection."""
-        uuids = await self.get_field_values_async("fmu.iteration.uuid.keyword")
-        return objects.Iterations(self, uuids)
-
-    @property
     def ensembles(self):
         """Ensembles from current selection."""
         uuids = self.get_field_values("fmu.ensemble.uuid.keyword")
@@ -1423,32 +1345,6 @@ class SearchContext:
             Case: case object
         """
         return await self._get_object_by_class_and_uuid_async("case", uuid)
-
-    def get_iteration_by_uuid(self, uuid: str) -> objects.Iteration:
-        """Get iteration object by uuid
-
-        Args:
-            uuid (str): iteration uuid
-
-        Returns: iteration object
-        """
-        obj = self.get_object(uuid)
-        assert isinstance(obj, objects.Iteration)
-        return obj
-
-    async def get_iteration_by_uuid_async(
-        self, uuid: str
-    ) -> objects.Iteration:
-        """Get iteration object by uuid
-
-        Args:
-            uuid (str): iteration uuid
-
-        Returns: iteration object
-        """
-        obj = await self.get_object_async(uuid)
-        assert isinstance(obj, objects.Iteration)
-        return obj
 
     def get_ensemble_by_uuid(self, uuid: str) -> objects.Ensemble:
         """Get ensemble object by uuid
