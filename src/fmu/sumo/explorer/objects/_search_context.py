@@ -660,11 +660,9 @@ class SearchContext:
 
     def _maybe_prefetch(self, index):
         assert isinstance(self._hits, list)
-        print("***", index)
         uuid = self._hits[index]
         if self._cache.has(uuid):
             return
-        print("///")
         uuids = self._hits[index : min(index + 100, len(self._hits))]
         uuids = [uuid for uuid in uuids if not self._cache.has(uuid)]
         hits = self.__search_all(
