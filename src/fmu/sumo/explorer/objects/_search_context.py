@@ -64,19 +64,16 @@ def _gen_filter_gen(attr):
 def _gen_filter_stage(attr):
     """Match property against either single value or list of values.
     If the value given is a boolean, tests for existence or not of the property.
-    In addition, if the value is or includes either "iteration" or "ensemble",
-    expand to include both values.
+    In addition, if the value is or includes "ensemble" expand to include it.
     """
 
     _inner = _gen_filter_gen(attr)
 
     def _fn(value):
-        if value == "iteration" or value == "ensemble":
-            return _inner(["iteration", "ensemble"])
-        elif isinstance(value, list) and set(value).intersection(
-            {"iteration", "ensemble"}
-        ):
-            return _inner(list(set(value).union({"iteration", "ensemble"})))
+        if value == "ensemble":
+            return _inner(["ensemble"])
+        elif isinstance(value, list) and set(value).intersection({"ensemble"}):
+            return _inner(list(set(value).union({"ensemble"})))
         else:
             return _inner(value)
 
@@ -156,10 +153,6 @@ _filterspec = {
     "relative_path": [_gen_filter_gen, "file.relative_path.keyword"],
     "tagname": [_gen_filter_gen, "data.tagname.keyword"],
     "dataformat": [_gen_filter_gen, "data.format.keyword"],
-    "iteration": [
-        _gen_filter_gen,
-        "fmu.iteration.name.keyword",
-    ],  # FIXME: to be removed
     "ensemble": [_gen_filter_gen, "fmu.ensemble.name.keyword"],
     "realization": [_gen_filter_gen, "fmu.realization.id"],
     "aggregation": [_gen_filter_gen, "fmu.aggregation.operation.keyword"],
@@ -1550,7 +1543,6 @@ class SearchContext:
             "class": classname,
             "entity_uuid": entityuuid,
             "ensemble_name": ensemblename,
-            "iteration_name": ensemblename,
             "operations": [operation],
         }
         if columns is not None:

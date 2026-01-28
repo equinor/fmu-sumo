@@ -12,19 +12,19 @@ def _make_overview_query(id) -> Dict:
     return {
         "query": {"term": {"fmu.case.uuid.keyword": id}},
         "aggs": {
-            "iteration_uuids": {
-                "terms": {"field": "fmu.iteration.uuid.keyword", "size": 100}
+            "ensemble_uuids": {
+                "terms": {"field": "fmu.ensemble.uuid.keyword", "size": 100}
             },
-            "iteration_names": {
-                "terms": {"field": "fmu.iteration.name.keyword", "size": 100}
+            "ensemble_names": {
+                "terms": {"field": "fmu.ensemble.name.keyword", "size": 100}
             },
             "data_types": {"terms": {"field": "class.keyword", "size": 100}},
-            "iterations": {
-                "terms": {"field": "fmu.iteration.uuid.keyword", "size": 100},
+            "ensembles": {
+                "terms": {"field": "fmu.ensemble.uuid.keyword", "size": 100},
                 "aggs": {
-                    "iteration_name": {
+                    "ensemble_name": {
                         "terms": {
-                            "field": "fmu.iteration.name.keyword",
+                            "field": "fmu.ensemble.name.keyword",
                             "size": 100,
                         }
                     },
@@ -49,7 +49,7 @@ class Case(Document, SearchContext):
             self, sumo, must=[{"term": {"fmu.case.uuid.keyword": self.uuid}}]
         )
         self._overview = None
-        self._iterations = None
+        self._ensembles = None
 
     @property
     def overview(self) -> Dict:
@@ -63,27 +63,27 @@ class Case(Document, SearchContext):
             res = self._sumo.post("/search", json=query)
             data = res.json()
             aggs = data["aggregations"]
-            iteration_names = extract_bucket_keys(aggs, "iteration_names")
-            iteration_uuids = extract_bucket_keys(aggs, "iteration_uuids")
+            ensemble_names = extract_bucket_keys(aggs, "ensemble_names")
+            ensemble_uuids = extract_bucket_keys(aggs, "ensemble_uuids")
             data_types = extract_bucket_keys(aggs, "data_types")
-            iterations = {}
-            for bucket in aggs["iterations"]["buckets"]:
+            ensembles = {}
+            for bucket in aggs["ensembles"]["buckets"]:
                 iterid = bucket["key"]
-                itername = extract_bucket_keys(bucket, "iteration_name")
+                itername = extract_bucket_keys(bucket, "ensemble_name")
                 minreal = bucket["minreal"]["value"]
                 maxreal = bucket["maxreal"]["value"]
                 numreal = bucket["numreal"]["value"]
-                iterations[iterid] = {
+                ensembles[iterid] = {
                     "name": itername,
                     "minreal": minreal,
                     "maxreal": maxreal,
                     "numreal": numreal,
                 }
             self._overview = {
-                "iteration_names": iteration_names,
-                "iteration_uuids": iteration_uuids,
+                "ensemble_names": ensemble_names,
+                "ensemble_uuids": ensemble_uuids,
                 "data_types": data_types,
-                "iterations": iterations,
+                "ensembles": ensembles,
             }
 
         return self._overview

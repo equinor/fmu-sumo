@@ -61,7 +61,7 @@ class CPGrid(Child):
         """
         sc = SearchContext(self._sumo).grid_properties.filter(
             uuid=self.caseuuid,
-            iteration=self.iteration,
+            ensemble=self.ensemble,
             realization=self.realization,
         )
         return sc.filter(

@@ -26,7 +26,7 @@ class Realization(Document, SearchContext):
     def __str__(self):
         return (
             f"<{self.__class__.__name__}: {self.realizationid} {self.uuid}(uuid) "
-            f"in iteration {self.iterationname} "
+            f"in ensemble {self.ensemblename} "
             f"in case {self.casename} "
             f"in asset {self.asset}>"
         )
@@ -46,7 +46,7 @@ class Realization(Document, SearchContext):
 
     @property
     def user(self) -> str:
-        """Name of user who uploaded iteration."""
+        """Name of user who uploaded ensemble."""
         return self.get_property("fmu.case.user.id")
 
     @property
@@ -60,14 +60,14 @@ class Realization(Document, SearchContext):
         return self.get_property("fmu.case.name")
 
     @property
-    def iterationuuid(self) -> str:
-        """FMU iteration uuid"""
-        return self.get_property("fmu.iteration.uuid")
+    def ensembleuuid(self) -> str:
+        """FMU ensemble uuid"""
+        return self.get_property("fmu.ensemble.uuid")
 
     @property
-    def iterationname(self) -> str:
-        """FMU iteration name"""
-        return self.get_property("fmu.iteration.name")
+    def ensemblename(self) -> str:
+        """FMU ensemble name"""
+        return self.get_property("fmu.ensemble.name")
 
     @property
     def realizationuuid(self) -> str:

@@ -22,7 +22,7 @@ class Filters:
     observations = {
         "bool": {
             "must_not": [
-                {"exists": {"field": "fmu.iteration.name.keyword"}},
+                {"exists": {"field": "fmu.ensemble.name.keyword"}},
                 {"exists": {"field": "fmu.realization.id"}},
             ]
         }
