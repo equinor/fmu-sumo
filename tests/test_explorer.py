@@ -213,13 +213,13 @@ def test_case_surfaces_filter(test_case: Case):
     real_surfs = test_case.surfaces.filter(realization=True)
     assert len(real_surfs) == 212
 
-    # filter on iteration
-    real_surfs = real_surfs.filter(iteration="iter-0")
+    # filter on ensemble
+    real_surfs = real_surfs.filter(ensemble="iter-0")
     assert len(real_surfs) == 212
 
     # for surf in real_surfs:
-    #     assert surf.iteration == "iter-0"
-    its = real_surfs.get_field_values("fmu.iteration.name.keyword")
+    #     assert surf.ensemble == "iter-0"
+    its = real_surfs.get_field_values("fmu.ensemble.name.keyword")
     assert len(its) == 1 and its[0] == "iter-0"
 
     # filter on name
@@ -230,9 +230,9 @@ def test_case_surfaces_filter(test_case: Case):
     assert len(real_surfs) == 56
 
     # for surf in real_surfs:
-    #     assert surf.iteration == "iter-0"
+    #     assert surf.ensemble == "iter-0"
     #     assert surf.name == "Valysar Fm."
-    its = real_surfs.get_field_values("fmu.iteration.name.keyword")
+    its = real_surfs.get_field_values("fmu.ensemble.name.keyword")
     assert len(its) == 1 and its[0] == "iter-0"
     names = real_surfs.get_field_values("data.name.keyword")
     assert len(names) == 1 and names[0] == "Valysar Fm."
@@ -252,10 +252,10 @@ def test_case_surfaces_filter(test_case: Case):
     assert len(real_surfs) == 4
 
     # for surf in real_surfs:
-    #     assert surf.iteration == "iter-0"
+    #     assert surf.ensemble == "iter-0"
     #     assert surf.name == "Valysar Fm."
     #     assert surf.tagname == "FACIES_Fraction_Channel"
-    its = real_surfs.get_field_values("fmu.iteration.name.keyword")
+    its = real_surfs.get_field_values("fmu.ensemble.name.keyword")
     assert len(its) == 1 and its[0] == "iter-0"
     names = real_surfs.get_field_values("data.name.keyword")
     assert len(names) == 1 and names[0] == "Valysar Fm."
@@ -273,7 +273,7 @@ def test_case_surfaces_filter(test_case: Case):
     real_surfs = real_surfs.filter(realization=0)
     assert len(real_surfs) == 1
 
-    assert real_surfs[0].iteration == "iter-0"
+    assert real_surfs[0].ensemble == "iter-0"
     assert real_surfs[0].name == "Valysar Fm."
     assert real_surfs[0].tagname == "FACIES_Fraction_Channel"
     assert real_surfs[0].realization == 0

@@ -61,7 +61,7 @@ class CPGridProperty(Child):
         """
         sc = SearchContext(self._sumo).grids.filter(
             uuid=self.caseuuid,
-            iteration=self.iteration,
+            ensemble=self.ensemble,
             realization=self.realization,
         )
         should = [

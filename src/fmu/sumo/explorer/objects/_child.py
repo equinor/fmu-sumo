@@ -33,7 +33,7 @@ class Child(Document):
                 return (
                     f"<{self.__class__.__name__}: {self.name} {self.uuid}(uuid) "
                     f"in realization {self.realization} "
-                    f"in iteration {self.iteration} "
+                    f"in ensemble {self.ensemble} "
                     f"in case {self.casename} "
                     f"in asset {self.asset}>"
                 )
@@ -41,7 +41,7 @@ class Child(Document):
                 return (
                     f"<{self.__class__.__name__}: {self.name} {self.uuid}(uuid) "
                     f"in operation {self.operationname} "
-                    f"in iteration {self.iteration} "
+                    f"in ensemble {self.ensemble} "
                     f"in case {self.casename} "
                     f"in asset {self.asset}>"
                 )
@@ -94,8 +94,7 @@ class Child(Document):
     @property
     def template_path(self) -> str:
         return "/".join(
-            ["{realization}", "{iteration}"]
-            + self.relative_path.split("/")[2:]
+            ["{realization}", "{ensemble}"] + self.relative_path.split("/")[2:]
         )
 
     @property
@@ -137,11 +136,6 @@ class Child(Document):
     def realization(self) -> str:
         """Object realization"""
         return self.get_property("fmu.realization.id")
-
-    @property
-    def iteration(self) -> str:
-        """Object iteration"""
-        return self.get_property("fmu.iteration.name")
 
     @property
     def ensemble(self) -> str:
