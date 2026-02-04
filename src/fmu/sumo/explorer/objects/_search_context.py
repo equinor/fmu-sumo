@@ -1278,8 +1278,8 @@ class SearchContext:
                                 "must": [
                                     {"term": {"class.keyword": "dictionary"}},
                                     {
-                                        "exists": {
-                                            "field": "fmu.realization.id"
+                                        "term": {
+                                            "fmu.context.stage.keyword": "realization"
                                         }
                                     },
                                 ]
@@ -1290,8 +1290,11 @@ class SearchContext:
                                 "must": [
                                     {"term": {"class.keyword": "table"}},
                                     {
-                                        "exists": {
-                                            "field": "fmu.aggregation.operation"
+                                        "terms": {
+                                            "fmu.context.stage.keyword": [
+                                                "ensemble",
+                                                "iteration",
+                                            ]
                                         }
                                     },
                                 ]
