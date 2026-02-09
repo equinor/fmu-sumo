@@ -184,6 +184,36 @@ def test_get_cases_combinations(explorer: Explorer):
         )
 
 
+def test_get_asset_names(explorer: Explorer):
+    """
+    Test the `asset_names` property to ensure it returns a list of strings.
+
+    Args:
+        explorer (Explorer): An instance of the Explorer class.
+
+    Asserts:
+        - The `asset_names` property returns a list.
+        - All items in the list are strings.
+    """
+    asset_names = explorer.asset_names
+    assert isinstance(asset_names, list)
+    assert all(isinstance(asset_name, str) for asset_name in asset_names)
+
+
+def test_get_asset_names_drogon_case(explorer: Explorer):
+    """
+    Test the `asset_names` property for a specific case filtered by "DROGON".
+
+    Args:
+        explorer (Explorer): An instance of the Explorer class.
+
+    Asserts:
+        - The `asset_names` property for the "DROGON" case returns the expected list ["Drogon"].
+    """
+    drogon_case_asset_name = explorer.cases.filter(field="DROGON").asset_names
+    assert drogon_case_asset_name == ["Drogon"]
+
+
 def test_case_surfaces_type(test_case: Case):
     """Test that all objects in Case.surfaces class surface"""
     # assert all([x.metadata["class"] == "surface" for x in test_case.surfaces])

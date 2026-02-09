@@ -1987,6 +1987,16 @@ class SearchContext:
         """List of entity uuids."""
         return await self.get_field_values_async("fmu.entity.uuid.keyword")
 
+    @property
+    def asset_names(self) -> List[str]:
+        """List of asset names."""
+        return self.get_field_values("access.asset.name.keyword")
+
+    @property
+    async def asset_names_async(self) -> List[str]:
+        """List of asset names."""
+        return await self.get_field_values_async("access.asset.name.keyword")
+
 
 def _gen_filter_doc(spec):
     fmap = {
