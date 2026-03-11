@@ -1703,7 +1703,8 @@ class SearchContext:
             "Maximum 1000 columns allowed for a single call to batch_aggregate_async."
         )
         sc = self.filter(realization=True, column=columns)
-        if len(sc.hidden) > 0:
+        length_hidden = await sc.hidden.length_async()
+        if length_hidden > 0:
             sc = sc.hidden
         res = await sc._aggregate_async(
             columns=columns, operation=operation, no_wait=True
