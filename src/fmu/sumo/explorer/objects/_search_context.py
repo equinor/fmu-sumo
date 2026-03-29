@@ -611,15 +611,7 @@ class SearchContext:
         """
         obj = self._cache.get(uuid)
         if obj is None:
-            query = {
-                "query": {"ids": {"values": [uuid]}},
-                "size": 1,
-                "_source": self._select,
-            }
-
-            res = self._sumo.post("/search", json=query)
-            hits = res.json()["hits"]["hits"]
-            obj = hits[0]
+            obj = self._sumo.get(f"/objects('{uuid}')").json()
             self._cache.put(uuid, obj)
 
         return self._to_sumo(obj)
@@ -637,16 +629,7 @@ class SearchContext:
 
         obj = self._cache.get(uuid)
         if obj is None:
-            query = {
-                "query": {"ids": {"values": [uuid]}},
-                "size": 1,
-                "_source": self._select,
-            }
-
-            res = await self._sumo.post_async("/search", json=query)
-            hits = res.json()["hits"]["hits"]
-
-            obj = hits[0]
+            obj = (await self._sumo.get_async(f"/objects('{uuid}')")).json()
             self._cache.put(uuid, obj)
 
         return self._to_sumo(obj)
