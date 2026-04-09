@@ -1,15 +1,15 @@
 ## Issue
 _Link to the issue resolved by this PR._
 
-## Short description
-_Short description of the approach taken to solve the issue_
+## Description
+_Description of the approach taken to solve the issue._
 
-## Pre-review checklist
-- [ ] Read through all changes. No redundant `print()` statements, commented-out code, or other remnants from the development. 👀
-- [ ] Make sure tests pass after every commit. ✅
-- [ ] New/refactored code is following same conventions as the rest of the code base. 🧬
-- [ ] New/refactored code is tested. ⚙
+## How to test
+_How to verify the changes._
+
+## Checklist
+- [ ] No redundant `print()` statements, commented-out code, or other remnants from the development 👀
+- [ ] New/refactored code is following same conventions as the rest of the code base 🧬
+- [ ] New/refactored code is tested ⚙
 - [ ] Documentation has been updated 🧾
-
-## Pre-merge checklist
-- [ ] Commit history is consistent and clean. 👌
+- [ ] Commits are semantic ✅
