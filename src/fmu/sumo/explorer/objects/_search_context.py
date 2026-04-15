@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import warnings
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
@@ -343,12 +344,12 @@ class SearchContext:
             if len(must) == 1:
                 return must[0]
             else:
-                return {"bool": {"must": must}}
+                return {"bool": {"filter": must}}
         else:
             if len(must) == 0:
                 return {"bool": {"must_not": must_not}}
             else:
-                return {"bool": {"must": must, "must_not": must_not}}
+                return {"bool": {"filter": must, "must_not": must_not}}
 
     def _to_sumo(self, obj, blob=None) -> objects.Document:
         cls = obj["_source"]["class"]
@@ -758,7 +759,7 @@ class SearchContext:
             A List of unique values for a given field
         """
 
-        buckets_per_batch = 1000
+        buckets_per_batch = 10000
 
         # fast path: try without Pit
         query = _build_bucket_query_simple(
@@ -803,6 +804,48 @@ class SearchContext:
                     break
                 pass
 
+        return all_buckets
+
+    def _get_buckets_partitioned(self, field: str) -> List[Dict]:
+        qdoc = {
+            "query": self._query,
+            "size": 0,
+            "aggs": {
+                "nvals": {
+                    "cardinality": {
+                        "field": field
+                        }
+                    }
+                }
+            }
+        res = self._sumo.post("/search", json=qdoc).json()
+        nvals = res["aggregations"]["nvals"]["value"]
+        print(f"Cardinality: {nvals}")
+        num_partitions = math.ceil(nvals / 10000) + 1
+        all_buckets = {}
+        with Pit(self._sumo, "1m") as pit:
+            for p in range(num_partitions):
+                qdoc = {
+                    "query": self._query,
+                    "size": 0,
+                    "aggs": {
+                        "values": {
+                            "terms": {
+                                "field": field,
+                                "include": {
+                                    "partition": p,
+                                    "num_partitions": num_partitions,
+                                },
+                                "size": 10000
+                            }
+                        }
+                    },
+                }
+                qdoc = pit.stamp_query(qdoc)
+                res = self._sumo.post("/search", json=qdoc).json()
+                buckets = {b["key"]: b["doc_count"] for b in res["aggregations"]["values"]["buckets"]}
+                all_buckets |= buckets
+            
         return all_buckets
 
     async def _get_buckets_async(
