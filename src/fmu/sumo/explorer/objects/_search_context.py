@@ -1548,7 +1548,7 @@ class SearchContext:
         )
 
         object_ids = None
-        if (classname == "surface"):
+        if classname == "surface":
             sc = SearchContext(
                 sumo=self._sumo,
             ).filter(
@@ -1558,7 +1558,7 @@ class SearchContext:
                 ensemble=ensemblename,
                 column=columns,
             )
-            if  (len(sc) > tot_hits):
+            if len(sc) > tot_hits:
                 object_ids = self.uuids
 
         return caseuuid, classname, entityuuid, ensemblename, object_ids
@@ -1663,7 +1663,7 @@ class SearchContext:
         )
 
         object_ids = None
-        if (classname == "surface"):
+        if classname == "surface":
             sc = SearchContext(
                 sumo=self._sumo,
             ).filter(
@@ -1673,7 +1673,7 @@ class SearchContext:
                 ensemble=ensemblename,
                 column=columns,
             )
-            if ((await sc.length_async()) > tot_hits):
+            if (await sc.length_async()) > tot_hits:
                 object_ids = await self.uuids_async
 
         return caseuuid, classname, entityuuid, ensemblename, object_ids
