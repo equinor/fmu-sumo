@@ -312,6 +312,8 @@ class SearchContext:
         self._select: SelectArg = {
             "excludes": ["fmu.realization.parameters"],
         }
+        self._sort = {"_doc": {"order": "asc"}}
+        self._limit = None
         return
 
     def __str__(self):
@@ -376,6 +378,8 @@ class SearchContext:
             query = {"query": self._query}
             res = self._sumo.post("/count", json=query).json()
             self._length = res["count"]
+            if self._limit is not None:
+                self._length = min(self._length, self._limit)
         return self._length
 
     async def length_async(self):
@@ -385,30 +389,35 @@ class SearchContext:
             query = {"query": self._query}
             res = (await self._sumo.post_async("/count", json=query)).json()
             self._length = res["count"]
+            if self._limit is not None:
+                self._length = min(self._length, self._limit)
         return self._length
 
     def __search_all(self, query, size: int = 1000, select: SelectArg = False):
-        all_hits = []
+        tot_count = len(self)
         query = {
             "query": query,
             "size": size,
             "_source": select,
-            "sort": {"_doc": {"order": "asc"}},
+            "sort": self._sort,
             "track_total_hits": True,
         }
-        # fast path: try searching without Pit
-        res = self._sumo.post("/search", json=query).json()
-        total_hits = res["hits"]["total"]["value"]
-        if total_hits <= size:
+        if tot_count <= size:
+            # fast path: try searching without Pit
+            query["size"] = tot_count
+            res = self._sumo.post("/search", json=query).json()
             hits = res["hits"]["hits"]
             if select is False:
                 return [hit["_id"] for hit in hits]
             else:
                 return hits
+        # ELSE
+        all_hits = []
         after = None
         with Pit(self._sumo, "1m") as pit:
-            while True:
+            while len(all_hits) < tot_count:
                 query = pit.stamp_query(_set_search_after(query, after))
+                query["size"] = min(size, tot_count - len(all_hits))
                 res = self._sumo.post("/search", json=query).json()
                 pit.update_from_result(res)
                 hits = res["hits"]["hits"]
@@ -416,9 +425,9 @@ class SearchContext:
                     break
                 after = hits[-1]["sort"]
                 if select is False:
-                    all_hits = all_hits + [hit["_id"] for hit in hits]
+                    all_hits.extend([hit["_id"] for hit in hits])
                 else:
-                    all_hits = all_hits + hits
+                    all_hits.extend(hits)
                     pass
                 pass
             pass
@@ -430,27 +439,30 @@ class SearchContext:
     async def __search_all_async(
         self, query, size: int = 1000, select: SelectArg = False
     ):
-        all_hits = []
+        tot_count = await self.length_async()
         query = {
             "query": query,
             "size": size,
             "_source": select,
-            "sort": {"_doc": {"order": "asc"}},
+            "sort": self._sort,
             "track_total_hits": True,
         }
-        # fast path: try searching without Pit
-        res = (await self._sumo.post_async("/search", json=query)).json()
-        total_hits = res["hits"]["total"]["value"]
-        if total_hits <= size:
+        if tot_count <= size:
+            # fast path: try searching without Pit
+            query["size"] = tot_count
+            res = (await self._sumo.post_async("/search", json=query)).json()
             hits = res["hits"]["hits"]
             if select is False:
                 return [hit["_id"] for hit in hits]
             else:
                 return hits
+        # ELSE
+        all_hits = []
         after = None
         async with Pit(self._sumo, "1m") as pit:
-            while True:
+            while len(all_hits) < tot_count:
                 query = pit.stamp_query(_set_search_after(query, after))
+                query["size"] = min(size, tot_count - len(all_hits))
                 res = (
                     await self._sumo.post_async("/search", json=query)
                 ).json()
@@ -460,9 +472,9 @@ class SearchContext:
                     break
                 after = hits[-1]["sort"]
                 if select is False:
-                    all_hits = all_hits + [hit["_id"] for hit in hits]
+                    all_hits.extend([hit["_id"] for hit in hits])
                 else:
-                    all_hits = all_hits + hits
+                    all_hits.extend(hits)
                     pass
                 pass
             pass
@@ -570,7 +582,7 @@ class SearchContext:
         Args:
             sel (str | List(str) | Dict(str, List[str]): select specification
         Returns:
-            itself (SearchContext)
+            SearchContext (itself)
         """
 
         required = {"class"}
@@ -599,6 +611,41 @@ class SearchContext:
         self._cache.clear()
         return self
 
+    def sort(self, sortspec):
+        """Set sort order.
+
+        Args: sortspec: A single sort specification, or a list of sort
+          specifications, each of which is a an object with a field as
+          key and a dictionary with key "order" and "asc" or "desc" as
+          value.  The default is {"_doc": {"order": "asc"}}
+
+          This method returns itself, so it is chainable, but the sort
+          settings will not propagate into a new SearchContextBase
+          (specifically, it will not be passed into the result of .filter()).
+
+        Returns: SearchContext (itself)
+
+        """
+        self._sort = sortspec
+        self._hits = None
+        return self
+
+    def limit(self, n=None):
+        """Set max number of items to search. If set to None, there is no limit.
+        Args:
+          n: Optional[int]
+
+        This method returns itself, so it is chainable, but the sort
+        settings will not propagate into a new SearchContextBase
+        (specifically, it will not be passed into the result of .filter()).
+
+        Returns: SearchContext (itself)
+        """
+        self._limit = n
+        self._length = None
+        self._hits = None
+        return self
+
     def get_object(self, uuid: str) -> objects.Document:
         """Get metadata object by uuid
 
@@ -611,15 +658,7 @@ class SearchContext:
         """
         obj = self._cache.get(uuid)
         if obj is None:
-            query = {
-                "query": {"ids": {"values": [uuid]}},
-                "size": 1,
-                "_source": self._select,
-            }
-
-            res = self._sumo.post("/search", json=query)
-            hits = res.json()["hits"]["hits"]
-            obj = hits[0]
+            obj = self._sumo.get(f"/objects('{uuid}')").json()
             self._cache.put(uuid, obj)
 
         return self._to_sumo(obj)
@@ -637,16 +676,7 @@ class SearchContext:
 
         obj = self._cache.get(uuid)
         if obj is None:
-            query = {
-                "query": {"ids": {"values": [uuid]}},
-                "size": 1,
-                "_source": self._select,
-            }
-
-            res = await self._sumo.post_async("/search", json=query)
-            hits = res.json()["hits"]["hits"]
-
-            obj = hits[0]
+            obj = (await self._sumo.get_async(f"/objects('{uuid}')")).json()
             self._cache.put(uuid, obj)
 
         return self._to_sumo(obj)

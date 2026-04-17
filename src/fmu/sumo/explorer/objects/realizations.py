@@ -11,12 +11,6 @@ class Realizations(SearchContext):
         self._hits = uuids
         return
 
-    def __len__(self):
-        return len(self.uuids)
-
-    async def length_async(self):
-        return len(await self.uuids_async)
-
     @property
     def classes(self) -> List[str]:
         return ["realization"]
