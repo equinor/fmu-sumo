@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import deprecation
 import httpx
@@ -1507,7 +1507,7 @@ class SearchContext:
 
     def __verify_aggregation_operation(
         self, sres
-    ) -> Tuple[str, str, str, str, str]:
+    ) -> Tuple[str, str, str, str, int]:
         tot_hits = sres["hits"]["total"]["value"]
         if tot_hits == 0:
             raise Exception("No matching realizations found.")
@@ -1539,7 +1539,7 @@ class SearchContext:
 
     def _verify_aggregation_operation(
         self, columns
-    ) -> Tuple[str, str, str, str]:
+    ) -> Tuple[str, str, str, str, Optional[List[str]]]:
         sc = self if columns is None else self.filter(column=columns)
         query = sc.__prepare_verify_aggregation_query()
         sres = sc._sumo.post("/search", json=query).json()
@@ -1547,11 +1547,8 @@ class SearchContext:
             sc.__verify_aggregation_operation(sres)
         )
 
-        if (
-            classname != "surface"
-            and isinstance(columns, list)
-            and len(columns) == 1
-        ):
+        object_ids = None
+        if classname == "surface":
             sc = SearchContext(
                 sumo=self._sumo,
             ).filter(
@@ -1561,15 +1558,20 @@ class SearchContext:
                 ensemble=ensemblename,
                 column=columns,
             )
+            if len(sc) > tot_hits:
+                object_ids = self.uuids
 
-            if len(sc) != tot_hits:
-                raise Exception(
-                    "Filtering on realization is not allowed for table and parameter aggregation."
-                )
-        return caseuuid, classname, entityuuid, ensemblename
+        return caseuuid, classname, entityuuid, ensemblename, object_ids
 
     def __prepare_aggregation_spec(
-        self, caseuuid, classname, entityuuid, ensemblename, operation, columns
+        self,
+        caseuuid,
+        classname,
+        entityuuid,
+        ensemblename,
+        operation,
+        columns,
+        object_ids,
     ):
         spec = {
             "case_uuid": caseuuid,
@@ -1580,18 +1582,25 @@ class SearchContext:
         }
         if columns is not None:
             spec["columns"] = columns
+        if object_ids is not None:
+            spec["object_ids"] = object_ids
         return spec
 
     def _aggregate(
         self, columns=None, operation=None, no_wait=False
     ) -> objects.Child | httpx.Response:
-        caseuuid, classname, entityuuid, ensemblename = (
+        caseuuid, classname, entityuuid, ensemblename, object_ids = (
             self._verify_aggregation_operation(columns)
         )
         spec = self.__prepare_aggregation_spec(
-            caseuuid, classname, entityuuid, ensemblename, operation, columns
+            caseuuid,
+            classname,
+            entityuuid,
+            ensemblename,
+            operation,
+            columns,
+            object_ids,
         )
-        spec["object_ids"] = self.uuids
         try:
             res = self._sumo.post("/aggregations", json=spec)
         except httpx.HTTPStatusError as ex:
@@ -1645,7 +1654,7 @@ class SearchContext:
 
     async def _verify_aggregation_operation_async(
         self, columns
-    ) -> Tuple[str, str, str, str]:
+    ) -> Tuple[str, str, str, str, Optional[List[str]]]:
         sc = self if columns is None else self.filter(column=columns)
         query = sc.__prepare_verify_aggregation_query()
         sres = (await self._sumo.post_async("/search", json=query)).json()
@@ -1653,11 +1662,8 @@ class SearchContext:
             sc.__verify_aggregation_operation(sres)
         )
 
-        if (
-            classname != "surface"
-            and isinstance(columns, list)
-            and len(columns) == 1
-        ):
+        object_ids = None
+        if classname == "surface":
             sc = SearchContext(
                 sumo=self._sumo,
             ).filter(
@@ -1667,13 +1673,10 @@ class SearchContext:
                 ensemble=ensemblename,
                 column=columns,
             )
+            if (await sc.length_async()) > tot_hits:
+                object_ids = await self.uuids_async
 
-            tot_reals = await sc.length_async()
-            if tot_reals != tot_hits:
-                raise Exception(
-                    "Filtering on realization is not allowed for table and parameter aggregation."
-                )
-        return caseuuid, classname, entityuuid, ensemblename
+        return caseuuid, classname, entityuuid, ensemblename, object_ids
 
     async def _aggregate_async(
         self, columns=None, operation=None, no_wait=False
@@ -1683,11 +1686,17 @@ class SearchContext:
             classname,
             entityuuid,
             ensemblename,
+            object_ids,
         ) = await self._verify_aggregation_operation_async(columns)
         spec = self.__prepare_aggregation_spec(
-            caseuuid, classname, entityuuid, ensemblename, operation, columns
+            caseuuid,
+            classname,
+            entityuuid,
+            ensemblename,
+            operation,
+            columns,
+            object_ids,
         )
-        spec["object_ids"] = await self.uuids_async
         try:
             res = await self._sumo.post_async("/aggregations", json=spec)
         except httpx.HTTPStatusError as ex:
