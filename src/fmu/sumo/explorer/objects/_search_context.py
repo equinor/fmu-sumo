@@ -1547,20 +1547,19 @@ class SearchContext:
             sc.__verify_aggregation_operation(sres)
         )
 
-        sc = SearchContext(
-            sumo=self._sumo,
-        ).filter(
-            cls=classname,
-            realization=True,
-            entity=entityuuid,
-            ensemble=ensemblename,
-            column=columns,
-        )
-
-        if (classname == "surface") and (len(sc) > tot_hits):
-            object_ids = self.uuids
-        else:
-            object_ids = None
+        object_ids = None
+        if (classname == "surface"):
+            sc = SearchContext(
+                sumo=self._sumo,
+            ).filter(
+                cls=classname,
+                realization=True,
+                entity=entityuuid,
+                ensemble=ensemblename,
+                column=columns,
+            )
+            if  (len(sc) > tot_hits):
+                object_ids = self.uuids
 
         return caseuuid, classname, entityuuid, ensemblename, object_ids
 
@@ -1663,20 +1662,19 @@ class SearchContext:
             sc.__verify_aggregation_operation(sres)
         )
 
-        sc = SearchContext(
-            sumo=self._sumo,
-        ).filter(
-            cls=classname,
-            realization=True,
-            entity=entityuuid,
-            ensemble=ensemblename,
-            column=columns,
-        )
-
-        if (classname == "surface") and ((await sc.length_async()) > tot_hits):
-            object_ids = await self.uuids_async
-        else:
-            object_ids = None
+        object_ids = None
+        if (classname == "surface"):
+            sc = SearchContext(
+                sumo=self._sumo,
+            ).filter(
+                cls=classname,
+                realization=True,
+                entity=entityuuid,
+                ensemble=ensemblename,
+                column=columns,
+            )
+            if ((await sc.length_async()) > tot_hits):
+                object_ids = await self.uuids_async
 
         return caseuuid, classname, entityuuid, ensemblename, object_ids
 
