@@ -2,7 +2,7 @@
 
 import sys
 
-if not sys.platform.startswith("darwin") and sys.version_info < (3, 12):
+if not sys.platform.startswith("darwin"):
     import openvds
 import json
 import logging
@@ -331,8 +331,8 @@ def test_get_case_by_uuid(explorer: Explorer, case_uuid: str, case_name: str):
 
 
 @pytest.mark.skipif(
-    sys.platform.startswith("darwin") or sys.version_info > (3, 12),
-    reason="do not run OpenVDS SEGYImport on mac os or python 3.12",
+    sys.platform.startswith("darwin"),
+    reason="do not run OpenVDS SEGYImport on mac os",
 )
 def test_seismic_case_by_uuid(explorer: Explorer, seismic_case_uuid: str):
     """Test that explorer returns openvds compatible cubes for seismic case"""
