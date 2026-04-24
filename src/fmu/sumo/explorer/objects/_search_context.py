@@ -807,22 +807,17 @@ class SearchContext:
         return all_buckets
 
     def _get_buckets_partitioned(self, field: str) -> List[Dict]:
+        buckets_per_partition = 10000
         qdoc = {
             "query": self._query,
             "size": 0,
-            "aggs": {
-                "nvals": {
-                    "cardinality": {
-                        "field": field
-                        }
-                    }
-                }
-            }
+            "aggs": {"nvals": {"cardinality": {"field": field}}},
+        }
         res = self._sumo.post("/search", json=qdoc).json()
         nvals = res["aggregations"]["nvals"]["value"]
         print(f"Cardinality: {nvals}")
-        num_partitions = math.ceil(nvals / 10000) + 1
-        all_buckets = {}
+        num_partitions = math.ceil(nvals / buckets_per_partition)
+        all_buckets = []
         with Pit(self._sumo, "1m") as pit:
             for p in range(num_partitions):
                 qdoc = {
@@ -836,16 +831,23 @@ class SearchContext:
                                     "partition": p,
                                     "num_partitions": num_partitions,
                                 },
-                                "size": 10000
+                                "size": buckets_per_partition,
                             }
                         }
                     },
                 }
                 qdoc = pit.stamp_query(qdoc)
                 res = self._sumo.post("/search", json=qdoc).json()
-                buckets = {b["key"]: b["doc_count"] for b in res["aggregations"]["values"]["buckets"]}
-                all_buckets |= buckets
-            
+                buckets = res["aggregations"]["values"]["buckets"]
+                buckets = [
+                    {
+                        "key": bucket["key"],
+                        "doc_count": bucket["doc_count"],
+                    }
+                    for bucket in buckets
+                ]
+                all_buckets = all_buckets + buckets
+
         return all_buckets
 
     async def _get_buckets_async(
@@ -906,6 +908,52 @@ class SearchContext:
                 if len(buckets) < buckets_per_batch:
                     break
                 pass
+
+        return all_buckets
+
+    async def _get_buckets_partitioned_async(self, field: str) -> List[Dict]:
+        buckets_per_partition = 10000
+        qdoc = {
+            "query": self._query,
+            "size": 0,
+            "aggs": {"nvals": {"cardinality": {"field": field}}},
+        }
+        res = (await self._sumo.post_async("/search", json=qdoc)).json()
+        nvals = res["aggregations"]["nvals"]["value"]
+        print(f"Cardinality: {nvals}")
+        num_partitions = math.ceil(nvals / buckets_per_partition)
+        all_buckets = []
+        async with Pit(self._sumo, "1m") as pit:
+            for p in range(num_partitions):
+                qdoc = {
+                    "query": self._query,
+                    "size": 0,
+                    "aggs": {
+                        "values": {
+                            "terms": {
+                                "field": field,
+                                "include": {
+                                    "partition": p,
+                                    "num_partitions": num_partitions,
+                                },
+                                "size": buckets_per_partition,
+                            }
+                        }
+                    },
+                }
+                qdoc = pit.stamp_query(qdoc)
+                res = (
+                    await self._sumo.post_async("/search", json=qdoc)
+                ).json()
+                buckets = res["aggregations"]["values"]["buckets"]
+                buckets = [
+                    {
+                        "key": bucket["key"],
+                        "doc_count": bucket["doc_count"],
+                    }
+                    for bucket in buckets
+                ]
+                all_buckets = all_buckets + buckets
 
         return all_buckets
 
