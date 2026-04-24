@@ -856,7 +856,7 @@ class SearchContext:
             A List of unique values for a given field
         """
 
-        buckets_per_batch = 1000
+        buckets_per_batch = 10000
 
         # fast path: try without Pit
         query = _build_bucket_query_simple(
@@ -954,7 +954,8 @@ class SearchContext:
         """
         if field not in self._field_values_and_counts:
             buckets = {
-                b["key"]: b["doc_count"] for b in self._get_buckets_partitioned(field)
+                b["key"]: b["doc_count"]
+                for b in self._get_buckets_partitioned(field)
             }
             self._field_values_and_counts[field] = buckets
 
