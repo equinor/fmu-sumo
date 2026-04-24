@@ -808,13 +808,7 @@ class SearchContext:
 
     def _get_buckets_partitioned(self, field: str) -> List[Dict]:
         buckets_per_partition = 10000
-        qdoc = {
-            "query": self._query,
-            "size": 0,
-            "aggs": {"nvals": {"cardinality": {"field": field}}},
-        }
-        res = self._sumo.post("/search", json=qdoc).json()
-        nvals = res["aggregations"]["nvals"]["value"]
+        nvals = self.metrics.cardinality(field)
         print(f"Cardinality: {nvals}")
         num_partitions = math.ceil(nvals / buckets_per_partition)
         all_buckets = []
@@ -913,13 +907,7 @@ class SearchContext:
 
     async def _get_buckets_partitioned_async(self, field: str) -> List[Dict]:
         buckets_per_partition = 10000
-        qdoc = {
-            "query": self._query,
-            "size": 0,
-            "aggs": {"nvals": {"cardinality": {"field": field}}},
-        }
-        res = (await self._sumo.post_async("/search", json=qdoc)).json()
-        nvals = res["aggregations"]["nvals"]["value"]
+        nvals = await self.metrics.cardinality_async(field)
         print(f"Cardinality: {nvals}")
         num_partitions = math.ceil(nvals / buckets_per_partition)
         all_buckets = []
