@@ -954,7 +954,7 @@ class SearchContext:
         """
         if field not in self._field_values_and_counts:
             buckets = {
-                b["key"]: b["doc_count"] for b in self._get_buckets(field)
+                b["key"]: b["doc_count"] for b in self._get_buckets_partitioned(field)
             }
             self._field_values_and_counts[field] = buckets
 
@@ -970,7 +970,7 @@ class SearchContext:
             A List of unique values for the given field
         """
         if field not in self._field_values:
-            buckets = self._get_buckets(field)
+            buckets = self._get_buckets_partitioned(field)
             self._field_values[field] = [bucket["key"] for bucket in buckets]
 
         return self._field_values[field]
@@ -1023,7 +1023,7 @@ class SearchContext:
         if field not in self._field_values_and_counts:
             buckets = {
                 b["key"]: b["doc_count"]
-                for b in await self._get_buckets_async(field)
+                for b in await self._get_buckets_partitioned_async(field)
             }
             self._field_values_and_counts[field] = buckets
 
@@ -1039,7 +1039,7 @@ class SearchContext:
             A List of unique values for the given field
         """
         if field not in self._field_values:
-            buckets = await self._get_buckets_async(field)
+            buckets = await self._get_buckets_partitioned_async(field)
             self._field_values[field] = [bucket["key"] for bucket in buckets]
 
         return self._field_values[field]
