@@ -809,7 +809,6 @@ class SearchContext:
     def _get_buckets_partitioned(self, field: str) -> List[Dict]:
         buckets_per_partition = 10000
         nvals = self.metrics.cardinality(field)
-        print(f"Cardinality: {nvals}")
         num_partitions = math.ceil(nvals / buckets_per_partition)
         all_buckets = []
         with Pit(self._sumo, "1m") as pit:
@@ -908,7 +907,6 @@ class SearchContext:
     async def _get_buckets_partitioned_async(self, field: str) -> List[Dict]:
         buckets_per_partition = 10000
         nvals = await self.metrics.cardinality_async(field)
-        print(f"Cardinality: {nvals}")
         num_partitions = math.ceil(nvals / buckets_per_partition)
         all_buckets = []
         async with Pit(self._sumo, "1m") as pit:
