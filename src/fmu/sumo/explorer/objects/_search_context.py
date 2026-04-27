@@ -230,6 +230,25 @@ def _build_composite_query(query, fields, size):
     }
 
 
+def _extract_buckets(bucketlist, field=None):
+    if field is not None:
+        return [
+            {
+                "key": bucket["key"][field],
+                "doc_count": bucket["doc_count"],
+            }
+            for bucket in bucketlist
+        ]
+    else:
+        return [
+            {
+                "key": bucket["key"],
+                "doc_count": bucket["doc_count"],
+            }
+            for bucket in bucketlist
+        ]
+
+
 def _extract_composite_results(res):
     aggs = res["aggregations"]["composite"]
     after_key = aggs.get("after_key")
@@ -768,14 +787,7 @@ class SearchContext:
         res = self._sumo.post("/search", json=query).json()
         other_docs_count = res["aggregations"][field]["sum_other_doc_count"]
         if other_docs_count == 0:
-            buckets = res["aggregations"][field]["buckets"]
-            buckets = [
-                {
-                    "key": bucket["key"],
-                    "doc_count": bucket["doc_count"],
-                }
-                for bucket in buckets
-            ]
+            buckets = _extract_buckets(res["aggregations"][field]["buckets"])
             return buckets
 
         query = _build_bucket_query(self._query, field, buckets_per_batch)
@@ -788,18 +800,13 @@ class SearchContext:
                 )
                 res = self._sumo.post("/search", json=query).json()
                 pit.update_from_result(res)
-                buckets = res["aggregations"][field]["buckets"]
+                buckets = _extract_buckets(
+                    res["aggregations"][field]["buckets"], field
+                )
                 if len(buckets) == 0:
                     break
                 after_key = res["aggregations"][field]["after_key"]
-                buckets = [
-                    {
-                        "key": bucket["key"][field],
-                        "doc_count": bucket["doc_count"],
-                    }
-                    for bucket in buckets
-                ]
-                all_buckets = all_buckets + buckets
+                all_buckets.extend(buckets)
                 if len(buckets) < buckets_per_batch:
                     break
                 pass
@@ -831,15 +838,10 @@ class SearchContext:
                 }
                 qdoc = pit.stamp_query(qdoc)
                 res = self._sumo.post("/search", json=qdoc).json()
-                buckets = res["aggregations"]["values"]["buckets"]
-                buckets = [
-                    {
-                        "key": bucket["key"],
-                        "doc_count": bucket["doc_count"],
-                    }
-                    for bucket in buckets
-                ]
-                all_buckets = all_buckets + buckets
+                buckets = _extract_buckets(
+                    res["aggregations"]["values"]["buckets"]
+                )
+                all_buckets.extend(buckets)
 
         return all_buckets
 
@@ -865,14 +867,7 @@ class SearchContext:
         res = (await self._sumo.post_async("/search", json=query)).json()
         other_docs_count = res["aggregations"][field]["sum_other_doc_count"]
         if other_docs_count == 0:
-            buckets = res["aggregations"][field]["buckets"]
-            buckets = [
-                {
-                    "key": bucket["key"],
-                    "doc_count": bucket["doc_count"],
-                }
-                for bucket in buckets
-            ]
+            buckets = _extract_buckets(res["aggregations"][field]["buckets"])
             return buckets
 
         query = _build_bucket_query(self._query, field, buckets_per_batch)
@@ -886,18 +881,13 @@ class SearchContext:
                 res = await self._sumo.post_async("/search", json=query)
                 res = res.json()
                 pit.update_from_result(res)
-                buckets = res["aggregations"][field]["buckets"]
+                buckets = _extract_buckets(
+                    res["aggregations"][field]["buckets"], field
+                )
                 if len(buckets) == 0:
                     break
                 after_key = res["aggregations"][field]["after_key"]
-                buckets = [
-                    {
-                        "key": bucket["key"][field],
-                        "doc_count": bucket["doc_count"],
-                    }
-                    for bucket in buckets
-                ]
-                all_buckets = all_buckets + buckets
+                all_buckets.extend(buckets)
                 if len(buckets) < buckets_per_batch:
                     break
                 pass
@@ -931,15 +921,10 @@ class SearchContext:
                 res = (
                     await self._sumo.post_async("/search", json=qdoc)
                 ).json()
-                buckets = res["aggregations"]["values"]["buckets"]
-                buckets = [
-                    {
-                        "key": bucket["key"],
-                        "doc_count": bucket["doc_count"],
-                    }
-                    for bucket in buckets
-                ]
-                all_buckets = all_buckets + buckets
+                buckets = _extract_buckets(
+                    res["aggregations"]["values"]["buckets"]
+                )
+                all_buckets.extend(buckets)
 
         return all_buckets
 
