@@ -437,14 +437,11 @@ def test_buckets_partitioned(explorer: Explorer):
         .limit(10)
     )
     for ens in ensembles:
-        print(ens)
         tables = ens.tables.filter(tagname="summary", realization=True)
         res_p = tables._get_buckets_partitioned("data.spec.columns.keyword")
         res_c = tables._get_buckets("data.spec.columns.keyword")
         col_p = {b[0] for b in res_p}
         col_c = {b[0] for b in res_c}
-        print(f"len(col_p) = {len(col_p)}")
-        print(f"len(col_c) = {len(col_c)}")
 
         diff = col_p.symmetric_difference(col_c)
         assert len(diff) == 0
