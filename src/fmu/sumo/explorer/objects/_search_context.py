@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import warnings
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
@@ -229,6 +230,25 @@ def _build_composite_query(query, fields, size):
     }
 
 
+def _extract_buckets(bucketlist, field=None):
+    if field is not None:
+        return [
+            (
+                bucket["key"][field],
+                bucket["doc_count"],
+            )
+            for bucket in bucketlist
+        ]
+    else:
+        return [
+            (
+                bucket["key"],
+                bucket["doc_count"],
+            )
+            for bucket in bucketlist
+        ]
+
+
 def _extract_composite_results(res):
     aggs = res["aggregations"]["composite"]
     after_key = aggs.get("after_key")
@@ -343,12 +363,12 @@ class SearchContext:
             if len(must) == 1:
                 return must[0]
             else:
-                return {"bool": {"must": must}}
+                return {"bool": {"filter": must}}
         else:
             if len(must) == 0:
                 return {"bool": {"must_not": must_not}}
             else:
-                return {"bool": {"must": must, "must_not": must_not}}
+                return {"bool": {"filter": must, "must_not": must_not}}
 
     def _to_sumo(self, obj, blob=None) -> objects.Document:
         cls = obj["_source"]["class"]
@@ -758,7 +778,7 @@ class SearchContext:
             A List of unique values for a given field
         """
 
-        buckets_per_batch = 1000
+        buckets_per_batch = 10000
 
         # fast path: try without Pit
         query = _build_bucket_query_simple(
@@ -767,14 +787,7 @@ class SearchContext:
         res = self._sumo.post("/search", json=query).json()
         other_docs_count = res["aggregations"][field]["sum_other_doc_count"]
         if other_docs_count == 0:
-            buckets = res["aggregations"][field]["buckets"]
-            buckets = [
-                {
-                    "key": bucket["key"],
-                    "doc_count": bucket["doc_count"],
-                }
-                for bucket in buckets
-            ]
+            buckets = _extract_buckets(res["aggregations"][field]["buckets"])
             return buckets
 
         query = _build_bucket_query(self._query, field, buckets_per_batch)
@@ -787,23 +800,50 @@ class SearchContext:
                 )
                 res = self._sumo.post("/search", json=query).json()
                 pit.update_from_result(res)
-                buckets = res["aggregations"][field]["buckets"]
+                buckets = _extract_buckets(
+                    res["aggregations"][field]["buckets"], field
+                )
                 if len(buckets) == 0:
                     break
                 after_key = res["aggregations"][field]["after_key"]
-                buckets = [
-                    {
-                        "key": bucket["key"][field],
-                        "doc_count": bucket["doc_count"],
-                    }
-                    for bucket in buckets
-                ]
-                all_buckets = all_buckets + buckets
+                all_buckets.extend(buckets)
                 if len(buckets) < buckets_per_batch:
                     break
                 pass
 
         return all_buckets
+
+    def _get_buckets_partitioned(self, field: str) -> List[Dict]:
+        buckets_per_partition = 10000
+        nvals = self.metrics.cardinality(field)
+        num_partitions = math.ceil(nvals / buckets_per_partition)
+        all_buckets = []
+        with Pit(self._sumo, "1m") as pit:
+            for p in range(num_partitions):
+                qdoc = {
+                    "query": self._query,
+                    "size": 0,
+                    "aggs": {
+                        "values": {
+                            "terms": {
+                                "field": field,
+                                "include": {
+                                    "partition": p,
+                                    "num_partitions": num_partitions,
+                                },
+                                "size": buckets_per_partition,
+                            }
+                        }
+                    },
+                }
+                qdoc = pit.stamp_query(qdoc)
+                res = self._sumo.post("/search", json=qdoc).json()
+                buckets = _extract_buckets(
+                    res["aggregations"]["values"]["buckets"]
+                )
+                all_buckets.extend(buckets)
+
+        return sorted(all_buckets, key=lambda b: b[1])
 
     async def _get_buckets_async(
         self,
@@ -818,7 +858,7 @@ class SearchContext:
             A List of unique values for a given field
         """
 
-        buckets_per_batch = 1000
+        buckets_per_batch = 10000
 
         # fast path: try without Pit
         query = _build_bucket_query_simple(
@@ -827,14 +867,7 @@ class SearchContext:
         res = (await self._sumo.post_async("/search", json=query)).json()
         other_docs_count = res["aggregations"][field]["sum_other_doc_count"]
         if other_docs_count == 0:
-            buckets = res["aggregations"][field]["buckets"]
-            buckets = [
-                {
-                    "key": bucket["key"],
-                    "doc_count": bucket["doc_count"],
-                }
-                for bucket in buckets
-            ]
+            buckets = _extract_buckets(res["aggregations"][field]["buckets"])
             return buckets
 
         query = _build_bucket_query(self._query, field, buckets_per_batch)
@@ -848,23 +881,52 @@ class SearchContext:
                 res = await self._sumo.post_async("/search", json=query)
                 res = res.json()
                 pit.update_from_result(res)
-                buckets = res["aggregations"][field]["buckets"]
+                buckets = _extract_buckets(
+                    res["aggregations"][field]["buckets"], field
+                )
                 if len(buckets) == 0:
                     break
                 after_key = res["aggregations"][field]["after_key"]
-                buckets = [
-                    {
-                        "key": bucket["key"][field],
-                        "doc_count": bucket["doc_count"],
-                    }
-                    for bucket in buckets
-                ]
-                all_buckets = all_buckets + buckets
+                all_buckets.extend(buckets)
                 if len(buckets) < buckets_per_batch:
                     break
                 pass
 
         return all_buckets
+
+    async def _get_buckets_partitioned_async(self, field: str) -> List[Dict]:
+        buckets_per_partition = 10000
+        nvals = await self.metrics.cardinality_async(field)
+        num_partitions = math.ceil(nvals / buckets_per_partition)
+        all_buckets = []
+        async with Pit(self._sumo, "1m") as pit:
+            for p in range(num_partitions):
+                qdoc = {
+                    "query": self._query,
+                    "size": 0,
+                    "aggs": {
+                        "values": {
+                            "terms": {
+                                "field": field,
+                                "include": {
+                                    "partition": p,
+                                    "num_partitions": num_partitions,
+                                },
+                                "size": buckets_per_partition,
+                            }
+                        }
+                    },
+                }
+                qdoc = pit.stamp_query(qdoc)
+                res = (
+                    await self._sumo.post_async("/search", json=qdoc)
+                ).json()
+                buckets = _extract_buckets(
+                    res["aggregations"]["values"]["buckets"]
+                )
+                all_buckets.extend(buckets)
+
+        return sorted(all_buckets, key=lambda b: b[1])
 
     def get_field_values_and_counts(self, field: str) -> Dict[str, int]:
         """Get List of unique values with occurrence counts for a given field
@@ -877,7 +939,7 @@ class SearchContext:
         """
         if field not in self._field_values_and_counts:
             buckets = {
-                b["key"]: b["doc_count"] for b in self._get_buckets(field)
+                b[0]: b[1] for b in self._get_buckets_partitioned(field)
             }
             self._field_values_and_counts[field] = buckets
 
@@ -893,8 +955,8 @@ class SearchContext:
             A List of unique values for the given field
         """
         if field not in self._field_values:
-            buckets = self._get_buckets(field)
-            self._field_values[field] = [bucket["key"] for bucket in buckets]
+            buckets = self._get_buckets_partitioned(field)
+            self._field_values[field] = [bucket[0] for bucket in buckets]
 
         return self._field_values[field]
 
@@ -945,8 +1007,8 @@ class SearchContext:
         """
         if field not in self._field_values_and_counts:
             buckets = {
-                b["key"]: b["doc_count"]
-                for b in await self._get_buckets_async(field)
+                b[0]: b[1]
+                for b in await self._get_buckets_partitioned_async(field)
             }
             self._field_values_and_counts[field] = buckets
 
@@ -962,8 +1024,8 @@ class SearchContext:
             A List of unique values for the given field
         """
         if field not in self._field_values:
-            buckets = await self._get_buckets_async(field)
-            self._field_values[field] = [bucket["key"] for bucket in buckets]
+            buckets = await self._get_buckets_partitioned_async(field)
+            self._field_values[field] = [bucket[0] for bucket in buckets]
 
         return self._field_values[field]
 
