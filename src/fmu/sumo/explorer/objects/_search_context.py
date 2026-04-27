@@ -233,18 +233,18 @@ def _build_composite_query(query, fields, size):
 def _extract_buckets(bucketlist, field=None):
     if field is not None:
         return [
-            {
-                "key": bucket["key"][field],
-                "doc_count": bucket["doc_count"],
-            }
+            (
+                bucket["key"][field],
+                bucket["doc_count"],
+            )
             for bucket in bucketlist
         ]
     else:
         return [
-            {
-                "key": bucket["key"],
-                "doc_count": bucket["doc_count"],
-            }
+            (
+                bucket["key"],
+                bucket["doc_count"],
+            )
             for bucket in bucketlist
         ]
 
@@ -843,7 +843,7 @@ class SearchContext:
                 )
                 all_buckets.extend(buckets)
 
-        return sorted(all_buckets, key=lambda b: b["key"])
+        return sorted(all_buckets, key=lambda b: b[1])
 
     async def _get_buckets_async(
         self,
@@ -926,7 +926,7 @@ class SearchContext:
                 )
                 all_buckets.extend(buckets)
 
-        return sorted(all_buckets, key=lambda b: b["key"])
+        return sorted(all_buckets, key=lambda b: b[1])
 
     def get_field_values_and_counts(self, field: str) -> Dict[str, int]:
         """Get List of unique values with occurrence counts for a given field
@@ -939,8 +939,7 @@ class SearchContext:
         """
         if field not in self._field_values_and_counts:
             buckets = {
-                b["key"]: b["doc_count"]
-                for b in self._get_buckets_partitioned(field)
+                b[0]: b[1] for b in self._get_buckets_partitioned(field)
             }
             self._field_values_and_counts[field] = buckets
 
@@ -957,7 +956,7 @@ class SearchContext:
         """
         if field not in self._field_values:
             buckets = self._get_buckets_partitioned(field)
-            self._field_values[field] = [bucket["key"] for bucket in buckets]
+            self._field_values[field] = [bucket[0] for bucket in buckets]
 
         return self._field_values[field]
 
@@ -1008,7 +1007,7 @@ class SearchContext:
         """
         if field not in self._field_values_and_counts:
             buckets = {
-                b["key"]: b["doc_count"]
+                b[0]: b[1]
                 for b in await self._get_buckets_partitioned_async(field)
             }
             self._field_values_and_counts[field] = buckets
@@ -1026,7 +1025,7 @@ class SearchContext:
         """
         if field not in self._field_values:
             buckets = await self._get_buckets_partitioned_async(field)
-            self._field_values[field] = [bucket["key"] for bucket in buckets]
+            self._field_values[field] = [bucket[0] for bucket in buckets]
 
         return self._field_values[field]
 
