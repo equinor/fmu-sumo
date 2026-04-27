@@ -843,7 +843,7 @@ class SearchContext:
                 )
                 all_buckets.extend(buckets)
 
-        return all_buckets
+        return sorted(all_buckets, key=lambda b: b["key"])
 
     async def _get_buckets_async(
         self,
@@ -926,7 +926,7 @@ class SearchContext:
                 )
                 all_buckets.extend(buckets)
 
-        return all_buckets
+        return sorted(all_buckets, key=lambda b: b["key"])
 
     def get_field_values_and_counts(self, field: str) -> Dict[str, int]:
         """Get List of unique values with occurrence counts for a given field
