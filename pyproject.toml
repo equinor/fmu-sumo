@@ -42,7 +42,7 @@ test = [
   "pytest-timeout",
 ]
 docs = [
-  "sphinx==6.2.1",
+  "sphinx==9.0.4",
   "sphinx-rtd-theme",
   "autoapi",
   "sphinx-autodoc-typehints",
