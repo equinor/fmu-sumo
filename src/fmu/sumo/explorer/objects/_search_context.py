@@ -230,6 +230,22 @@ def _build_composite_query(query, fields, size):
     }
 
 
+def _build_composite_buckets_query(query, sources, sub_aggs, size):
+    composite_agg = {
+        "composite": {
+            "size": size,
+            "sources": sources,
+        }
+    }
+    if sub_aggs:
+        composite_agg["aggs"] = sub_aggs
+    return {
+        "size": 0,
+        "query": query,
+        "aggs": {"composite": composite_agg},
+    }
+
+
 def _extract_buckets(bucketlist, field=None):
     if field is not None:
         return [
@@ -254,6 +270,12 @@ def _extract_composite_results(res):
     after_key = aggs.get("after_key")
     buckets = [bucket["key"] for bucket in aggs["buckets"]]
     return buckets, after_key
+
+
+def _extract_composite_buckets(res):
+    aggs = res["aggregations"]["composite"]
+    after_key = aggs.get("after_key")
+    return aggs["buckets"], after_key
 
 
 def _set_after_key(query, field, after_key):
@@ -1109,6 +1131,98 @@ class SearchContext:
                 res = res.json()
                 pit.update_from_result(res)
                 buckets, after_key = _extract_composite_results(res)
+                if len(buckets) == 0:
+                    break
+                all_buckets = all_buckets + buckets
+                if len(buckets) < buckets_per_batch:
+                    break
+                pass
+
+        return all_buckets
+
+    def get_composite_buckets(
+        self,
+        sources: List[Dict[str, Any]],
+        sub_aggs: Optional[Dict[str, Any]] = None,
+    ) -> List[Dict[str, Any]]:
+        """Paginated composite aggregation returning the full buckets.
+
+        Unlike `get_composite_agg`, which returns only the composite keys, this returns the
+        complete bucket dictionaries (including `doc_count` and any sub-aggregation results), and
+        accepts raw Elasticsearch composite sources as well as optional metric sub-aggregations.
+
+        Arguments:
+            - sources: raw Elasticsearch composite sources, e.g.
+                [{"name": {"terms": {"field": "data.name.keyword"}}},
+                 {"t0": {"terms": {"field": "data.time.t0.value", "missing_bucket": True}}}]
+            - sub_aggs: optional sub-aggregations applied within each bucket, e.g.
+                {"value_min": {"min": {"field": "data.spec.value_statistics.min"}}}
+
+        Returns:
+            A list of bucket dictionaries, each with "key", "doc_count" and any sub-aggregation
+            results.
+        """
+        buckets_per_batch = 1000
+        query = _build_composite_buckets_query(
+            self._query, sources, sub_aggs, buckets_per_batch
+        )
+        all_buckets: List[Dict[str, Any]] = []
+        after_key = None
+        with Pit(self._sumo, "1m") as pit:
+            while True:
+                query = pit.stamp_query(
+                    _set_after_key(query, "composite", after_key)
+                )
+                res = self._sumo.post("/search", json=query)
+                res = res.json()
+                pit.update_from_result(res)
+                buckets, after_key = _extract_composite_buckets(res)
+                if len(buckets) == 0:
+                    break
+                all_buckets = all_buckets + buckets
+                if len(buckets) < buckets_per_batch:
+                    break
+                pass
+
+        return all_buckets
+
+    async def get_composite_buckets_async(
+        self,
+        sources: List[Dict[str, Any]],
+        sub_aggs: Optional[Dict[str, Any]] = None,
+    ) -> List[Dict[str, Any]]:
+        """Paginated composite aggregation returning the full buckets.
+
+        Unlike `get_composite_agg_async`, which returns only the composite keys, this returns the
+        complete bucket dictionaries (including `doc_count` and any sub-aggregation results), and
+        accepts raw Elasticsearch composite sources as well as optional metric sub-aggregations.
+
+        Arguments:
+            - sources: raw Elasticsearch composite sources, e.g.
+                [{"name": {"terms": {"field": "data.name.keyword"}}},
+                 {"t0": {"terms": {"field": "data.time.t0.value", "missing_bucket": True}}}]
+            - sub_aggs: optional sub-aggregations applied within each bucket, e.g.
+                {"value_min": {"min": {"field": "data.spec.value_statistics.min"}}}
+
+        Returns:
+            A list of bucket dictionaries, each with "key", "doc_count" and any sub-aggregation
+            results.
+        """
+        buckets_per_batch = 1000
+        query = _build_composite_buckets_query(
+            self._query, sources, sub_aggs, buckets_per_batch
+        )
+        all_buckets: List[Dict[str, Any]] = []
+        after_key = None
+        async with Pit(self._sumo, "1m") as pit:
+            while True:
+                query = pit.stamp_query(
+                    _set_after_key(query, "composite", after_key)
+                )
+                res = await self._sumo.post_async("/search", json=query)
+                res = res.json()
+                pit.update_from_result(res)
+                buckets, after_key = _extract_composite_buckets(res)
                 if len(buckets) == 0:
                     break
                 all_buckets = all_buckets + buckets
