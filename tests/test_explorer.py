@@ -446,19 +446,30 @@ def test_buckets_partitioned(explorer: Explorer):
         diff = col_p.symmetric_difference(col_c)
         assert len(diff) == 0
 
+
 def test_get_composite_buckets(explorer: Explorer, case_uuid: str):
-    context = explorer.filter(uuid=case_uuid, ensemble="iter-0",realization=True).surfaces
-    sources: List[Dict[str, Any]] = [
+    context = explorer.filter(
+        uuid=case_uuid, ensemble="iter-0", realization=True
+    ).surfaces
+    sources = [
         {"k_name": {"terms": {"field": "data.name.keyword"}}},
         {"k_tagname": {"terms": {"field": "data.tagname.keyword"}}},
     ]
-    sub_aggs: Dict[str, Any] = {
+    sub_aggs = {
         "agg_value_min": {"min": {"field": "data.bbox.zmin"}},
         "agg_value_max": {"max": {"field": "data.bbox.zmax"}},
     }
     buckets = context.get_composite_buckets(sources, sub_aggs)
     assert len(buckets) == 37
-    bucket = next((b for b in buckets if b["key"]["k_name"] == "Therys Fm. Top" and b["key"]["k_tagname"] == "DS_extract_geogrid"), None)
+    bucket = next(
+        (
+            b
+            for b in buckets
+            if b["key"]["k_name"] == "Therys Fm. Top"
+            and b["key"]["k_tagname"] == "DS_extract_geogrid"
+        ),
+        None,
+    )
     assert bucket is not None
     min_value = bucket["agg_value_min"]["value"]
     max_value = bucket["agg_value_max"]["value"]
