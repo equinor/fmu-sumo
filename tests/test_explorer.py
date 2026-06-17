@@ -465,13 +465,13 @@ def test_get_composite_buckets(explorer: Explorer, case_uuid: str):
         (
             b
             for b in buckets
-            if b["key"]["k_name"] == "Therys Fm. Top"
-            and b["key"]["k_tagname"] == "DS_extract_geogrid"
+            if b["key"]["k_name"] == "Therys Fm."
+            and b["key"]["k_tagname"] == "PHIT_Average"
         ),
         None,
     )
     assert bucket is not None
     min_value = bucket["agg_value_min"]["value"]
     max_value = bucket["agg_value_max"]["value"]
-    assert min_value == pytest.approx(1570.96, 1e-3)
-    assert max_value == pytest.approx(1967.40, 1e-3)
+    assert min_value == 0
+    assert max_value == pytest.approx(0.34, 0.001)
