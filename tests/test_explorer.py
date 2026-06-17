@@ -461,6 +461,8 @@ def test_get_composite_buckets(explorer: Explorer, case_uuid: str):
     }
     buckets = context.get_composite_buckets(sources, sub_aggs)
     assert len(buckets) == 37
+    # Every bucket should carry the full payload, not just the composite key.
+    assert all(b["doc_count"] > 0 for b in buckets)
     bucket = next(
         (
             b
@@ -475,3 +477,29 @@ def test_get_composite_buckets(explorer: Explorer, case_uuid: str):
     max_value = bucket["agg_value_max"]["value"]
     assert min_value == 0
     assert max_value == pytest.approx(0.34, 0.001)
+
+
+def test_get_composite_buckets_missing_bucket(
+    explorer: Explorer, case_uuid: str
+):
+    context = explorer.filter(
+        uuid=case_uuid, ensemble="iter-0", realization=True
+    ).surfaces
+    # "missing_bucket" lets documents without a time.t0 value fold into a single
+    # bucket (key value None) instead of being dropped from the aggregation.
+    sources = [
+        {"k_name": {"terms": {"field": "data.name.keyword"}}},
+        {
+            "k_t0": {
+                "terms": {
+                    "field": "data.time.t0.value",
+                    "missing_bucket": True,
+                }
+            }
+        },
+    ]
+    buckets = context.get_composite_buckets(sources)
+    assert len(buckets) > 0
+    # At least one surface in this ensemble has no t0 timestamp, so the missing
+    # bucket (key None) must be present.
+    assert any(b["key"]["k_t0"] is None for b in buckets)
