@@ -155,6 +155,7 @@ _filterspec = {
     "tagname": [_gen_filter_gen, "data.tagname.keyword"],
     "dataformat": [_gen_filter_gen, "data.format.keyword"],
     "ensemble": [_gen_filter_gen, "fmu.ensemble.name.keyword"],
+    "tags": [_gen_filter_gen, "tags"],
     "realization": [_gen_filter_gen, "fmu.realization.id"],
     "aggregation": [_gen_filter_gen, "fmu.aggregation.operation.keyword"],
     "stage": [_gen_filter_stage, "fmu.context.stage.keyword"],
