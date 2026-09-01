@@ -155,6 +155,7 @@ _filterspec = {
     "tagname": [_gen_filter_gen, "data.tagname.keyword"],
     "dataformat": [_gen_filter_gen, "data.format.keyword"],
     "ensemble": [_gen_filter_gen, "fmu.ensemble.name.keyword"],
+    "tag": [_gen_filter_gen, "tags.keyword"],
     "realization": [_gen_filter_gen, "fmu.realization.id"],
     "aggregation": [_gen_filter_gen, "fmu.aggregation.operation.keyword"],
     "stage": [_gen_filter_stage, "fmu.context.stage.keyword"],
@@ -2150,6 +2151,16 @@ class SearchContext:
     async def dataformats_async(self) -> List[str]:
         """List of unique data.format values."""
         return await self.get_field_values_async("data.format.keyword")
+
+    @property
+    def tags(self) -> List[str]:
+        """List of unique object tags."""
+        return self.get_field_values("tags.keyword")
+
+    @property
+    async def tags_async(self) -> List[str]:
+        """List of unique object tags."""
+        return await self.get_field_values_async("tags.keyword")
 
     @property
     def tagnames(self) -> List[str]:
