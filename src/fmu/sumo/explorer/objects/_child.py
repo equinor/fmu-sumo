@@ -1,7 +1,6 @@
 """module containing class for child object"""
 
 from io import BytesIO
-from typing import Dict, List, Tuple, Union
 
 from sumo.wrapper import SumoClient
 
@@ -11,7 +10,7 @@ from ._document import Document
 class Child(Document):
     """Class representing a child object in Sumo"""
 
-    def __init__(self, sumo: SumoClient, metadata: Dict, blob=None) -> None:
+    def __init__(self, sumo: SumoClient, metadata: dict, blob=None) -> None:
         """
         Args:
             sumo (SumoClient): connection to Sumo
@@ -70,7 +69,7 @@ class Child(Document):
         return self._blob
 
     @property
-    def timestamp(self) -> Union[str, None]:
+    def timestamp(self) -> str | None:
         """Object timestmap data"""
         t0 = self._get_property(["data", "time", "t0", "value"])
         t1 = self._get_property(["data", "time", "t1", "value"])
@@ -81,7 +80,7 @@ class Child(Document):
         return None
 
     @property
-    def interval(self) -> Union[str, Tuple[str, str], None]:
+    def interval(self) -> str | tuple[str, str] | None:
         """Object interval data"""
         t0 = self._get_property(["data", "time", "t0", "value"])
         t1 = self._get_property(["data", "time", "t1", "value"])
@@ -98,12 +97,12 @@ class Child(Document):
         )
 
     @property
-    def spec(self) -> Dict:
+    def spec(self) -> dict:
         """Object spec data"""
         return self.get_property("data.spec")
 
     @property
-    def bbox(self) -> Dict:
+    def bbox(self) -> dict:
         """Object boundary-box data"""
         return self.get_property("data.bbox")
 
@@ -158,7 +157,7 @@ class Child(Document):
         return self.get_property("data.stratigraphic")
 
     @property
-    def columns(self) -> List[str]:
+    def columns(self) -> list[str]:
         """Object table columns"""
         return self.get_property("data.spec.columns")
 

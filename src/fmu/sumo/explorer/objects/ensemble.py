@@ -1,6 +1,5 @@
 """Module for (pseudo) ensemble class."""
 
-from typing import Dict, Optional
 
 from sumo.wrapper import SumoClient
 
@@ -12,7 +11,7 @@ class Ensemble(Document, SearchContext):
     """Class for representing an ensemble in Sumo."""
 
     def __init__(
-        self, sumo: SumoClient, metadata: Dict, blob: Optional[bytes] = None
+        self, sumo: SumoClient, metadata: dict, blob: bytes | None = None
     ):
         assert blob is None
         Document.__init__(self, metadata)
@@ -21,7 +20,6 @@ class Ensemble(Document, SearchContext):
             sumo,
             must=[{"term": {"fmu.ensemble.uuid.keyword": self.uuid}}],
         )
-        pass
 
     def __str__(self):
         return (

@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 import warnings
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Union
 
 import deprecation
 import httpx
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 # Type aliases
-SelectArg = Union[bool, str, Dict[str, Union[str, List[str]]], List[str]]
+SelectArg = Union[bool, str, dict[str, str | list[str]], list[str]]
 
 
 def _gen_filter_none():
@@ -184,7 +184,6 @@ def _gen_filters(spec):
             res[name] = gen()
         else:
             res[name] = gen(param)
-            pass
     return res
 
 
@@ -282,14 +281,12 @@ def _extract_composite_buckets(res):
 def _set_after_key(query, field, after_key):
     if after_key is not None:
         query["aggs"][field]["composite"]["after"] = after_key
-        pass
     return query
 
 
 def _set_search_after(query, after):
     if after is not None:
         query["search_after"] = after
-        pass
     return query
 
 
@@ -298,7 +295,6 @@ class Pit:
         self._sumo = sumo
         self._keepalive = keepalive
         self._id = None
-        return
 
     def __enter__(self):
         res = self._sumo.post("/pit", params={"keep-alive": self._keepalive})
@@ -308,7 +304,6 @@ class Pit:
     def __exit__(self, *_):
         if self._id is not None:
             self._sumo.delete("/pit", params={"id": self._id})
-            pass
         return False
 
     async def __aenter__(self):
@@ -321,7 +316,6 @@ class Pit:
     async def __aexit__(self, *_):
         if self._id is not None:
             await self._sumo.delete_async("/pit", params={"id": self._id})
-            pass
         return False
 
     def stamp_query(self, query):
@@ -330,15 +324,14 @@ class Pit:
 
     def update_from_result(self, result):
         self._id = result["pit_id"]
-        return
 
 
 class SearchContext:
     def __init__(
         self,
         sumo: SumoClient,
-        must: List = [],
-        must_not: List = [],
+        must: list = [],
+        must_not: list = [],
         hidden=False,
         visible=True,
     ):
@@ -357,7 +350,6 @@ class SearchContext:
         }
         self._sort = {"_doc": {"order": "asc"}}
         self._limit = None
-        return
 
     def __str__(self):
         cls = self.__class__.__name__
@@ -381,7 +373,6 @@ class SearchContext:
             must_not.append({"term": {"_sumo.hidden": True}})
         elif not self._visible and self._hidden:
             must.append({"term": {"_sumo.hidden": True}})
-            pass
         if len(must_not) == 0:
             if len(must) == 1:
                 return must[0]
@@ -471,9 +462,6 @@ class SearchContext:
                     all_hits.extend([hit["_id"] for hit in hits])
                 else:
                     all_hits.extend(hits)
-                    pass
-                pass
-            pass
         return all_hits
 
     def _search_all(self, select: SelectArg = False):
@@ -518,9 +506,6 @@ class SearchContext:
                     all_hits.extend([hit["_id"] for hit in hits])
                 else:
                     all_hits.extend(hits)
-                    pass
-                pass
-            pass
         return all_hits
 
     async def _search_all_async(self, select: SelectArg = False):
@@ -553,7 +538,6 @@ class SearchContext:
     def __next__(self):
         if self._hits is None:
             self._hits = self._search_all()
-            pass
         if self._curr_index < len(self._hits):
             uuid = self._hits[self._curr_index]
             self._maybe_prefetch(self._curr_index)
@@ -569,7 +553,6 @@ class SearchContext:
     async def __anext__(self):
         if self._hits is None:
             self._hits = await self._search_all_async()
-            pass
         if self._curr_index < len(self._hits):
             uuid = self._hits[self._curr_index]
             await self._maybe_prefetch_async(self._curr_index)
@@ -581,7 +564,6 @@ class SearchContext:
     def __getitem__(self, index):
         if self._hits is None:
             self._hits = self._getuuids()
-            pass
         self._maybe_prefetch(index)
         uuid = self._hits[index]
         return self.get_object(uuid)
@@ -589,7 +571,6 @@ class SearchContext:
     async def getitem_async(self, index):
         if self._hits is None:
             self._hits = await self._getuuids_async()
-            pass
         await self._maybe_prefetch_async(index)
         uuid = self._hits[index]
         return await self.get_object_async(uuid)
@@ -645,12 +626,9 @@ class SearchContext:
             slct = {}
             if inc is not None:
                 slct["includes"] = extreq(inc)
-                pass
             if exc is not None:
                 slct["excludes"] = exc
-                pass
             self._select = slct
-            pass
         self._cache.clear()
         return self
 
@@ -760,9 +738,9 @@ class SearchContext:
 
     def get_objects(
         self,
-        uuids: List[str],
+        uuids: list[str],
         select: SelectArg,
-    ) -> List[Dict]:
+    ) -> list[dict]:
         size = (
             1000
             if select is False
@@ -775,8 +753,8 @@ class SearchContext:
         )
 
     async def get_objects_async(
-        self, uuids: List[str], select: SelectArg
-    ) -> List[Dict]:
+        self, uuids: list[str], select: SelectArg
+    ) -> list[dict]:
         size = (
             1000
             if select is False
@@ -791,7 +769,7 @@ class SearchContext:
     def _get_buckets(
         self,
         field: str,
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """Get a List of buckets
 
         Arguments:
@@ -832,11 +810,10 @@ class SearchContext:
                 all_buckets.extend(buckets)
                 if len(buckets) < buckets_per_batch:
                     break
-                pass
 
         return all_buckets
 
-    def _get_buckets_partitioned(self, field: str) -> List[Dict]:
+    def _get_buckets_partitioned(self, field: str) -> list[dict]:
         buckets_per_partition = 10000
         nvals = self.metrics.cardinality(field)
         num_partitions = math.ceil(nvals / buckets_per_partition)
@@ -871,7 +848,7 @@ class SearchContext:
     async def _get_buckets_async(
         self,
         field: str,
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """Get a List of buckets
 
         Arguments:
@@ -913,11 +890,10 @@ class SearchContext:
                 all_buckets.extend(buckets)
                 if len(buckets) < buckets_per_batch:
                     break
-                pass
 
         return all_buckets
 
-    async def _get_buckets_partitioned_async(self, field: str) -> List[Dict]:
+    async def _get_buckets_partitioned_async(self, field: str) -> list[dict]:
         buckets_per_partition = 10000
         nvals = await self.metrics.cardinality_async(field)
         num_partitions = math.ceil(nvals / buckets_per_partition)
@@ -951,7 +927,7 @@ class SearchContext:
 
         return sorted(all_buckets, key=lambda b: b[1])
 
-    def get_field_values_and_counts(self, field: str) -> Dict[str, int]:
+    def get_field_values_and_counts(self, field: str) -> dict[str, int]:
         """Get List of unique values with occurrence counts for a given field
 
         Arguments:
@@ -968,7 +944,7 @@ class SearchContext:
 
         return self._field_values_and_counts[field]
 
-    def get_field_values(self, field: str) -> List:
+    def get_field_values(self, field: str) -> list:
         """Get List of unique values for a given field
 
         Arguments:
@@ -986,7 +962,7 @@ class SearchContext:
     @deprecation.deprecated(
         details="Use the method 'get_field_values' instead."
     )
-    def _get_field_values(self, field: str) -> List:
+    def _get_field_values(self, field: str) -> list:
         """Get List of unique values for a given field
 
         Arguments:
@@ -1019,7 +995,7 @@ class SearchContext:
 
     async def get_field_values_and_counts_async(
         self, field: str
-    ) -> Dict[str, int]:
+    ) -> dict[str, int]:
         """Get List of unique values with occurrence counts for a given field
 
         Arguments:
@@ -1037,7 +1013,7 @@ class SearchContext:
 
         return self._field_values_and_counts[field]
 
-    async def get_field_values_async(self, field: str) -> List:
+    async def get_field_values_async(self, field: str) -> list:
         """Get List of unique values for a given field
 
         Arguments:
@@ -1055,7 +1031,7 @@ class SearchContext:
     @deprecation.deprecated(
         details="Use the method 'get_field_values' instead."
     )
-    async def _get_field_values_async(self, field: str) -> List:
+    async def _get_field_values_async(self, field: str) -> list:
         """Get List of unique values for a given field
 
         Arguments:
@@ -1095,7 +1071,7 @@ class SearchContext:
         }
     }
 
-    def get_composite_agg(self, fields: Dict[str, str]):
+    def get_composite_agg(self, fields: dict[str, str]):
         buckets_per_batch = 1000
         query = _build_composite_query(self._query, fields, buckets_per_batch)
         all_buckets = []
@@ -1114,11 +1090,10 @@ class SearchContext:
                 all_buckets = all_buckets + buckets
                 if len(buckets) < buckets_per_batch:
                     break
-                pass
 
         return all_buckets
 
-    async def get_composite_agg_async(self, fields: Dict[str, str]):
+    async def get_composite_agg_async(self, fields: dict[str, str]):
         buckets_per_batch = 1000
         query = _build_composite_query(self._query, fields, buckets_per_batch)
         all_buckets = []
@@ -1137,15 +1112,14 @@ class SearchContext:
                 all_buckets = all_buckets + buckets
                 if len(buckets) < buckets_per_batch:
                     break
-                pass
 
         return all_buckets
 
     def get_composite_buckets(
         self,
-        sources: List[Dict[str, Any]],
-        sub_aggs: Optional[Dict[str, Any]] = None,
-    ) -> List[Dict[str, Any]]:
+        sources: list[dict[str, Any]],
+        sub_aggs: dict[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
         """Paginated composite aggregation returning the full buckets.
 
         Unlike `get_composite_agg`, which returns only the composite keys, this returns the
@@ -1167,7 +1141,7 @@ class SearchContext:
         query = _build_composite_buckets_query(
             self._query, sources, sub_aggs, buckets_per_batch
         )
-        all_buckets: List[Dict[str, Any]] = []
+        all_buckets: list[dict[str, Any]] = []
         after_key = None
         with Pit(self._sumo, "1m") as pit:
             while True:
@@ -1183,15 +1157,14 @@ class SearchContext:
                 all_buckets = all_buckets + buckets
                 if len(buckets) < buckets_per_batch:
                     break
-                pass
 
         return all_buckets
 
     async def get_composite_buckets_async(
         self,
-        sources: List[Dict[str, Any]],
-        sub_aggs: Optional[Dict[str, Any]] = None,
-    ) -> List[Dict[str, Any]]:
+        sources: list[dict[str, Any]],
+        sub_aggs: dict[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
         """Paginated composite aggregation returning the full buckets.
 
         Unlike `get_composite_agg_async`, which returns only the composite keys, this returns the
@@ -1213,7 +1186,7 @@ class SearchContext:
         query = _build_composite_buckets_query(
             self._query, sources, sub_aggs, buckets_per_batch
         )
-        all_buckets: List[Dict[str, Any]] = []
+        all_buckets: list[dict[str, Any]] = []
         after_key = None
         async with Pit(self._sumo, "1m") as pit:
             while True:
@@ -1229,7 +1202,6 @@ class SearchContext:
                 all_buckets = all_buckets + buckets
                 if len(buckets) < buckets_per_batch:
                     break
-                pass
 
         return all_buckets
 
@@ -1321,7 +1293,7 @@ class SearchContext:
         )
 
     @property
-    def template_paths(self) -> List[str]:
+    def template_paths(self) -> list[str]:
         return {obj.template_path for obj in self}
 
     @property
@@ -1330,7 +1302,7 @@ class SearchContext:
         return objects.Metrics(self)
 
     @property
-    def timestamps(self) -> List[str]:
+    def timestamps(self) -> list[str]:
         """List of unique timestamps in SearchContext"""
         ts = self.filter(complex=self._timestamp_query).get_field_values(
             "data.time.t0.value"
@@ -1338,7 +1310,7 @@ class SearchContext:
         return [datetime.fromtimestamp(t / 1000).isoformat() for t in ts]
 
     @property
-    async def timestamps_async(self) -> List[str]:
+    async def timestamps_async(self) -> list[str]:
         """List of unique timestamps in SearchContext"""
         ts = await self.filter(
             complex=self._timestamp_query
@@ -1372,7 +1344,7 @@ class SearchContext:
     }
 
     @property
-    def intervals(self) -> List[Tuple]:
+    def intervals(self) -> list[tuple]:
         """List of unique intervals in SearchContext"""
         res = self._sumo.post(
             "/search",
@@ -1386,7 +1358,7 @@ class SearchContext:
         return self._extract_intervals(res)
 
     @property
-    async def intervals_async(self) -> List[Tuple]:
+    async def intervals_async(self) -> list[tuple]:
         """List of unique intervals in SearchContext"""
         res = await self._sumo.post_async(
             "/search",
@@ -1399,7 +1371,7 @@ class SearchContext:
 
         return self._extract_intervals(res)
 
-    def filter(self, **kwargs) -> "SearchContext":
+    def filter(self, **kwargs) -> SearchContext:
         """Filter SearchContext"""
 
         must = self._must[:]
@@ -1663,7 +1635,7 @@ class SearchContext:
         """
         return await self._get_object_by_class_and_uuid_async("table", uuid)
 
-    def __prepare_verify_aggregation_query(self) -> Dict:
+    def __prepare_verify_aggregation_query(self) -> dict:
         return {
             "query": self._query,
             "size": 0,
@@ -1684,7 +1656,7 @@ class SearchContext:
 
     def __verify_aggregation_operation(
         self, sres
-    ) -> Tuple[str, str, str, str, int]:
+    ) -> tuple[str, str, str, str, int]:
         tot_hits = sres["hits"]["total"]["value"]
         if tot_hits == 0:
             raise Exception("No matching realizations found.")
@@ -1716,7 +1688,7 @@ class SearchContext:
 
     def _verify_aggregation_operation(
         self, columns
-    ) -> Tuple[str, str, str, str, Optional[List[str]]]:
+    ) -> tuple[str, str, str, str, list[str] | None]:
         sc = self if columns is None else self.filter(column=columns)
         query = sc.__prepare_verify_aggregation_query()
         sres = sc._sumo.post("/search", json=query).json()
@@ -1831,7 +1803,7 @@ class SearchContext:
 
     async def _verify_aggregation_operation_async(
         self, columns
-    ) -> Tuple[str, str, str, str, Optional[List[str]]]:
+    ) -> tuple[str, str, str, str, list[str] | None]:
         sc = self if columns is None else self.filter(column=columns)
         query = sc.__prepare_verify_aggregation_query()
         sres = (await self._sumo.post_async("/search", json=query)).json()
@@ -2031,196 +2003,196 @@ class SearchContext:
         return self.aggregate(operation="p90")
 
     @property
-    def realizationids(self) -> List[int]:
+    def realizationids(self) -> list[int]:
         """List of unique realization ids."""
         return self.get_field_values("fmu.realization.id")
 
     @property
-    async def realizationids_async(self) -> List[int]:
+    async def realizationids_async(self) -> list[int]:
         """List of unique realization ids."""
         return await self.get_field_values_async("fmu.realization.id")
 
     @property
-    def stratcolumnidentifiers(self) -> List[str]:
+    def stratcolumnidentifiers(self) -> list[str]:
         """List of unique stratigraphic column names."""
         return self.get_field_values(
             "masterdata.smda.stratigraphic_column.identifier.keyword"
         )
 
     @property
-    async def stratcolumnidentifiers_async(self) -> List[str]:
+    async def stratcolumnidentifiers_async(self) -> list[str]:
         """List of unique stratigraphic column names."""
         return await self.get_field_values_async(
             "masterdata.smda.stratigraphic_column.identifier.keyword"
         )
 
     @property
-    def fieldidentifiers(self) -> List[str]:
+    def fieldidentifiers(self) -> list[str]:
         """List of unique field names."""
         return self.get_field_values(
             "masterdata.smda.field.identifier.keyword"
         )
 
     @property
-    async def fieldidentifiers_async(self) -> List[str]:
+    async def fieldidentifiers_async(self) -> list[str]:
         """List of unique field names."""
         return await self.get_field_values_async(
             "masterdata.smda.field.identifier.keyword"
         )
 
     @property
-    def users(self) -> List[str]:
+    def users(self) -> list[str]:
         """List of unique user names."""
         return self.get_field_values("fmu.case.user.id.keyword")
 
     @property
-    async def users_async(self) -> List[str]:
+    async def users_async(self) -> list[str]:
         """List of unique user names."""
         return await self.get_field_values_async("fmu.case.user.id.keyword")
 
     @property
-    def statuses(self) -> List[str]:
+    def statuses(self) -> list[str]:
         """List of unique case statuses."""
         return self.get_field_values("_sumo.status.keyword")
 
     @property
-    async def statuses_async(self) -> List[str]:
+    async def statuses_async(self) -> list[str]:
         """List of unique case statuses."""
         return await self.get_field_values_async("_sumo.status.keyword")
 
     @property
-    def columns(self) -> List[str]:
+    def columns(self) -> list[str]:
         """List of unique column names."""
         return self.get_field_values("data.spec.columns.keyword")
 
     @property
-    async def columns_async(self) -> List[str]:
+    async def columns_async(self) -> list[str]:
         """List of unique column names."""
         return await self.get_field_values_async("data.spec.columns.keyword")
 
     @property
-    def contents(self) -> List[str]:
+    def contents(self) -> list[str]:
         """List of unique contents."""
         return self.get_field_values("data.content.keyword")
 
     @property
-    async def contents_async(self) -> List[str]:
+    async def contents_async(self) -> list[str]:
         """List of unique contents."""
         return await self.get_field_values_async("data.content.keyword")
 
     @property
-    def vertical_domains(self) -> List[str]:
+    def vertical_domains(self) -> list[str]:
         """List of unique object vertical domains."""
         return self.get_field_values("data.vertical_domain.keyword")
 
     @property
-    async def vertical_domains_async(self) -> List[str]:
+    async def vertical_domains_async(self) -> list[str]:
         """List of unique object vertical domains."""
         return await self.get_field_values_async(
             "data.vertical_domain.keyword"
         )
 
     @property
-    def stages(self) -> List[str]:
+    def stages(self) -> list[str]:
         """List of unique stages."""
         return self.get_field_values("fmu.context.stage.keyword")
 
     @property
-    async def stages_async(self) -> List[str]:
+    async def stages_async(self) -> list[str]:
         """List of unique stages."""
         return await self.get_field_values_async("fmu.context.stage.keyword")
 
     @property
-    def aggregations(self) -> List[str]:
+    def aggregations(self) -> list[str]:
         """List of unique object aggregation operations."""
         return self.get_field_values("fmu.aggregation.operation.keyword")
 
     @property
-    async def aggregations_async(self) -> List[str]:
+    async def aggregations_async(self) -> list[str]:
         """List of unique object aggregation operations."""
         return await self.get_field_values_async(
             "fmu.aggregation.operation.keyword"
         )
 
     @property
-    def dataformats(self) -> List[str]:
+    def dataformats(self) -> list[str]:
         """List of unique data.format values."""
         return self.get_field_values("data.format.keyword")
 
     @property
-    async def dataformats_async(self) -> List[str]:
+    async def dataformats_async(self) -> list[str]:
         """List of unique data.format values."""
         return await self.get_field_values_async("data.format.keyword")
 
     @property
-    def tags(self) -> List[str]:
+    def tags(self) -> list[str]:
         """List of unique object tags."""
         return self.get_field_values("tags.keyword")
 
     @property
-    async def tags_async(self) -> List[str]:
+    async def tags_async(self) -> list[str]:
         """List of unique object tags."""
         return await self.get_field_values_async("tags.keyword")
 
     @property
-    def tagnames(self) -> List[str]:
+    def tagnames(self) -> list[str]:
         """List of unique object tagnames."""
         return self.get_field_values("data.tagname.keyword")
 
     @property
-    async def tagnames_async(self) -> List[str]:
+    async def tagnames_async(self) -> list[str]:
         """List of unique object tagnames."""
         return await self.get_field_values_async("data.tagname.keyword")
 
     @property
-    def names(self) -> List[str]:
+    def names(self) -> list[str]:
         """List of unique object names."""
         return self.get_field_values("data.name.keyword")
 
     @property
-    async def names_async(self) -> List[str]:
+    async def names_async(self) -> list[str]:
         """List of unique object names."""
         return await self.get_field_values_async("data.name.keyword")
 
     @property
-    def classes(self) -> List[str]:
+    def classes(self) -> list[str]:
         """List of class names."""
         return self.get_field_values("class.keyword")
 
     @property
-    async def classes_async(self) -> List[str]:
+    async def classes_async(self) -> list[str]:
         """List of class names."""
         return await self.get_field_values_async("class.keyword")
 
     @property
-    def standard_results(self) -> List[str]:
+    def standard_results(self) -> list[str]:
         """List of standard result names."""
         return self.get_field_values("data.standard_result.name.keyword")
 
     @property
-    async def standard_results_async(self) -> List[str]:
+    async def standard_results_async(self) -> list[str]:
         """List of standard result names."""
         return await self.get_field_values_async(
             "data.standard_result.name.keyword"
         )
 
     @property
-    def entities(self) -> List[str]:
+    def entities(self) -> list[str]:
         """List of entity uuids."""
         return self.get_field_values("fmu.entity.uuid.keyword")
 
     @property
-    async def entities_async(self) -> List[str]:
+    async def entities_async(self) -> list[str]:
         """List of entity uuids."""
         return await self.get_field_values_async("fmu.entity.uuid.keyword")
 
     @property
-    def asset_names(self) -> List[str]:
+    def asset_names(self) -> list[str]:
         """List of asset names."""
         return self.get_field_values("access.asset.name.keyword")
 
     @property
-    async def asset_names_async(self) -> List[str]:
+    async def asset_names_async(self) -> list[str]:
         """List of asset names."""
         return await self.get_field_values_async("access.asset.name.keyword")
 
@@ -2262,9 +2234,6 @@ Args:
                 ret = ret + f"    {name} ({typ})\n"
             else:
                 ret = ret + f'    {name} ({typ}): "{property}"\n'
-                pass
-            pass
-        pass
     ret = ret + "    has (Complex)\n"
     ret = ret + "    complex (Complex)\n"
     ret = (

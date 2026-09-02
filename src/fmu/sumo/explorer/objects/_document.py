@@ -1,7 +1,7 @@
 """Contains class for one document"""
 
 import re
-from typing import Any, Dict, List, Union
+from typing import Any
 
 _path_split_rx = re.compile(r"\]\.|\.|\[")
 
@@ -14,7 +14,7 @@ def _splitpath(path):
 class Document:
     """Class for representing a document in Sumo"""
 
-    def __init__(self, metadata: Dict) -> None:
+    def __init__(self, metadata: dict) -> None:
         self._uuid = metadata["_id"]
         self._metadata = metadata["_source"]
 
@@ -45,7 +45,7 @@ class Document:
         """
         return self._metadata
 
-    def _get_property(self, path: List[Union[str, int]]):
+    def _get_property(self, path: list[str | int]):
         curr = self._metadata
 
         for key in path:

@@ -404,7 +404,6 @@ def test_reference_realization(explorer: Explorer):
         refs = ens.reference_realizations
         assert len(refs) > 0
         assert len(set(refs.realizationids)) == len(refs)
-        pass
 
 
 def test_reference_realization_fallback(explorer: Explorer):
@@ -424,8 +423,6 @@ def test_reference_realization_fallback(explorer: Explorer):
             refids = refs.realizationids
             assert len(refids) == len(set(refids))
             assert len(set(refids).difference([0, 1])) == 0
-            pass
-        pass
 
 
 def test_buckets_partitioned(explorer: Explorer):

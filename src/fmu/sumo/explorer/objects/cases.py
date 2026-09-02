@@ -1,6 +1,5 @@
 """Module for searchcontext for collection of cases."""
 
-from typing import List
 
 from ._search_context import SearchContext
 
@@ -9,14 +8,13 @@ class Cases(SearchContext):
     def __init__(self, sc, uuids):
         super().__init__(sc._sumo, must=[{"ids": {"values": uuids}}])
         self._hits = uuids
-        return
 
     @property
-    def classes(self) -> List[str]:
+    def classes(self) -> list[str]:
         return ["case"]
 
     @property
-    async def classes_async(self) -> List[str]:
+    async def classes_async(self) -> list[str]:
         return ["case"]
 
     @property

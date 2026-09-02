@@ -1,6 +1,5 @@
 """Module containing class for cpgrid"""
 
-from typing import Dict
 
 from sumo.wrapper import SumoClient
 
@@ -11,7 +10,7 @@ from ._search_context import SearchContext
 class CPGrid(Child):
     """Class representing a cpgrid object in Sumo."""
 
-    def __init__(self, sumo: SumoClient, metadata: Dict, blob=None) -> None:
+    def __init__(self, sumo: SumoClient, metadata: dict, blob=None) -> None:
         """
         Args:
             sumo (SumoClient): connection to Sumo

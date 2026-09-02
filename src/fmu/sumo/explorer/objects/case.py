@@ -1,6 +1,5 @@
 """Module containing case class"""
 
-from typing import Dict
 
 from sumo.wrapper import SumoClient
 
@@ -8,7 +7,7 @@ from ._document import Document
 from ._search_context import SearchContext
 
 
-def _make_overview_query(id) -> Dict:
+def _make_overview_query(id) -> dict:
     return {
         "query": {"term": {"fmu.case.uuid.keyword": id}},
         "aggs": {
@@ -43,7 +42,7 @@ def _make_overview_query(id) -> Dict:
 class Case(Document, SearchContext):
     """Class for representing a case in Sumo"""
 
-    def __init__(self, sumo: SumoClient, metadata: Dict):
+    def __init__(self, sumo: SumoClient, metadata: dict):
         Document.__init__(self, metadata)
         SearchContext.__init__(
             self, sumo, must=[{"term": {"fmu.case.uuid.keyword": self.uuid}}]
@@ -52,7 +51,7 @@ class Case(Document, SearchContext):
         self._ensembles = None
 
     @property
-    def overview(self) -> Dict:
+    def overview(self) -> dict:
         """Overview of case contents."""
 
         def extract_bucket_keys(bucket, name):
