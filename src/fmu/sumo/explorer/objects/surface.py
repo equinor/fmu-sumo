@@ -1,6 +1,5 @@
 """Module containg class for surface"""
 
-from typing import Dict
 
 from sumo.wrapper import SumoClient
 
@@ -10,7 +9,7 @@ from ._child import Child
 class Surface(Child):
     """Class representing a surface object in Sumo"""
 
-    def __init__(self, sumo: SumoClient, metadata: Dict, blob=None) -> None:
+    def __init__(self, sumo: SumoClient, metadata: dict, blob=None) -> None:
         """
         Args:
             sumo (SumoClient): connection to Sumo

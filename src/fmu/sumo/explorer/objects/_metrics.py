@@ -1,7 +1,6 @@
 class Metrics:
     def __init__(self, search_context):
         self._search_context = search_context
-        return
 
     def _aggregate(self, op, **kwargs):
         aggs = {

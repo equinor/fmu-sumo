@@ -1,7 +1,6 @@
 """module containing class for table"""
 
 import logging
-from typing import Dict
 
 from sumo.wrapper import SumoClient
 
@@ -11,7 +10,7 @@ from ._child import Child
 class Table(Child):
     """Class representing a table object in Sumo"""
 
-    def __init__(self, sumo: SumoClient, metadata: Dict, blob=None) -> None:
+    def __init__(self, sumo: SumoClient, metadata: dict, blob=None) -> None:
         """
         Args:
             sumo (SumoClient): connection to Sumo
@@ -66,9 +65,6 @@ class Table(Child):
                         raise TypeError(
                             f"Unable to convert a blob of format {self.dataformat} to pandas table; tried csv, parquet and feather."
                         )
-                    pass
-                pass
-            pass
         return dataframe
 
     def to_pandas(self):
@@ -127,9 +123,6 @@ class Table(Child):
                         raise TypeError(
                             f"Unable to convert a blob of format {self.dataformat} to arrow; tried csv, parquet and feather."
                         )
-                    pass
-                pass
-            pass
         return arrowtable
 
     def to_arrow(self):

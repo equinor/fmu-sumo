@@ -1,6 +1,5 @@
 """Module for searchcontext for collection of realizations."""
 
-from typing import List
 
 from ._search_context import SearchContext
 
@@ -9,20 +8,19 @@ class Realizations(SearchContext):
     def __init__(self, sc, uuids):
         super().__init__(sc._sumo, must=[{"ids": {"values": uuids}}])
         self._hits = uuids
-        return
 
     @property
-    def classes(self) -> List[str]:
+    def classes(self) -> list[str]:
         return ["realization"]
 
     @property
-    async def classes_async(self) -> List[str]:
+    async def classes_async(self) -> list[str]:
         return ["realization"]
 
     @property
-    def realizationids(self) -> List[int]:
+    def realizationids(self) -> list[int]:
         return self.get_field_values("fmu.realization.id")
 
     @property
-    async def realizationids_async(self) -> List[int]:
+    async def realizationids_async(self) -> list[int]:
         return await self.get_field_values_async("fmu.realization.id")

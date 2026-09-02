@@ -1,7 +1,6 @@
 """Module with classes handling time filtering"""
 
 from enum import Enum
-from typing import Optional
 
 
 class TimeType(Enum):
@@ -25,8 +24,8 @@ class TimeFilter:
     def __init__(
         self,
         time_type: TimeType,
-        start: Optional[str] = None,
-        end: Optional[str] = None,
+        start: str | None = None,
+        end: str | None = None,
         overlap: bool = False,
         exact: bool = False,
     ) -> None:

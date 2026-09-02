@@ -1,6 +1,5 @@
 """Module containing class for cube object"""
 
-from typing import Dict, Tuple
 
 from sumo.wrapper import SumoClient
 
@@ -10,7 +9,7 @@ from ._child import Child
 class Cube(Child):
     """Class representig a seismic cube object in Sumo"""
 
-    def __init__(self, sumo: SumoClient, metadata: Dict, blob=None) -> None:
+    def __init__(self, sumo: SumoClient, metadata: dict, blob=None) -> None:
         """
         Args:
             sumo (SumoClient): connection to Sumo
@@ -18,23 +17,22 @@ class Cube(Child):
         """
         super().__init__(sumo, metadata, blob)
 
-    def _extract_auth(self, res) -> Tuple[str, str]:
+    def _extract_auth(self, res) -> tuple[str, str]:
         try:
             res = res.json()
             url = res.get("baseuri") + self.uuid
             sas = res.get("auth")
         except Exception:
             url, sas = res.text.split("?")
-            pass
         return url, sas
 
     @property
-    def auth(self) -> Tuple[str, str]:
+    def auth(self) -> tuple[str, str]:
         res = self._sumo.get(f"/objects('{self.uuid}')/blob/authuri")
         return self._extract_auth(res)
 
     @property
-    async def auth_async(self) -> Tuple[str, str]:
+    async def auth_async(self) -> tuple[str, str]:
         res = await self._sumo.get_async(
             f"/objects('{self.uuid}')/blob/authuri"
         )
