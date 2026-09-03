@@ -1,6 +1,5 @@
 """Module for searchcontext for collection of realizations."""
 
-
 from ._search_context import SearchContext
 
 

@@ -1,6 +1,5 @@
 """Module containing class for polygons object"""
 
-
 from sumo.wrapper import SumoClient
 
 from ._child import Child

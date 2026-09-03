@@ -1,6 +1,5 @@
 """Module for searchcontext for collection of ensembles."""
 
-
 from ._search_context import SearchContext
 
 

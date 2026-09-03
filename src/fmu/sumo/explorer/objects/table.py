@@ -52,16 +52,16 @@ class Table(Child):
                 raise TypeError(
                     f"Don't know how to convert a blob of format {self.dataformat} to a pandas table."
                 )
-        except Exception:       # noqa: BLE001
+        except Exception:  # noqa: BLE001
             try:
                 dataframe = pd.read_csv(blob)
-            except Exception:   # noqa: BLE001
+            except Exception:  # noqa: BLE001
                 try:
                     dataframe = pd.read_parquet(blob)
-                except Exception: # noqa: BLE001
+                except Exception:  # noqa: BLE001
                     try:
                         dataframe = pf.read_feather(blob)
-                    except Exception: # noqa: BLE001
+                    except Exception:  # noqa: BLE001
                         raise TypeError(
                             f"Unable to convert a blob of format {self.dataformat} to pandas table; tried csv, parquet and feather."
                         )
@@ -110,16 +110,16 @@ class Table(Child):
                 raise TypeError(
                     f"Don't know how to convert a blob of format {self.dataformat} to a pandas table."
                 )
-        except Exception:       # noqa: BLE001
+        except Exception:  # noqa: BLE001
             try:
                 arrowtable = pa.Table.from_pandas(pd.read_csv(blob))
-            except Exception:   # noqa: BLE001
+            except Exception:  # noqa: BLE001
                 try:
                     arrowtable = pq.read_table(blob)
-                except Exception: # noqa: BLE001
+                except Exception:  # noqa: BLE001
                     try:
                         arrowtable = pf.read_table(blob)
-                    except Exception: # noqa: BLE001
+                    except Exception:  # noqa: BLE001
                         raise TypeError(
                             f"Unable to convert a blob of format {self.dataformat} to arrow; tried csv, parquet and feather."
                         )

@@ -292,7 +292,7 @@ def _set_search_after(query, after):
 
 def _es_timestamp_utc(t):
     return (
-        datetime.fromtimestamp(int(t/1000))
+        datetime.fromtimestamp(int(t / 1000))
         .astimezone(timezone(timedelta(), "UTC"))
         .isoformat()
         .replace("+00:00", "Z")
