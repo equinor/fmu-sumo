@@ -171,6 +171,7 @@ _filterspec = {
     "is_prediction": [_gen_filter_bool, "data.is_prediction"],
     "standard_result": [_gen_filter_gen, "data.standard_result.name.keyword"],
     "entity": [_gen_filter_gen, "fmu.entity.uuid.keyword"],
+    "affiliate": [_gen_filter_gen, "access.affiliate_roles.keyword"],
     "complex": [_gen_filter_complex, None],
     "has": [_gen_filter_none, None],
 }
@@ -2204,6 +2205,18 @@ class SearchContext:
     async def asset_names_async(self) -> list[str]:
         """List of asset names."""
         return await self.get_field_values_async("access.asset.name.keyword")
+
+    @property
+    def affiliates(self) -> list[str]:
+        """List of affiliate roles."""
+        return self.get_field_values("access.affiliate_roles.keyword")
+
+    @property
+    async def affiliates_async(self) -> list[str]:
+        """List of affiliate roles."""
+        return await self.get_field_values_async(
+            "access.affiliate_roles.keyword"
+        )
 
 
 def _gen_filter_doc(spec):
