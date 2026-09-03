@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import math
 import warnings
-from datetime import datetime
-from typing import TYPE_CHECKING, Any, Union
+from datetime import datetime, timedelta, timezone
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import deprecation
 import httpx
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 # Type aliases
-SelectArg = Union[bool, str, dict[str, str | list[str]], list[str]]
+SelectArg = bool | str | dict[str, str | list[str]] | list[str]
 
 
 def _gen_filter_none():
@@ -290,6 +290,15 @@ def _set_search_after(query, after):
     return query
 
 
+def _es_timestamp_utc(t):
+    return (
+        datetime.fromtimestamp(int(t/1000))
+        .astimezone(timezone(timedelta(), "UTC"))
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
+
+
 class Pit:
     def __init__(self, sumo: SumoClient, keepalive="5m"):
         self._sumo = sumo
@@ -330,14 +339,14 @@ class SearchContext:
     def __init__(
         self,
         sumo: SumoClient,
-        must: list = [],
-        must_not: list = [],
+        must: list | None = None,
+        must_not: list | None = None,
         hidden=False,
         visible=True,
     ):
         self._sumo = sumo
-        self._must = must[:]
-        self._must_not = must_not[:]
+        self._must = must[:] if must is not None else []
+        self._must_not = must_not[:] if must_not is not None else []
         self._visible = visible
         self._hidden = hidden
         self._field_values = {}
@@ -1064,7 +1073,7 @@ class SearchContext:
             for bucket in res["aggregations"]["values"]["buckets"]
         ]
 
-    _timestamp_query = {
+    _timestamp_query: ClassVar = {
         "bool": {
             "must": [{"exists": {"field": "data.time.t0"}}],
             "must_not": [{"exists": {"field": "data.time.t1"}}],
@@ -1307,7 +1316,7 @@ class SearchContext:
         ts = self.filter(complex=self._timestamp_query).get_field_values(
             "data.time.t0.value"
         )
-        return [datetime.fromtimestamp(t / 1000).isoformat() for t in ts]
+        return [_es_timestamp_utc(t) for t in ts]
 
     @property
     async def timestamps_async(self) -> list[str]:
@@ -1315,7 +1324,7 @@ class SearchContext:
         ts = await self.filter(
             complex=self._timestamp_query
         ).get_field_values_async("data.time.t0.value")
-        return [datetime.fromtimestamp(t / 1000).isoformat() for t in ts]
+        return [_es_timestamp_utc(t) for t in ts]
 
     def _extract_intervals(self, res):
         buckets = res.json()["aggregations"]["t0"]["buckets"]
@@ -1329,7 +1338,7 @@ class SearchContext:
 
         return intervals
 
-    _intervals_aggs = {
+    _intervals_aggs: ClassVar = {
         "t0": {
             "terms": {"field": "data.time.t0.value", "size": 50},
             "aggs": {
@@ -1379,7 +1388,7 @@ class SearchContext:
         for k, v in kwargs.items():
             f = filters.get(k)
             if f is None:
-                raise Exception(f"Don't know how to generate filter for {k}")
+                raise ValueError(f"Don't know how to generate filter for {k}")
             _must, _must_not = f(v)
             if _must:
                 must.append(_must)
@@ -1488,13 +1497,13 @@ class SearchContext:
     def _get_object_by_class_and_uuid(self, cls, uuid) -> Any:
         obj = self.get_object(uuid)
         if obj.metadata["class"] != cls:
-            raise Exception(f"Document of type {cls} not found: {uuid}")
+            raise ValueError(f"Document of type {cls} not found: {uuid}")
         return obj
 
     async def _get_object_by_class_and_uuid_async(self, cls, uuid) -> Any:
         obj = await self.get_object_async(uuid)
         if obj.metadata["class"] != cls:
-            raise Exception(f"Document of type {cls} not found: {uuid}")
+            raise ValueError(f"Document of type {cls} not found: {uuid}")
         return obj
 
     def get_case_by_uuid(self, uuid: str) -> objects.Case:
@@ -1659,7 +1668,7 @@ class SearchContext:
     ) -> tuple[str, str, str, str, int]:
         tot_hits = sres["hits"]["total"]["value"]
         if tot_hits == 0:
-            raise Exception("No matching realizations found.")
+            raise ValueError("No matching realizations found.")
         conflicts = [
             k
             for (k, v) in sres["aggregations"].items()
@@ -1674,7 +1683,7 @@ class SearchContext:
             )
         ]
         if len(conflicts) > 0:
-            raise Exception(f"Conflicting values for {conflicts}")
+            raise ValueError(f"Conflicting values for {conflicts}")
         entityuuid = sres["aggregations"]["fmu.entity.uuid"]["buckets"][0][
             "key"
         ]
@@ -1755,7 +1764,7 @@ class SearchContext:
         except httpx.HTTPStatusError as ex:
             print(ex.response.reason_phrase)
             print(ex.response.text)
-            raise ex
+            raise
         if no_wait:
             return res
         # ELSE
@@ -1851,7 +1860,7 @@ class SearchContext:
         except httpx.HTTPStatusError as ex:
             print(ex.response.reason_phrase)
             print(ex.response.text)
-            raise ex
+            raise
         if no_wait:
             return res
         # ELSE
