@@ -1,6 +1,5 @@
 """Module containg class for surface"""
 
-
 from sumo.wrapper import SumoClient
 
 from ._child import Child

@@ -1,6 +1,5 @@
 """Module containing case class"""
 
-
 from sumo.wrapper import SumoClient
 
 from ._document import Document

@@ -1,6 +1,5 @@
 """Module for (pseudo) ensemble class."""
 
-
 from sumo.wrapper import SumoClient
 
 from ._document import Document
