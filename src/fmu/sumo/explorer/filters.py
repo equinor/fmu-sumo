@@ -2,10 +2,12 @@
 Complex(ish) filters for use with fmu-sumo Explorer.
 """
 
+from typing import ClassVar
+
 
 class Filters:
     # Filter that matches 4d-seismic objects.
-    seismic4d = {
+    seismic4d: ClassVar = {
         "bool": {
             "must": [
                 {"term": {"data.content.keyword": "seismic"}},
@@ -16,10 +18,10 @@ class Filters:
     }
 
     # Filter that matches aggregations
-    aggregations = {"exists": {"field": "fmu.aggregation.operation"}}
+    aggregations: ClassVar = {"exists": {"field": "fmu.aggregation.operation"}}
 
     # Filter that matches observations
-    observations = {
+    observations: ClassVar = {
         "bool": {
             "must_not": [
                 {"exists": {"field": "fmu.ensemble.name.keyword"}},
@@ -29,4 +31,4 @@ class Filters:
     }
 
     # Filter that matches realizations
-    realizations = {"exists": {"field": "fmu.realization.id"}}
+    realizations: ClassVar = {"exists": {"field": "fmu.realization.id"}}

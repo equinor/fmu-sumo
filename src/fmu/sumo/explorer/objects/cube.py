@@ -1,5 +1,6 @@
 """Module containing class for cube object"""
 
+import json
 
 from sumo.wrapper import SumoClient
 
@@ -22,7 +23,7 @@ class Cube(Child):
             res = res.json()
             url = res.get("baseuri") + self.uuid
             sas = res.get("auth")
-        except Exception:
+        except json.JSONDecodeError:
             url, sas = res.text.split("?")
         return url, sas
 
