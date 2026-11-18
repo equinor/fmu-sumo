@@ -1,30 +1,82 @@
 name: publish-release
 
 on:
+  pull_request:
   release:
     types:
       - published
 
 jobs:
-  buildAndPublish:
-    name: Publish to PyPi
+  build:
+    name: Build and verify PyPI distributions
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Build both packages
+        run: |
+          python -m pip install --upgrade build twine
+          python -m build --outdir dist/explorer
+          cp LICENSE compat/LICENSE
+          python -m build --outdir dist/compat compat
+          python -m twine check --strict dist/explorer/* dist/compat/*
+
+      - name: Verify release versions
+        if: github.event_name == 'release'
+        run: |
+          python - <<'PY'
+          from importlib.metadata import distributions
+          from pathlib import Path
+
+          def wheel_metadata(directory):
+              wheel, = Path(directory).glob("*.whl")
+              distribution, = distributions(path=[str(wheel)])
+              return distribution.metadata
+
+          explorer_version = wheel_metadata("dist/explorer")["Version"]
+          alias = wheel_metadata("dist/compat")
+          if alias["Version"] != explorer_version:
+              raise SystemExit(f"Package versions differ: {alias['Version']} != {explorer_version}")
+          if f"fmu-sumo-explorer=={explorer_version}" not in alias.get_all("Requires-Dist", []):
+              raise SystemExit(f"fmu-sumo must pin fmu-sumo-explorer=={explorer_version}")
+          PY
+
+      - if: github.event_name == 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pypi-distributions
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    name: Publish both distributions to PyPI
+    if: github.event_name == 'release'
+    needs: build
     permissions:
       contents: read
       id-token: write
     environment: production
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7.0.1
-
-      - uses: actions/setup-python@v7.1.0
+      - uses: actions/download-artifact@v4
         with:
-          python-version: "3.12"
+          name: pypi-distributions
+          path: dist
 
-      - name: build
-        run: |
-          python -m pip install --upgrade build
-          python -m build
-
-      - name: publish
-        if: github.event_name == 'release'
+      - name: Publish fmu-sumo-explorer
         uses: pypa/gh-action-pypi-publish@v1.14.3
+        with:
+          packages-dir: dist/explorer/
+
+      - name: Publish fmu-sumo compatibility package
+        uses: pypa/gh-action-pypi-publish@v1.14.3
+        with:
+          packages-dir: dist/compat/
