@@ -32,9 +32,10 @@ We will review the pull request and if it is appropriate and there are no clashe
 Release Please updates `compat/pyproject.toml` in each release PR. Keep the
 `x-release-please-version` markers on the alias version and dependency pins.
 On release builds, `setuptools-scm` gets Explorer's version from the Git tag.
-On ordinary PRs, CI builds both packages without requiring their versions to
-match. Before uploading a release to PyPI, CI checks that both wheels have the
-same version and that the alias pins that exact Explorer version.
+On ordinary PRs, the build-and-test workflow builds both packages without
+requiring their versions to match. The publishing workflow runs only on
+published GitHub releases. Before uploading to PyPI, it checks that both wheels
+have the same version and that the alias pins that exact Explorer version.
 
 To build the compatibility package locally with `build` installed:
 

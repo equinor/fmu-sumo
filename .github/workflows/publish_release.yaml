@@ -1,7 +1,6 @@
 name: publish-release
 
 on:
-  pull_request:
   release:
     types:
       - published
@@ -30,7 +29,6 @@ jobs:
           python -m twine check --strict dist/explorer/* dist/compat/*
 
       - name: Verify release versions
-        if: github.event_name == 'release'
         run: |
           python - <<'PY'
           from importlib.metadata import distributions
@@ -49,8 +47,7 @@ jobs:
               raise SystemExit(f"fmu-sumo must pin fmu-sumo-explorer=={explorer_version}")
           PY
 
-      - if: github.event_name == 'release'
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: pypi-distributions
           path: dist/
@@ -58,7 +55,6 @@ jobs:
 
   publish:
     name: Publish both distributions to PyPI
-    if: github.event_name == 'release'
     needs: build
     permissions:
       contents: read
