@@ -32,19 +32,19 @@ def fixture_the_logger():
 @pytest.fixture(name="case_name")
 def fixture_case_name() -> str:
     """Returns case name"""
-    return "drogon_design_small-2023-01-18"
+    return "static_test_case"
 
 
 @pytest.fixture(name="case_uuid")
 def fixture_case_uuid() -> str:
     """Returns case uuid"""
-    return "2c2f47cf-c7ab-4112-87f9-b4797ec51cb6"
+    return "13e96a88-9edb-46d3-ae81-474b10d4dd5f"
 
 
 @pytest.fixture(name="seismic_case_uuid")
 def fixture_seismic_case_uuid() -> str:
     """Returns seismic case uuid"""
-    return "c616019d-d344-4094-b2ee-dd4d6d336217"
+    return "13e96a88-9edb-46d3-ae81-474b10d4dd5f"
 
 
 @pytest.fixture(name="explorer")
