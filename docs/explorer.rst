@@ -10,15 +10,21 @@ Installation
 
 .. code-block:: console
 
-    pip install fmu-sumo
+    pip install fmu-sumo-explorer
 
 or for the latest development version:
 
 .. code-block:: console
 
-    git clone git@github.com:equinor/fmu-sumo.git
-    cd fmu-sumo
+    git clone git@github.com:equinor/fmu-sumo-explorer.git
+    cd fmu-sumo-explorer
     pip install .[dev]
+
+``fmu-sumo`` remains available as a compatibility package. The Python import
+path is still ``fmu.sumo.explorer``. If you have an older ``fmu-sumo`` release
+that contains the library, run ``python -m pip uninstall fmu-sumo`` before
+installing the new name. Reinstall using the old name instead if another
+dependency still requires it.
 
 Run tests
 ---------

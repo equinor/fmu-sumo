@@ -6,6 +6,28 @@ on:
   workflow_dispatch:
 
 jobs:
+  build_distributions:
+    name: Build and verify PyPI distributions
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Build both packages
+        run: |
+          python -m pip install --upgrade build twine
+          python -m build --outdir dist/explorer
+          cp LICENSE compat/LICENSE
+          python -m build --outdir dist/compat compat
+          python -m twine check --strict dist/explorer/* dist/compat/*
+
   build_pywheels:
     name: PY ${{ matrix.python-version }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}

@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 version_file = "src/fmu/sumo/explorer/_version.py"
 
 [project]
-name = "fmu-sumo"
+name = "fmu-sumo-explorer"
 description = "Python package for interacting with Sumo in an FMU setting"
 requires-python = ">=3.11"
 dynamic = ["version"]
@@ -23,7 +23,7 @@ dependencies = [
 ]
 
 [project.urls]
-Repository = "https://github.com/equinor/fmu-sumo"
+Repository = "https://github.com/equinor/fmu-sumo-explorer"
 
 [project.optional-dependencies]
 all = [
