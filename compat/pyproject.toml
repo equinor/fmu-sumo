@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fmu-sumo"
-version = "2.16.1" # x-release-please-version
+version = "3.0.0" # x-release-please-version
 description = "Compatibility package for fmu-sumo-explorer"
 requires-python = ">=3.11"
 license = { file = "LICENSE" }
 authors = [{ name = "Equinor" }]
 dependencies = [
-  "fmu-sumo-explorer==2.16.1", # x-release-please-version
+  "fmu-sumo-explorer==3.0.0", # x-release-please-version
 ]
 readme = { content-type = "text/markdown", text = """
 The Explorer library has moved to [fmu-sumo-explorer](https://pypi.org/project/fmu-sumo-explorer/).
@@ -29,16 +29,16 @@ Repository = "https://github.com/equinor/fmu-sumo-explorer"
 
 [project.optional-dependencies]
 all = [
-  "fmu-sumo-explorer[all]==2.16.1", # x-release-please-version
+  "fmu-sumo-explorer[all]==3.0.0", # x-release-please-version
 ]
 dev = [
-  "fmu-sumo-explorer[dev]==2.16.1", # x-release-please-version
+  "fmu-sumo-explorer[dev]==3.0.0", # x-release-please-version
 ]
 test = [
-  "fmu-sumo-explorer[test]==2.16.1", # x-release-please-version
+  "fmu-sumo-explorer[test]==3.0.0", # x-release-please-version
 ]
 docs = [
-  "fmu-sumo-explorer[docs]==2.16.1", # x-release-please-version
+  "fmu-sumo-explorer[docs]==3.0.0", # x-release-please-version
 ]
 
 [tool.setuptools]
